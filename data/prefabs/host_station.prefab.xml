@@ -1,0 +1,29 @@
+<prefab name="host_station" width="4" height="1">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="top"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell>
+				<ascii>222</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>220</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>220</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>248</ascii>
+				<fgd>#9E8664</fgd>
+				<bkg>#FFFFFF</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

@@ -1,0 +1,82 @@
+<!-- 
+const CAR_1_HORZ_1:[u8; 5] = [218, 219, 219, 220, 182];
+const CAR_1_HORZ_2:[u8; 5] = [212, 219, 219, 223, 182];
+
+const CAR_2_HORZ_1:[u8; 6] = [214, 218, 191, 92, 223, 180];
+const CAR_2_HORZ_2:[u8; 6] = [211, 192, 217, 47, 220, 180];
+-->
+<model>
+    <name>unnamed</name>
+    <images>
+        <image orientation="0" width="6" height="2"><!-- 0 = 0°, 1 = 90°, 2 = 180°, 3 = 270° -->
+            <width>20</width>
+            <height>2</height>
+            <data>
+                <row>
+                    <cell>
+                        <ascii>214</ascii>
+                        <fgd>#FFFFFF</fgd>
+                        <bkg>#000000</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>218</ascii>
+                        <fgd>#DEDEDE</fgd>
+                        <bkg>#FFFFFF</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>191</ascii>
+                        <fgd>#DEDEDE</fgd>
+                        <bkg>#FFFFFF</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>92</ascii>
+                        <fgd>#DEDEDE</fgd>
+                        <bkg>#FFFFFF</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>223</ascii>
+                        <fgd>#DEDEDE</fgd>
+                        <bkg>#FFFFFF</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>180</ascii>
+                        <fgd>#FFFFFF</fgd>
+                        <bkg>#000000</bkg>
+                    </cell>
+                </row>
+                <row>
+                    <cell>
+                        <ascii>211</ascii>
+                        <fgd>#FFFFFF</fgd>
+                        <bkg>#000000</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>192</ascii>
+                        <fgd>#DEDEDE</fgd>
+                        <bkg>#FFFFFF</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>217</ascii>
+                        <fgd>#DEDEDE</fgd>
+                        <bkg>#FFFFFF</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>47</ascii>
+                        <fgd>#DEDEDE</fgd>
+                        <bkg>#FFFFFF</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>220</ascii>
+                        <fgd>#DEDEDE</fgd>
+                        <bkg>#FFFFFF</bkg>
+                    </cell>
+                    <cell>
+                        <ascii>180</ascii>
+                        <fgd>#FFFFFF</fgd>
+                        <bkg>#000000</bkg>
+                    </cell>
+                </row>
+            </data>
+        </image>
+    </images>
+</model>

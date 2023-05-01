@@ -1,0 +1,72 @@
+<items>
+	<item>
+		<name>Mens Plain Suit</name>
+		<type>clothing</type>
+		<subtype>suit</subtype>
+		<price>12</price>
+		<char>225</char>
+	</item>
+	<item>
+		<name>Mens Well-Made Suit</name>
+		<type>clothing</type>
+		<subtype>suit</subtype>
+		<price>40</price>
+		<char>225</char>
+	</item>
+	<item>
+		<name>Mens Excellent Suit</name>
+		<type>clothing</type>
+		<subtype>suit</subtype>
+		<price>200</price>
+		<char>225</char>
+	</item>
+	<item>
+		<name>Shoes</name>
+		<type>clothing</type>
+		<subtype>footwear</subtype>
+		<price>3</price>
+		<char>236</char>
+	</item>
+	<item>
+		<name>Woman's Plain Dress</name>
+		<type>clothing</type>
+		<subtype>dress</subtype>
+		<price>3</price>
+		<char>239</char>
+	</item>
+	<item>
+		<name>Woman's Well-Made Dress</name>
+		<type>clothing</type>
+		<subtype>dress</subtype>
+		<price>10</price>
+		<char>239</char>
+	</item>
+	<item>
+		<name>Woman's Excellent Dress</name>
+		<type>clothing</type>
+		<subtype>dress</subtype>
+		<price>100</price>
+		<char>239</char>
+	</item>
+	<item>
+		<name>Fur Coat</name>
+		<type>clothing</type>
+		<subtype>coat</subtype>
+		<price>200</price>
+		<char>234</char>
+	</item>
+	<item>
+		<name>Silk Tie</name>
+		<type>clothing</type>
+		<subtype>tie</subtype>
+		<price>15</price>
+		<char>173</char>
+	</item>
+	<item>
+		<name>Fine watch</name>
+		<type>clothing</type>
+		<subtype>watch</subtype>
+		<price>40</price>
+		<char>21</char>
+	</item>
+</items>

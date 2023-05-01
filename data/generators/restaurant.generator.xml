@@ -1,0 +1,7 @@
+<generator name="restaurant" type="building_interior">
+	<rules>
+		<rule type="prefab" name="kitchen" frequency="one" />
+		<rule type="prefab" name="host_station" frequency="one" />
+		<rule type="prefab" name="dining_table" frequency="many" chance="0.25" />
+	</rules>
+</generator>

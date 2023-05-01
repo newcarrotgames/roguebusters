@@ -1,0 +1,46 @@
+<!-- <template type="business" subtype="restaurant" text="[LAST_NAME]'s Soda Fountain" />
+<template type="business" subtype="restaurant" text="[LAST_NAME]'s Ice Cream Parlor" /> -->
+<!-- <template type="business" subtype="restaurant" text="[LAST_NAME]'s Café and Confectionery" /> -->
+<!-- <template type="business" subtype="restaurant" text="[LAST_NAME]'s Coffee House" /> -->
+<templates>
+	<template>
+		<type>business</type>
+		<subtype>restaurant</subtype>
+		<text>[LAST_NAME]'s Family Restaurant</text>
+	</template>
+	<template>
+		<type>business</type>
+		<subtype>restaurant</subtype>
+		<text>[LAST_NAME]'s Supper Club</text>
+	</template>
+	<template>
+		<type>business</type>
+		<subtype>restaurant</subtype>
+		<text>[LAST_NAME]'s Tea Room</text>
+	</template>
+	<template>
+		<type>business</type>
+		<subtype>restaurant</subtype>
+		<text>[LAST_NAME]'s Chophouse</text>
+	</template>
+	<template>
+		<type>business</type>
+		<subtype>restaurant</subtype>
+		<text>[LAST_NAME]'s Oyster Bar</text>
+	</template>
+	<template>
+		<type>business</type>
+		<subtype>restaurant</subtype>
+		<text>[LAST_NAME]'s Luncheonette</text>
+	</template>
+	<template>
+		<type>business</type>
+		<subtype>restaurant</subtype>
+		<text>[LAST_NAME]'s Diner</text>
+	</template>
+	<template>
+		<type>business</type>
+		<subtype>restaurant</subtype>
+		<text>[LAST_NAME]'s Grill</text>
+	</template>
+</templates>

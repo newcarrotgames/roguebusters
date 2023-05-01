@@ -1,0 +1,101 @@
+<!-- <template type="business" subtype="restaurant" text="[LAST_NAME]'s Soda Fountain" />
+<template type="business" subtype="restaurant" text="[LAST_NAME]'s Ice Cream Parlor" /> -->
+<!-- <template type="business" subtype="restaurant" text="[LAST_NAME]'s Café and Confectionery" /> -->
+<!-- <template type="business" subtype="restaurant" text="[LAST_NAME]'s Coffee House" /> -->
+<templates>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[LAST_NAME] Plaza</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[LAST_NAME] Park</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[BUSINESS_TERM] Square</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>World [BUSINESS_TERM] Center</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[LAST_NAME] Circle</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[BUSINESS_TERM] Building</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[LAST_NAME] Tower</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[CITY_NAME] [BUSINESS_TERM] Complex</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>The [LAST_NAME] Building</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[NUMBERED_STREET] [DIRECTION] Office Park</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[LAST_NAME] Courtyard</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[BUSINESS_TERM] Pavilion</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[LAST_NAME] [NUMBERED_STREET] Street Center</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[CITY_NAME] [BUSINESS_TERM] Hub</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[LAST_NAME] Theatre</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[CITY_NAME] Union Station</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[LAST_NAME] Bank Building</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[LAST_NAME] Arcade</text>
+	</template>
+	<template>
+		<type>building</type>
+		<subtype>building</subtype>
+		<text>[CITY_NAME] City Hall</text>
+	</template>
+</templates>

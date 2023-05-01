@@ -1,0 +1,19 @@
+[package]
+name = "roguebusters"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bitflags = "2.1.0"
+log = "0.4.17"
+rand = "0.8.5"
+simple_logger = "4.1.0"
+specs = "0.18.0"
+specs-derive = "0.4.1"
+tcod = "0.15.0"
+walkdir = "2.3.3"
+xml-rs = "0.8.4"
+yaserde = "0.8.0"
+yaserde_derive = "0.8.0"

@@ -1,0 +1,363 @@
+Astor Plaza
+Bryant Park 
+Carnegie Hill 
+Central Park 
+Dag Hammarskjold Plaza 
+Fifth Avenue 
+Financial Square 
+Grand Army Plaza 
+Liberty Plaza 
+N.Y. Plaza 
+Penn Plaza 
+Rockefeller Plaza 
+Seaport Plaza 
+Times Square 
+Union Square South 
+Wall Street 
+World Financial Center 
+World Trade Center 
+Word Trade Center 
+Worldwide Plaza 
+Columbus Circle 
+E 40th Street 
+Park Avenue 
+U.N. Plaza 
+William Street 
+Fifth Avenue 
+Park Avenue 
+Warren St 
+West End Avenue 
+Times Square
+East 42nd Street 
+Sixth Avenue 
+Sixth Avenue 
+Metrotech Center
+Wall Street 
+John Street 
+Sixth Avenue 
+Liberty Street 
+East 57th Street 
+Columbus Circle 
+William Street 
+Broadway 
+Broadway 
+Charles Street 
+State Street 
+Perry Street 
+Broadway 
+East 96th Street 
+Perry Street 
+Broadway 
+Columbus Circle 
+Dag Hammarskjold Plaza
+N.Y. Plaza 
+Penn Plaza 
+Times Square
+World Financial Center 
+World Trade Center 
+River Terrace 
+Exchange Place 
+Times Square
+Water Street 
+North End Avenue 
+West 56th Street 
+River Terrace 
+West 56th Street 
+Riverside Boulevard at Trump Place 
+Madison Avenue 
+Times Square 
+World Financial Center 
+Broad Street 
+Hudson Street 
+Vestry Street 
+Madison Avenue 
+Fifth Avenue 
+Maiden Lane 
+River Terrace 
+West 38th Street 
+West 42nd Street 
+Park Avenue 
+West 50th Street 
+Madison Avenue 
+N.Y. Plaza 
+Times Square 
+World Financial Center 
+Wall Street 
+River Terrace 
+East 67th Street 
+Fifth Avenue 
+Wall Street 
+Greenwich Street 
+Times Square 
+Fifth Avenue 
+East 42nd Street 
+Fifth Avenue 
+Greenwich Street 
+Madison Avenue 
+Water Street 
+Maiden Lane 
+Lexington Avenue 
+Wall Street 
+West 42nd Street 
+Lexington Avenue 
+Wall Street 
+Fifth Avenue 
+Times Square 
+World Trade Center 
+Little West Street 
+Pine Street 
+Fifth Avenue 
+Lexington 
+Seventh Avenue 
+Seventh Avenue 
+Water Street 
+Third Avenue 
+South Street 
+Broad Street 
+UN Plaza 
+860-U.N. Plaza 
+Pine Street 
+Third Avenue – Lipstick 
+W 57th Street 
+West Street 
+Adams Building 
+American Brands Building 
+American International Building 
+American Radiator Building 
+American Standard Building 
+American Tract Society Building 
+The Andover 
+Annenberg Building 
+AOL Time Warner Center 
+Arthur A. Schomburg Plaza 
+Astor Place 
+AT&T Building 
+AT&T Building 
+AT&T Long Lines Building 
+Avalon Riverview 
+The Bamford 
+Bankers Trust Co. Building 
+Bankers Trust Plaza 
+Bank of America Tower 
+Bank of Manhattan Building 
+Bank of New York Building  
+Bank of New York Building II  
+The Barclay 
+Barclay Tower 
+Barclay-Vesey Building 
+Bayard-Condict Building 
+Beekman Tower 
+The Belmont 
+Beresford Apartments 
+Bertelsmann Building 
+Bloomberg Tower
+Bowery Savings Bank 
+Briar Hill 
+The Bristol 
+The Brittany 
+Bush Tower 
+The Caldwell 
+The Cambridge 
+Canada House 
+Candler Building 
+Carnegie Hall Tower 
+Carnegie Mews 
+CBS Building 
+Celanese Building 
+Central Park Place 
+Century Apartments 
+Chanin Building 
+Chase Manhattan Bank 
+Chatham Towers 
+Chemical Bank Building 
+Chrysler Building 
+Chrysler Building East 
+CIBC World Markets 
+Citigroup Center 
+Cities Service Building 
+City Bank Farmers Trust Co. Building 
+Citylights 
+Cityspire 
+Columbus Centre 
+Condé Nast Building 
+Confucius Plaza 
+Continental Center 
+Corning Glass Building 
+Crown Building 
+Dag Hammarskjold Tower 
+Daily News Building 
+Deutsche Bank Building 
+Doubletree Guest Suites 
+Downtown Athletic Club 
+Durst Tower 
+Eldorado Apartments 
+Empire State Building 
+Equitable Building I 
+Equitable Building II 
+Equitable Center 
+Ernst & Young National Headquarters 
+Essex House 
+Exxon Building 
+The Fairmont 
+Flatiron Building 
+Four Seasons Hotel 
+Freedom Tower 
+Fuller Building 
+Galleria 
+GE Building 
+General Electric Tower 
+General Motors Building 
+Goldman Sachs Tower 
+Grace Building 
+The Grand Tier 
+Group Health Insurance Building 
+Gulf & Western Building 
+The Hamilton 
+Hampton Court 
+Hearst Magazine Building 
+Helena 
+Helmsley Building 
+Helmsley Palace Hotel 
+Heckscher Building 
+Home Insurance Company Building 
+IBM Building 
+InterActiveCorp Headquarters 
+Interchem Building 
+International Building 
+Irving Trust Co. Building 
+Jacob Ruppert Brewery Project 
+Javits Federal Office Building 
+J.P. Morgan Bank Headquarters 
+Kent Building 
+Lehman Brothers Building 
+Lefcourt Colonial Building 
+Lever Building 
+Liberty Plaza 
+Lincoln Building 
+Lipstick Building 
+The Lucerne
+LVMH Tower 
+Majestic Apartments 
+Manufacturers Hanover Trust Building 
+Marc 
+Marine Midland Bank 
+The Marlowe 
+Marriott East Side Hotel 
+Marriott Marquis Hotel 
+Marriott Brooklyn
+McGraw-Hill Building I  
+McGraw-Hill Building II  
+Met Life Building 
+Metropolitan Life Insurance Co. Tower 
+Metropolitan Tower 
+Milan 
+Millennium Broadway Hotel 
+Millennium Hilton Hotel 
+Milstein Tower
+Mobil Building 
+The Monterey 
+MONY Tower 
+Morgan Stanley Building  
+Morgan Stanley Dean Witter Plaza 
+Morton Square 
+Municipal Building 
+Museum Tower 
+National Westminster Bank USA 
+Nelson Tower 
+New York Central Building 
+New Yorker Hotel 
+New York Hilton Hotel 
+New York Merchandise Mart 
+New York Palace Hotel 
+New York Times Tower 
+New York World Building 
+N.Y. Life Insurance Co. Building 
+N.Y. Telephone Co. Building  
+N.Y. Telephone Co. Building  
+N.Y. Telephone Co. Switching Station  
+N.Y. Telephone Co. Switching Station  
+Olympic Tower 
+On Prospect Park 
+One Bryant Park 
+One Carnegie Hill 
+One Dag Hammarskjold Plaza 
+One Fifth Avenue 
+One Penn Plaza 
+One Union Square South 
+Orion 
+Pan Am Building 
+Panhellenic Hotel 
+Paramount Building 
+Paramount Plaza 
+Paramount Tower 
+Park Avenue Place 
+Park Avenue Plaza 
+Park Imperial 
+Park Lane Hotel 
+Park Row Building 
+The Pavilion 
+Pennmark 
+Perry West 
+Philip Morris Inc. Building 
+Piaget Building 
+Pierre 
+Random House Building 
+RCA Building 
+Realty Building 
+The Regent 
+Reuters Building 
+Ritz Tower 
+RKO Building 
+San Remo Apartments 
+Seagram Building 
+Seward Park Houses Extension 
+Sheraton Centre 
+Silver Towers 
+Singer Tower 
+Socony-Mobil Building 
+Solaire 
+Solow Building 
+The Somerset 
+Sony Building 
+South Park Tower 
+Standard Oil Building 
+The Stratford 
+Taino Towers 
+Thames Twins 
+Time and Life Building 
+Time-Life Building 
+Time Warner Center 
+Times Square Tower 
+Times Tower 
+Time Warner Building 
+Tishman Building 
+Tribeca Bridge Tower 
+Tribeca Park 
+Tribeca Pointe 
+Trinity Building 
+Trump Tower 
+Trump International Hotel & Tower 
+Trump Place
+Trump World Tower 
+U.N. Plaza – Park Hyatt Hotel 
+Union Carbide Building 
+United Nations Secretariat 
+Universal Pictures Building 
+University Plaza 
+Uris Building 
+U.S. Courthouse 
+U.S. Plywood Building 
+U.S. Steel Building 
+Verdesian 
+Victory 
+Visionaire 
+Waldorf Astoria Hotel 
+Waterside 
+The Westport 
+Western Union Building 
+The Whitehall Building 
+Whitehall Building Annex 
+The Windermere 
+Woolworth Building 
+World Trade Center
+W. R. Grace Building 

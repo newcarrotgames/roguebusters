@@ -1,0 +1,150 @@
+<items>
+	<!-- revolvers -->
+	<item>
+		<name>.22 Revolver</name>
+		<type>weapon</type>
+		<subtype>handgun</subtype>
+		<range>50</range>
+		<damage>4</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>6</ammo>
+		<price>25</price>
+		<char>169</char>
+	</item>
+	<item>
+		<name>.38 Revolver</name>
+		<type>weapon</type>
+		<subtype>handgun</subtype>
+		<range>50</range>
+		<damage>5</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>6</ammo>
+		<price>40</price>
+		<char>169</char>
+	</item>
+	<item>
+		<name>.44 Revolver</name>
+		<type>weapon</type>
+		<subtype>handgun</subtype>
+		<range>70</range>
+		<damage>6</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>6</ammo>
+		<price>45</price>
+		<char>169</char>
+	</item>
+	<item>
+		<name>.45 Revolver</name>
+		<type>weapon</type>
+		<subtype>handgun</subtype>
+		<range>70</range>
+		<damage>6</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>6</ammo>
+		<price>45</price>
+		<char>169</char>
+	</item>
+	<!-- automatic pistols -->
+	<item>
+		<name>9mm Automatic</name>
+		<type>weapon</type>
+		<subtype>handgun</subtype>
+		<range>22</range>
+		<damage>5</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>8</ammo>
+		<price>50</price>
+		<char>169</char>
+	</item>
+	<item>
+		<name>.38 Automatic</name>
+		<type>weapon</type>
+		<subtype>handgun</subtype>
+		<range>22</range>
+		<damage>5</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>8</ammo>
+		<price>50</price>
+		<char>169</char>
+	</item>
+	<item>
+		<name>.45 Automatic</name>
+		<type>weapon</type>
+		<subtype>handgun</subtype>
+		<range>50</range>
+		<damage>6</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>8</ammo>
+		<price>75</price>
+		<char>169</char>
+	</item>
+	<!-- rifles -->
+	<item>
+		<name>.22 Rifle</name>
+		<type>weapon</type>
+		<subtype>rifle</subtype>
+		<range>500</range>
+		<damage>5</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>10</ammo>
+		<price>50</price>
+		<char>244</char>
+	</item>
+	<item>
+		<name>.30-06 Rifle</name>
+		<type>weapon</type>
+		<subtype>rifle</subtype>
+		<range>500</range>
+		<damage>7</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>5</ammo>
+		<price>50</price>
+		<char>244</char>
+	</item>
+	<item>
+		<name>Browning Automatic Rifle (BAR)</name>
+		<type>weapon</type>
+		<subtype>rifle</subtype>
+		<range>500</range>
+		<damage>7</damage>
+		<rate>5</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>20</ammo>
+		<price>175</price>
+		<char>244</char>
+	</item>
+	<!-- other -->
+	<item>
+		<name>Thompson Submachine Gun</name>
+		<type>weapon</type>
+		<subtype>smg</subtype>
+		<range>90</range>
+		<damage>7</damage>
+		<rate>5</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>20</ammo>
+		<price>200</price>
+		<char>214</char>
+	</item>
+	<item>
+		<name>Double-Barrel Shotgun</name>
+		<type>weapon</type>
+		<subtype>shotgun</subtype>
+		<range>8</range>
+		<damage>15</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<ammo>2</ammo>
+		<price>50</price>
+		<char>244</char>
+	</item>
+</items>
