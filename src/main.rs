@@ -1,19 +1,18 @@
 use game::Game;
 use simple_logger::SimpleLogger;
 use tcod::console::*;
-use kira::{
-    manager::{
-        AudioManager, AudioManagerSettings,
-        backend::cpal::CpalBackend,
-    },
-    sound::static_sound::{StaticSoundData, StaticSoundSettings},
-};
+// use kira::{
+//     manager::{
+//         AudioManager, AudioManagerSettings,
+//         backend::cpal::CpalBackend,
+//     },
+//     sound::static_sound::{StaticSoundData, StaticSoundSettings},
+// };
 
 mod game;
 mod input;
 mod ui;
 mod names;
-mod test;
 
 mod deser {
     pub mod prefabs;

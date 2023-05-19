@@ -87,7 +87,7 @@ pub struct Building {
 
 impl Building {
     fn new(id: i32, rect: Rect) -> Self {
-        Building { id, root: Space::new(rect) }
+        Building { id, root: Space::new(rect, id) }
     }
 
     pub fn subdivide_space(space: &mut Space, data: &mut Grid, depth: i32) {
@@ -97,6 +97,16 @@ impl Building {
         }
         for space in space.partitions.iter_mut() {
             Building::subdivide_space(space, data, depth + 1);
+        }
+    }
+
+    pub fn add_doors(space: &mut Space, data: &mut Grid) {
+        if space.partitions.len() > 0 {
+            for space in space.partitions.iter_mut() {
+                Building::add_doors(space, data);
+            }
+        } else {
+            space.add_doors(data, EXTERIOR);
         }
     }
 }
@@ -227,15 +237,16 @@ pub struct Space {
     rect: Rect,
     walls: [bool; 4],   // interior/exterior
     partitions: Vec<Space>,
+    building_id: i32,
 }
 
 impl Space {
-    pub fn new(rect: Rect) -> Self {
-        Space { rect, walls: Wall::all(), partitions: Vec::new() }
+    pub fn new(rect: Rect, building_id: i32) -> Self {
+        Space { rect, walls: Wall::all(), partitions: Vec::new(), building_id }
     }
 
-    pub fn with_walls(rect: Rect, walls: [bool; 4]) -> Self {
-        Space { rect, walls, partitions: Vec::new() }
+    pub fn with_walls(rect: Rect, building_id: i32, walls: [bool; 4]) -> Self {
+        Space { rect, walls, partitions: Vec::new(), building_id }
     }
 
     pub fn partition_point(&self, axis: bool) -> i32 {
@@ -303,7 +314,7 @@ impl Space {
             let mut walls = self.walls.clone();
             walls[DIR_SOUTH] = INTERIOR;
 
-            space1 = Space::with_walls(Rect{x1, y1, x2, y2}, walls);
+            space1 = Space::with_walls(Rect{x1, y1, x2, y2}, self.building_id, walls);
             log::info!("space1: {}, width: {}, height: {}", space1, space1.rect.width(), space1.rect.height());
             // second space
             y1 = self.rect.y1 + point;
@@ -312,7 +323,7 @@ impl Space {
             let mut walls = self.walls.clone();
             walls[DIR_NORTH] = INTERIOR;
 
-            space2 = Space::with_walls(Rect{x1, y1, x2, y2}, walls);
+            space2 = Space::with_walls(Rect{x1, y1, x2, y2}, self.building_id, walls);
             log::info!("space2: {}, width: {}, height: {}", space2, space2.rect.width(), space2.rect.height());
         } else {
             let mut x1 = self.rect.x1;
@@ -323,7 +334,7 @@ impl Space {
             let mut walls = self.walls.clone();
             walls[DIR_EAST] = INTERIOR;
 
-            space1 = Space::with_walls(Rect{x1, y1, x2, y2}, walls);
+            space1 = Space::with_walls(Rect{x1, y1, x2, y2}, self.building_id, walls);
             log::info!("space1: {}, width: {}, height: {}", space1, space1.rect.width(), space1.rect.height());
 
             // second space
@@ -333,7 +344,7 @@ impl Space {
             let mut walls = self.walls.clone();
             walls[DIR_WEST] = INTERIOR;
 
-            space2 = Space::with_walls(Rect{x1, y1, x2, y2}, walls);
+            space2 = Space::with_walls(Rect{x1, y1, x2, y2}, self.building_id, walls);
             log::info!("space2: {}, width: {}, height: {}", space2, space2.rect.width(), space2.rect.height());
         }
 
@@ -390,6 +401,50 @@ impl Space {
 
         self.partitions.push(space1);
         self.partitions.push(space2);
+    }
+
+    pub fn get_wall_coords(&mut self, wall_dir: Direction) -> Rect {
+        match wall_dir {
+            Direction::NORTH => Rect { x1: self.rect.x1, y1: self.rect.y1, x2: self.rect.x2, y2: self.rect.y1 },
+            Direction::EAST => Rect { x1: self.rect.x2, y1: self.rect.y1, x2: self.rect.x2, y2: self.rect.y2 },
+            Direction::SOUTH => Rect { x1: self.rect.x1, y1: self.rect.y2, x2: self.rect.x2, y2: self.rect.y2 },
+            Direction::WEST => Rect { x1: self.rect.x1, y1: self.rect.y1, x2: self.rect.x1, y2: self.rect.y2 },
+        }
+    }
+
+    pub fn add_doors(&mut self, data: &mut Grid, exterior: bool) {
+        let mut rng = rand::thread_rng();
+        let mut has_door = false;
+        while !has_door {
+            for (i, wall) in self.walls.iter().enumerate() {
+                if *wall == exterior {
+                    if rng.gen_bool(0.5) {
+                        let door_x:i32;
+                        let door_y:i32;
+                        match DIRECTIONS[i] {
+                            Direction::NORTH => {
+                                door_x = self.rect.x1 + self.partition_point(HORIZONTAL);
+                                door_y = self.rect.y1;
+                            },
+                            Direction::EAST => {
+                                door_x = self.rect.x2;
+                                door_y = self.rect.y1 + self.partition_point(VERTICAL);
+                            },
+                            Direction::SOUTH => {
+                                door_x = self.rect.x1 + self.partition_point(HORIZONTAL);
+                                door_y = self.rect.y2;
+                            },
+                            Direction::WEST => {
+                                door_x = self.rect.x1;
+                                door_y = self.rect.y1 + self.partition_point(VERTICAL);
+                            },
+                        }
+                        data[door_y as usize][door_x as usize] = Tile::door(self.building_id, DIRECTIONS[i]);
+                        has_door = true;
+                    } 
+                }
+            }
+        }        
     }
 }
 

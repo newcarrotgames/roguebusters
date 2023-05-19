@@ -139,8 +139,8 @@ impl Tile {
 
     pub fn wall() -> Self {
         Tile {
-            blocked: false,
-            block_sight: false,
+            blocked: true,
+            block_sight: true,
             building_id: 0,
             bg_color: Color::new(245, 245, 245),
             fg_color: Color::new(235, 235, 235),
@@ -353,7 +353,7 @@ impl City {
                     }
 
                     rect = Rect::new(x1 + offset + 4, y1 + offset + 4, x2 - offset - 4, y2 - offset - 4);
-                    self.buildings.insert(building_id, Building{id: building_id, root: Space::new(rect)});
+                    self.buildings.insert(building_id, Building{id: building_id, root: Space::new(rect, building_id)});
 
                     // interior
                     offset += 5;
@@ -402,7 +402,7 @@ impl City {
                     }
 
                     rect = Rect::new(x1 + offset + 4, y1 + offset + 4, x2 - offset - 4, y2 - offset - 4);
-                    self.buildings.insert(building_id, Building{id: building_id, root: Space::new(rect)});
+                    self.buildings.insert(building_id, Building{id: building_id, root: Space::new(rect, building_id)});
 
                     // interior
                     offset += 5;
@@ -514,6 +514,10 @@ impl City {
         for building in buildings {
             log::info!("--------------------------- subdividing building ---------------------------");
             Building::subdivide_space(&mut building.root, &mut self.data, 0);
+
+            Building::add_doors(&mut building.root, &mut self.data);
+            // add doors
+
         }
     }
 

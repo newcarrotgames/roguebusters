@@ -20,7 +20,7 @@ use tcod::{
     BackgroundFlag, Color, Console,
 };
 
-const TORCH_RADIUS: i32 = 60;
+const TORCH_RADIUS: i32 = 75;
 const FOV_LIGHT_WALLS: bool = true;
 const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
 
