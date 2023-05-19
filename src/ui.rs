@@ -1,19 +1,16 @@
 use crate::{
-    city::{Rect, City},
-    components::{
-        inventory::Inventory,
-        player::Player, position::Position,
-    },
-    SCREEN_HEIGHT, SCREEN_WIDTH, MAP_HEIGHT, MAP_WIDTH,
+    components::{inventory::Inventory, player::Player, position::Position},
+    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City,
 };
 use specs::{Join, World, WorldExt};
 use tcod::{
-    colors::{BLACK, WHITE, BLUE},
+    colors::{BLACK, BLUE, WHITE},
     console::Offscreen,
     BackgroundFlag, Color, Console,
 };
 
 type LineSet = [u8; 8];
+type Quad = [i32; 4];
 
 pub const UI_WIDTH: i32 = 20;
 pub const MESSAGES_HEIGHT: i32 = 15;
@@ -25,6 +22,8 @@ const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
 
 const INVENTORY_POSITION: [i32; 4] = [10, 10, 50, 50];
 const MAP_POSITION: [i32; 4] = [5, 5, 113, 61];
+
+const NULLCHAR:char = 0 as char;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum UIState {
@@ -53,10 +52,15 @@ impl UI {
         // map
         self.draw_labeled_box(
             con,
-            [0, 0, SCREEN_WIDTH - UI_WIDTH - 1, SCREEN_HEIGHT - MESSAGES_HEIGHT],
+            [
+                0,
+                0,
+                SCREEN_WIDTH - UI_WIDTH - 1,
+                SCREEN_HEIGHT - MESSAGES_HEIGHT,
+            ],
             WHITE,
             LINES_DOUBLE_SINGLE,
-            "City"
+            "City",
         );
 
         // side bar
@@ -70,7 +74,7 @@ impl UI {
             ],
             WHITE,
             LINES_DOUBLE_SINGLE,
-            "RogueBusters"
+            "RogueBusters",
         );
 
         // message log
@@ -103,7 +107,7 @@ impl UI {
             );
         }
 
-        match self.state  {
+        match self.state {
             UIState::Inventory => self.render_dialog(
                 con,
                 INVENTORY_POSITION,
@@ -111,13 +115,9 @@ impl UI {
                 LINES_DOUBLE_SINGLE,
                 "Inventory",
             ),
-            UIState::Map => self.render_dialog(
-                con,
-                MAP_POSITION,
-                WHITE,
-                LINES_DOUBLE_SINGLE,
-                "Map",
-            ),
+            UIState::Map => {
+                self.render_dialog(con, MAP_POSITION, WHITE, LINES_DOUBLE_SINGLE, "Map")
+            }
             UIState::None => (),
         }
     }
@@ -142,23 +142,25 @@ impl UI {
                 }
             }
         } else if self.state == UIState::Map {
-            // draw city
+            // draw map view
             let map = world.read_resource::<City>();
             let map_x_scale = MAP_WIDTH / (MAP_POSITION[2] - MAP_POSITION[0] - 2);
             let map_y_scale = MAP_HEIGHT / (MAP_POSITION[3] - MAP_POSITION[1] - 2);
-            for my in MAP_POSITION[1] + 1..MAP_POSITION[3]  {
-                for mx in MAP_POSITION[0] + 1..MAP_POSITION[2] {
+            for my in MAP_POSITION[1] + 1..MAP_POSITION[3] {
+                for mx in MAP_POSITION[0] + 1..MAP_POSITION[2]  {
                     let x = mx - MAP_POSITION[0];
                     let y = my - MAP_POSITION[1];
                     let wall = map.data[(y * map_y_scale) as usize][(x * map_x_scale) as usize];
                     con.set_default_foreground(WHITE);
+                    let mut c = 176 as char;
                     if wall.bg_color == BLUE {
                         con.set_default_background(BLUE);
+                        c = ' ' as char;
                     } else {
                         con.set_default_background(BLACK);
                     }
-                    let mut c = 177 as char;
-                    if wall.building_id == 0 && (wall.char == 32 as char || wall.char == 0 as char) {
+                    
+                    if wall.building_id == 0 && (wall.char == 32 as char || wall.char == 0 as char) && wall.bg_color == BLACK {
                         c = ' ';
                     }
                     con.put_char(mx, my, c, BackgroundFlag::Set);
@@ -172,10 +174,11 @@ impl UI {
             let position_storage = world.read_storage::<Position>();
             for (_, player_position) in (&player_storage, &position_storage).join() {
                 con.put_char(
-                    MAP_POSITION[0] + (player_position.x as i32 / map_x_scale), 
-                    MAP_POSITION[1] + (player_position.y as i32 / map_y_scale), 
-                    '@', 
-                    BackgroundFlag::None);
+                    MAP_POSITION[0] + (player_position.x as i32 / map_x_scale),
+                    MAP_POSITION[1] + (player_position.y as i32 / map_y_scale),
+                    '@',
+                    BackgroundFlag::None,
+                );
             }
         }
     }
@@ -183,7 +186,7 @@ impl UI {
     fn render_dialog(
         &mut self,
         con: &mut Offscreen,
-        pos: Rect,
+        pos: Quad,
         col: Color,
         set: LineSet,
         title: &str,
@@ -195,7 +198,7 @@ impl UI {
     fn draw_labeled_box(
         &mut self,
         con: &mut Offscreen,
-        pos: Rect,
+        pos: Quad,
         col: Color,
         set: LineSet,
         title: &str,
@@ -229,7 +232,7 @@ impl UI {
         }
     }
 
-    pub fn line_rect(&mut self, con: &mut Offscreen, pos: Rect, col: Color, set: LineSet) {
+    pub fn line_rect(&mut self, con: &mut Offscreen, pos: Quad, col: Color, set: LineSet) {
         // rect properties struct
         con.set_default_foreground(col);
         con.set_default_background(BLACK);
@@ -250,7 +253,7 @@ impl UI {
         con.put_char(pos[2], pos[3], set[5] as char, BackgroundFlag::Set);
     }
 
-    fn fill(&mut self, con: &mut Offscreen, pos: Rect, col: Color, char: char) {
+    fn fill(&mut self, con: &mut Offscreen, pos: Quad, col: Color, char: char) {
         con.set_default_foreground(col);
         con.set_default_background(Color::new(32, 32, 16));
         for x in pos[0] + 1..pos[2] {
@@ -260,4 +263,3 @@ impl UI {
         }
     }
 }
-

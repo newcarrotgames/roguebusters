@@ -1,5 +1,4 @@
 use tcod::input::KEY_PRESSED;
-use tcod::input::KEY_RELEASED;
 use tcod::input::Key;
 use tcod::input::KeyCode::*;
 use crate::game::Game;

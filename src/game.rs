@@ -1,5 +1,4 @@
 use crate::{
-    city::City,
     components::{
         inventory::Inventory, item::Item, name::Name, player::Player, position::Position,
         renderable::Renderable, target::Target,
@@ -8,10 +7,10 @@ use crate::{
     names::{NameType, Names},
     systems::{item_search::ItemSearch, simple_path::SimplePath},
     ui::{MESSAGES_HEIGHT, UI, UI_WIDTH},
-    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
+    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City,
 };
 use specs::{
-    shred::FetchMut, Builder, Dispatcher, DispatcherBuilder, Entities, Entity, Join, World,
+    Builder, Dispatcher, DispatcherBuilder, Entity, Join, World,
     WorldExt,
 };
 use tcod::{
@@ -21,7 +20,7 @@ use tcod::{
     BackgroundFlag, Color, Console,
 };
 
-const TORCH_RADIUS: i32 = 100;
+const TORCH_RADIUS: i32 = 60;
 const FOV_LIGHT_WALLS: bool = true;
 const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
 
@@ -85,7 +84,7 @@ impl Game<'_> {
         log::info!("creating npcs");
 
         // add npcs
-        for _ in 0..1000 {
+        for _ in 0..10 {
             let position = map.get_random_target();
             let target = map.get_random_target();
             world
@@ -111,7 +110,7 @@ impl Game<'_> {
         items.load_all("data/items");
 
         // add items
-        for _ in 0..1000 {
+        for _ in 0..10 {
             let item = items.random_item();
             let position = map.get_random_target();
             world

@@ -1,8 +1,7 @@
 use specs::{Join, Read, ReadStorage, System, WriteStorage};
 
 use crate::{
-    components::{position::Position, target::Target},
-    city::City,
+    components::{position::Position, target::Target}, city::city::City,
 };
 
 pub struct SimplePath;

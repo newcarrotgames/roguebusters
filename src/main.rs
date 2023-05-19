@@ -1,10 +1,16 @@
 use game::Game;
 use simple_logger::SimpleLogger;
 use tcod::console::*;
+use kira::{
+    manager::{
+        AudioManager, AudioManagerSettings,
+        backend::cpal::CpalBackend,
+    },
+    sound::static_sound::{StaticSoundData, StaticSoundSettings},
+};
 
 mod game;
 mod input;
-mod city;
 mod ui;
 mod names;
 mod test;
@@ -29,6 +35,11 @@ mod components {
 mod systems {
     pub mod simple_path;
     pub mod item_search;
+}
+
+mod city {
+    pub mod city;
+    pub mod building;
 }
 
 use crate::{input::Input, deser::prefabs::Prefabs};
@@ -65,7 +76,16 @@ fn main() {
     let mut game = Game::new(root, con, prefabs);
     let input_handler = Input::new();
 
-    // call update game to prime the gears
+    // --- music start ---
+
+    // Create an audio manager. This plays sounds and manages resources.
+    // let mut manager = AudioManager::<CpalBackend>::new(AudioManagerSettings::default()).unwrap();
+    // let sound_data = StaticSoundData::from_file("sound/Rhapsody-in-Blue.ogg", StaticSoundSettings::default()).unwrap();
+    // manager.play(sound_data).unwrap();
+
+    // --- music end -----
+
+    // prime the carburetor
     game.update_game();
 
     while !game.root.window_closed() {
