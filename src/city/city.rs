@@ -1,7 +1,7 @@
 use crate::{
     city::building::{
         BuildingGuide, BuildingOrientation, BuildingType, BUILDING_TEMPLATE_A, BUILDING_TEMPLATE_B,
-        BUILDING_TEMPLATE_C, BUILDING_TEMPLATE_D, Space,
+        BUILDING_TEMPLATE_C, BUILDING_TEMPLATE_D,
     },
     components::position::Position,
     deser::{
@@ -9,8 +9,9 @@ use crate::{
         prefabs::{Cell, Prefab, Prefabs},
     },
 };
+use log::{error, info};
 use rand::Rng;
-use std::{collections::HashMap, error::Error, fmt, any::Any};
+use std::{collections::HashMap, error::Error, fmt};
 use tcod::{
     colors::{BLACK, BLUE, DARK_AMBER, LIGHT_GREY, WHITE},
     Color,
@@ -39,7 +40,7 @@ impl Rect {
         // if y1 == y2 {
         //     return Err(RectError::new("y1 is equal to y2"));
         // }
-        
+
         // // swap values if first is larger than second
         // if x1 > x2 {
         //     let x_ = x2;
@@ -52,7 +53,7 @@ impl Rect {
         //     y1 = y_;
         // }
 
-        Rect {x1, y1, x2, y2}
+        Rect { x1, y1, x2, y2 }
     }
 
     pub fn width(&self) -> i32 {
@@ -70,18 +71,20 @@ impl Rect {
 
 impl fmt::Display for Rect {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{},{},{},{}", self.x1,self.y1,self.x2,self.y2)
+        write!(f, "{},{},{},{}", self.x1, self.y1, self.x2, self.y2)
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct RectError {
-    msg: String
+    msg: String,
 }
 
 impl RectError {
     fn new(msg: &str) -> Self {
-        RectError{msg: msg.to_string()}
+        RectError {
+            msg: msg.to_string(),
+        }
     }
 }
 
@@ -111,13 +114,29 @@ pub const DIRECTIONS: [Direction; 4] = [
     Direction::WEST,
 ];
 
+pub enum VerticalDirection {
+    UP,
+    DOWN,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum TileId {
+    Empty,
+    Wall,
+    Sidewalk,
+    Door,
+    Stairs,
+    Water,
+    Interior,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Tile {
+    pub tile_id: TileId,
     pub blocked: bool,
     pub block_sight: bool,
     pub building_id: i32,
     pub char: char,
-    pub exterior_char: char,
     pub bg_color: Color,
     pub fg_color: Color,
     pub seen: bool,
@@ -126,39 +145,39 @@ pub struct Tile {
 impl Tile {
     pub fn empty() -> Self {
         Tile {
+            tile_id: TileId::Empty,
             blocked: false,
             block_sight: false,
             building_id: 0,
             bg_color: BLACK,
             fg_color: WHITE,
             char: 0 as char,
-            exterior_char: 0 as char,
             seen: false,
         }
     }
 
     pub fn wall() -> Self {
         Tile {
+            tile_id: TileId::Wall,
             blocked: true,
             block_sight: true,
             building_id: 0,
             bg_color: Color::new(245, 245, 245),
             fg_color: Color::new(235, 235, 235),
             char: 219 as char,
-            exterior_char: 0 as char,
             seen: false,
         }
     }
 
     pub fn sidewalk() -> Self {
         Tile {
+            tile_id: TileId::Sidewalk,
             blocked: false,
             block_sight: false,
             building_id: 0,
             bg_color: LIGHT_GREY,
             fg_color: WHITE,
             char: ' ',
-            exterior_char: 0 as char,
             seen: false,
         }
     }
@@ -173,52 +192,69 @@ impl Tile {
         }
 
         Tile {
-            blocked: false,
+            tile_id: TileId::Door,
+            blocked: true,
             block_sight: true,
             building_id,
             bg_color: LIGHT_GREY,
             fg_color: DARK_AMBER,
             char,
-            exterior_char: 0 as char,
+            seen: false,
+        }
+    }
+
+    pub fn stairs(building_id: i32, dir: VerticalDirection) -> Self {
+        let char = match dir {
+            VerticalDirection::UP => 30 as char,
+            VerticalDirection::DOWN => 31 as char,
+        };
+        Tile {
+            tile_id: TileId::Stairs,
+            blocked: false,
+            block_sight: false,
+            building_id,
+            bg_color: BLACK,
+            fg_color: WHITE,
+            char,
             seen: false,
         }
     }
 
     pub fn water() -> Self {
         Tile {
+            tile_id: TileId::Water,
             blocked: true,
             block_sight: false,
             building_id: 0,
             bg_color: BLUE,
             fg_color: WHITE,
             char: ' ',
-            exterior_char: 0 as char,
             seen: false,
         }
     }
 
     pub fn interior(building_id: i32) -> Self {
         Tile {
+            tile_id: TileId::Interior,
             blocked: false,
             block_sight: false,
             building_id,
             bg_color: BLACK,
             fg_color: WHITE,
             char: ' ' as char,
-            exterior_char: 178 as char,
             seen: false,
         }
     }
 
     fn from_cell(cell: &Cell, building_id: i32) -> Tile {
         Tile {
+            tile_id: TileId::Interior,
             blocked: cell.blocked,
             block_sight: false,
             building_id,
             bg_color: Tile::parse_hex_color(cell.bkg.as_str()),
             fg_color: Tile::parse_hex_color(cell.fgd.as_str()),
             char: cell.ascii as char,
-            exterior_char: 178 as char,
             seen: false,
         }
     }
@@ -307,7 +343,7 @@ impl City {
             }
 
             if previous_empty_blocks != empty_blocks {
-                log::info!("empty blocks: {}", empty_blocks);
+                info!("empty blocks: {}", empty_blocks);
                 previous_empty_blocks = empty_blocks;
             }
 
@@ -320,16 +356,21 @@ impl City {
         let mut generators = Generators::new("data/generators");
         generators.load_all();
 
-        log::info!("horizontal guides: {:?}", horizontal_guides);
-        log::info!("vertical guides: {:?}", vertical_guides);
+        info!("horizontal guides: {:?}", horizontal_guides);
+        info!("vertical guides: {:?}", vertical_guides);
 
         let mut building_id = 0;
 
         for building_guide in building_guides {
             building_id += 1;
-            let mut rect:Rect = Rect{x1: 0, y1: 0, x2: 0, y2: 0};
+            let mut rect: Rect = Rect {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: 0,
+            };
             match building_guide.building_type {
-                BuildingType::Empty => log::error!("building guide type is empty!"),
+                BuildingType::Empty => error!("building guide type is empty!"),
                 BuildingType::Single => {
                     let x1 = horizontal_guides[building_guide.x as usize];
                     let y1 = vertical_guides[building_guide.y as usize];
@@ -352,8 +393,14 @@ impl City {
                         );
                     }
 
-                    rect = Rect::new(x1 + offset + 4, y1 + offset + 4, x2 - offset - 4, y2 - offset - 4);
-                    self.buildings.insert(building_id, Building::new(building_id, rect));
+                    rect = Rect::new(
+                        x1 + offset + 4,
+                        y1 + offset + 4,
+                        x2 - offset - 4,
+                        y2 - offset - 4,
+                    );
+                    self.buildings
+                        .insert(building_id, Building::new(building_id, rect));
 
                     // interior
                     offset += 5;
@@ -379,7 +426,7 @@ impl City {
                             x2 = horizontal_guides[(building_guide.x + 2) as usize];
                             y2 = vertical_guides[(building_guide.y + 1) as usize];
                         }
-                        _ => log::error!(
+                        _ => error!(
                             "building type double has wrong orientation {:?}",
                             orientation
                         ),
@@ -401,8 +448,14 @@ impl City {
                         );
                     }
 
-                    rect = Rect::new(x1 + offset + 4, y1 + offset + 4, x2 - offset - 4, y2 - offset - 4);
-                    self.buildings.insert(building_id, Building::new(building_id, rect));
+                    rect = Rect::new(
+                        x1 + offset + 4,
+                        y1 + offset + 4,
+                        x2 - offset - 4,
+                        y2 - offset - 4,
+                    );
+                    self.buildings
+                        .insert(building_id, Building::new(building_id, rect));
 
                     // interior
                     offset += 5;
@@ -505,18 +558,18 @@ impl City {
             }
         }
 
-        let mut buildings:Vec<&mut Building> = Vec::new();
+        let mut buildings: Vec<&mut Building> = Vec::new();
         for (_, value) in self.buildings.iter_mut() {
             buildings.push(value);
         }
 
         // subdivide buildings
-        for building in buildings {
-            log::info!("--------------------------- subdividing building ---------------------------");
+        for building in buildings.iter_mut() {
+            info!("--------------------------- subdividing building ---------------------------");
             Building::subdivide_space(&mut building.root(), &mut self.data, 0);
             Building::add_doors(&mut building.root(), &mut self.data);
-            // add doors
-
+            Building::add_stairs(building, &mut self.data);
+            // Building::populate(&mut building.root(), &mut self.data);
         }
     }
 

@@ -1,4 +1,5 @@
 use game::Game;
+// use log::LevelFilter;
 use simple_logger::SimpleLogger;
 use tcod::console::*;
 // use kira::{
@@ -55,6 +56,21 @@ const LIMIT_FPS: i32 = 20; // 20 frames-per-second maximum
 
 fn main() {
     SimpleLogger::new().with_level(log::LevelFilter::Info).init().unwrap();
+
+    // env_logger::Builder::new()
+    //     .format(|buf, record| {
+    //         writeln!(
+    //             buf,
+    //             "{}:{} {} [{}] - {}",
+    //             record.file().unwrap_or("unknown"),
+    //             record.line().unwrap_or(0),
+    //             chrono::Local::now().format("%Y-%m-%dT%H:%M:%S"),
+    //             record.level(),
+    //             record.args()
+    //         )
+    //     })
+    //     .filter(Some("roguebusters"), LevelFilter::Debug)
+    //     .init();
 
     log::info!("loading prefabs");
     let mut prefabs = Prefabs::new("data/prefabs");

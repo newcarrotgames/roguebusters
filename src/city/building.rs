@@ -1,7 +1,8 @@
 use super::city::{Coord, Direction, Grid, Rect, DIRECTIONS};
-use crate::city::city::Tile;
+use crate::{city::city::Tile, deser::prefabs};
 use rand::Rng;
 use std::fmt;
+use log::{info, error};
 
 pub const EXTERIOR: bool = true;
 pub const INTERIOR: bool = false;
@@ -79,7 +80,7 @@ pub const BUILDING_TEMPLATE_D: [Coord; 7] = [
 #[derive(PartialEq, Clone, Debug)]
 pub struct Building {
     pub id: i32,
-    floors: Vec<Space>,
+    pub floors: Vec<Space>,
 }
 
 impl Building {
@@ -116,6 +117,31 @@ impl Building {
             space.add_doors(data, EXTERIOR);
         }
     }
+
+    pub(crate) fn add_stairs(building: &mut Building, data: &mut Grid) {
+        for floor in building.floors.iter_mut() {
+            info!("{}", floor);
+        }
+    }
+
+    // pub fn get_spaces(building: &mut Building, level: i32) -> Vec<Space> {
+    //     let spaces:Vec<Space> = Vec::new();
+    //     let floor = building.floors[level as usize].clone();
+
+    //     while !done {
+    //         for space in floor.partitions {
+
+    //         }
+    //     }
+    //     for space in floor.partitions {
+            
+    //     }
+    //     spaces
+    // }
+
+    // pub(crate) fn populate(space: &mut Space, data: &mut Grid, prefabs: ) {
+    //     log::info!("populating space");
+    // }
 }
 
 #[derive(PartialEq, Clone, Copy, Debug)]
@@ -179,7 +205,7 @@ impl BuildingGuide {
                     points.push([x, y]);
                     points.push([x + 1, y]);
                 }
-                _ => log::error!(
+                _ => error!(
                     "building orientation is not vertical or horizontal for building type double"
                 ),
             },
@@ -195,7 +221,7 @@ impl BuildingGuide {
                 points.push([x, y + 1]);
                 points.push([x + 1, y + 1]);
             }
-            BuildingType::Empty => log::error!("guide is empty!"),
+            BuildingType::Empty => error!("guide is empty!"),
         }
 
         let mut is_empty = true;
@@ -243,7 +269,7 @@ pub enum BuildingOrientation {
 pub struct Space {
     rect: Rect,
     walls: [bool; 4], // interior/exterior
-    partitions: Vec<Space>,
+    pub partitions: Vec<Space>,
     building_id: i32,
 }
 
@@ -273,7 +299,7 @@ impl Space {
             HORIZONTAL => self.rect.height() as i32,
         };
         let f = s / 4;
-        log::info!(
+        info!(
             "a: {}, rect: {}, f: {}/{}, s: {}",
             axis,
             self.rect,
@@ -285,7 +311,7 @@ impl Space {
     }
 
     pub fn subdivide(&mut self, data: &mut Grid, depth: i32) {
-        log::info!(
+        info!(
             "subdividing space: {}, width: {}, height: {}",
             self,
             self.rect.width(),
@@ -294,23 +320,23 @@ impl Space {
         let mut rng = rand::thread_rng();
 
         if depth > 0 && rng.gen_range(0..depth) > 0 {
-            log::info!("space missed coin toss, not subdividing");
+            info!("space missed coin toss, not subdividing");
             return;
         }
 
         // check if the space is large enough to subdivide
         if self.rect.size() <= SUBDIVISION_SIZE_LIMIT {
-            log::info!("space is too small to subdivide");
+            info!("space is too small to subdivide");
             return;
         }
 
         if self.rect.width() <= SUBDIVISION_WIDTH_LIMIT {
-            log::info!("space is beyond width limit");
+            info!("space is beyond width limit");
             return;
         }
 
         if self.rect.height() <= SUBDIVISION_HEIGHT_LIMIT {
-            log::info!("space is beyond height limit");
+            info!("space is beyond height limit");
             return;
         }
 
@@ -326,8 +352,8 @@ impl Space {
 
         let point = self.partition_point(axis);
 
-        log::info!("axis: {}", axis);
-        log::info!("point: {}", point);
+        info!("axis: {}", axis);
+        info!("point: {}", point);
 
         // create new spaces from partitions
         let space1: Space;
@@ -344,7 +370,7 @@ impl Space {
             walls[DIR_SOUTH] = INTERIOR;
 
             space1 = Space::with_walls(Rect { x1, y1, x2, y2 }, self.building_id, walls);
-            log::info!(
+            info!(
                 "space1: {}, width: {}, height: {}",
                 space1,
                 space1.rect.width(),
@@ -358,7 +384,7 @@ impl Space {
             walls[DIR_NORTH] = INTERIOR;
 
             space2 = Space::with_walls(Rect { x1, y1, x2, y2 }, self.building_id, walls);
-            log::info!(
+            info!(
                 "space2: {}, width: {}, height: {}",
                 space2,
                 space2.rect.width(),
@@ -374,7 +400,7 @@ impl Space {
             walls[DIR_EAST] = INTERIOR;
 
             space1 = Space::with_walls(Rect { x1, y1, x2, y2 }, self.building_id, walls);
-            log::info!(
+            info!(
                 "space1: {}, width: {}, height: {}",
                 space1,
                 space1.rect.width(),
@@ -389,7 +415,7 @@ impl Space {
             walls[DIR_WEST] = INTERIOR;
 
             space2 = Space::with_walls(Rect { x1, y1, x2, y2 }, self.building_id, walls);
-            log::info!(
+            info!(
                 "space2: {}, width: {}, height: {}",
                 space2,
                 space2.rect.width(),
@@ -401,14 +427,14 @@ impl Space {
         if space1.rect.width() <= SUBDIVISION_WIDTH_LIMIT
             || space2.rect.width() <= SUBDIVISION_WIDTH_LIMIT
         {
-            log::info!("one or both subdivided spaces were too small");
+            info!("one or both subdivided spaces were too small");
             return;
         }
 
         if space1.rect.height() <= SUBDIVISION_HEIGHT_LIMIT
             || space2.rect.height() <= SUBDIVISION_HEIGHT_LIMIT
         {
-            log::info!("one or both subdivided spaces were too small");
+            info!("one or both subdivided spaces were too small");
             return;
         }
 
@@ -422,7 +448,7 @@ impl Space {
         }
 
         if !has_exterior_wall {
-            log::info!("space has no exterior walls");
+            info!("space has no exterior walls");
             return;
         }
 
@@ -435,7 +461,7 @@ impl Space {
         }
 
         if !has_exterior_wall {
-            log::info!("space has no exterior walls");
+            info!("space has no exterior walls");
             return;
         }
 
