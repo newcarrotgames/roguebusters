@@ -193,7 +193,7 @@ impl Tile {
 
         Tile {
             tile_id: TileId::Door,
-            blocked: true,
+            blocked: false,
             block_sight: true,
             building_id,
             bg_color: LIGHT_GREY,

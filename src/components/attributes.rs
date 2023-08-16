@@ -6,5 +6,4 @@ pub struct Attributes {
     perception: u8,
     fortune: u8,
     charm: u8,
-    hp: u8,
 }

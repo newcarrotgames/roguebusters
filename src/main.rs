@@ -11,9 +11,12 @@ use tcod::console::*;
 // };
 
 mod game;
-mod input;
 mod ui;
 mod names;
+
+mod input {
+    pub mod handlers;
+}
 
 mod deser {
     pub mod prefabs;
@@ -42,7 +45,7 @@ mod city {
     pub mod building;
 }
 
-use crate::{input::Input, deser::prefabs::Prefabs};
+use crate::deser::prefabs::Prefabs;
 
 // size of the map
 const MAP_WIDTH: i32 = 1000;
@@ -89,7 +92,6 @@ fn main() {
     log::info!("creating specs world");
     
     let mut game = Game::new(root, con, prefabs);
-    let input_handler = Input::new();
 
     // --- music start ---
 
@@ -104,7 +106,6 @@ fn main() {
     game.update_game();
 
     while !game.root.window_closed() {
-        input_handler.handle_keys(&mut game);
         if !game.update() {
             break
         }

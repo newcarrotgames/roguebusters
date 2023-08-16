@@ -7,7 +7,7 @@ use crate::{
     names::{NameType, Names},
     systems::{item_search::ItemSearch, simple_path::SimplePath},
     ui::{MESSAGES_HEIGHT, UI, UI_WIDTH},
-    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City,
+    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City, input::handlers::{InputHandler, DefaultInputHandler},
 };
 use specs::{
     Builder, Dispatcher, DispatcherBuilder, Entity, Join, World,
@@ -17,7 +17,7 @@ use tcod::{
     colors::WHITE,
     console::{blit, Offscreen, Root},
     map::{FovAlgorithm, Map as FovMap},
-    BackgroundFlag, Color, Console,
+    BackgroundFlag, Color, Console, input::KEY_PRESSED,
 };
 
 const TORCH_RADIUS: i32 = 75;
@@ -34,6 +34,7 @@ pub struct Game<'a> {
     pub fov: FovMap,
     pub game_state: GameState,
     pub ui: UI,
+    pub input_handler: Box<dyn InputHandler>,
 }
 
 impl Game<'_> {
@@ -171,6 +172,8 @@ impl Game<'_> {
 
         log::info!("done creating game, returning player");
 
+        let input_handler: Box<dyn InputHandler> = Box::new(DefaultInputHandler::new());
+
         Game {
             root,
             con,
@@ -180,6 +183,7 @@ impl Game<'_> {
             fov,
             game_state: GameState::new(),
             ui,
+            input_handler,
         }
     }
 
@@ -201,6 +205,10 @@ impl Game<'_> {
                 update = true;
             }
             PlayerRequest::Wait => update = true,
+            PlayerRequest::ToggleFullscreen => todo!(),
+            PlayerRequest::ViewInventory => todo!(),
+            PlayerRequest::ViewMap => todo!(),
+            PlayerRequest::CloseCurrentView => todo!(),
         }
 
         return update;
@@ -213,7 +221,11 @@ impl Game<'_> {
     }
 
     pub fn update(&mut self) -> bool {
-        let request = self.get_player_request();
+        let key = self.root.check_for_keypress(KEY_PRESSED);
+        let mut request:PlayerRequest = PlayerRequest::None;
+        if key != None {
+            request = self.input_handler.handle_input(key.unwrap());
+        }        
         if request == PlayerRequest::Quit {
             return false;
         }
@@ -427,6 +439,10 @@ pub enum PlayerRequest {
     Move(i32, i32),
     None,
     Wait,
+    ToggleFullscreen,
+    ViewInventory,
+    ViewMap,
+    CloseCurrentView,
 }
 
 #[derive(Default)]
