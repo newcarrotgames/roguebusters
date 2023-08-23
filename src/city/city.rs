@@ -246,7 +246,7 @@ impl Tile {
         }
     }
 
-    fn from_cell(cell: &Cell, building_id: i32) -> Tile {
+    pub fn from_cell(cell: &Cell, building_id: i32) -> Tile {
         Tile {
             tile_id: TileId::Interior,
             blocked: cell.blocked,
@@ -570,6 +570,17 @@ impl City {
             Building::add_doors(&mut building.root(), &mut self.data);
             Building::add_stairs(building, &mut self.data);
             // Building::populate(&mut building.root(), &mut self.data);
+        }
+
+        let gen = generators.get("building_interior", "restaurant");
+
+        // generators
+        for building in buildings.iter_mut() { 
+            for floor in building.floors.iter_mut() {
+                for space in floor.partitions.iter_mut() {
+                    space.fill(gen, &prefabs, &mut self.data);
+                }
+            }
         }
     }
 

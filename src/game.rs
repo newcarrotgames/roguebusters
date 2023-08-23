@@ -1,13 +1,12 @@
 use crate::{
     components::{
         inventory::Inventory, item::Item, name::Name, player::Player, position::Position,
-        renderable::Renderable, target::Target,
+        renderable::Renderable, target::Target, equipped::Equipped,
     },
     deser::{items::Items, prefabs::Prefabs},
     names::{NameType, Names},
     systems::{item_search::ItemSearch, simple_path::SimplePath},
-    ui::{MESSAGES_HEIGHT, UI, UI_WIDTH},
-    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City, input::handlers::{InputHandler, DefaultInputHandler},
+    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City, input::handlers::{InputHandler, DefaultInputHandler}, ui::ui::{UI, MESSAGES_HEIGHT, UI_WIDTH, UIState},
 };
 use specs::{
     Builder, Dispatcher, DispatcherBuilder, Entity, Join, World,
@@ -17,12 +16,14 @@ use tcod::{
     colors::WHITE,
     console::{blit, Offscreen, Root},
     map::{FovAlgorithm, Map as FovMap},
-    BackgroundFlag, Color, Console, input::KEY_PRESSED,
+    BackgroundFlag, Color, Console, input::{KEY_PRESSED, KEY_PRESS, KeyCode},
 };
 
 const TORCH_RADIUS: i32 = 75;
 const FOV_LIGHT_WALLS: bool = true;
 const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
+const NUM_NPCS: i32 = 100;
+const NUM_ITEMS: i32 = 100;
 
 // todo: break this up?
 pub struct Game<'a> {
@@ -55,6 +56,7 @@ impl Game<'_> {
         world.register::<Item>();
         world.register::<Name>();
         world.register::<Inventory>();
+        world.register::<Equipped>();
 
         // create specs dispatcher
         let dispatcher = DispatcherBuilder::new()
@@ -85,7 +87,7 @@ impl Game<'_> {
         log::info!("creating npcs");
 
         // add npcs
-        for _ in 0..10 {
+        for _ in 0..NUM_NPCS {
             let position = map.get_random_target();
             let target = map.get_random_target();
             world
@@ -102,6 +104,7 @@ impl Game<'_> {
                 .with(Name {
                     name: names.get_random_name(NameType::AnyFullName),
                 })
+                .with(Equipped::new())
                 .build();
         }
 
@@ -111,7 +114,7 @@ impl Game<'_> {
         items.load_all("data/items");
 
         // add items
-        for _ in 0..10 {
+        for _ in 0..NUM_ITEMS {
             let item = items.random_item();
             let position = map.get_random_target();
             world
@@ -205,10 +208,23 @@ impl Game<'_> {
                 update = true;
             }
             PlayerRequest::Wait => update = true,
-            PlayerRequest::ToggleFullscreen => todo!(),
-            PlayerRequest::ViewInventory => todo!(),
-            PlayerRequest::ViewMap => todo!(),
-            PlayerRequest::CloseCurrentView => todo!(),
+            PlayerRequest::ToggleFullscreen => {
+                let fullscreen = self.root.is_fullscreen();
+                self.root.set_fullscreen(!fullscreen);
+                update = false;
+            }
+            PlayerRequest::ViewInventory => {
+                self.ui.set_state(UIState::Inventory);
+                update = false;
+            }
+            PlayerRequest::ViewMap => {
+                self.ui.set_state(UIState::Map);
+                update = false;
+            }
+            PlayerRequest::CloseCurrentView => {
+                self.ui.set_state(UIState::None);
+                update = false;
+            }
         }
 
         return update;
@@ -221,11 +237,15 @@ impl Game<'_> {
     }
 
     pub fn update(&mut self) -> bool {
-        let key = self.root.check_for_keypress(KEY_PRESSED);
         let mut request:PlayerRequest = PlayerRequest::None;
+        let key = self.root.check_for_keypress(KEY_PRESSED);
         if key != None {
-            request = self.input_handler.handle_input(key.unwrap());
-        }        
+            let actual_key = key.unwrap();
+            // log::info!("key pressed: {:?}", actual_key);
+            if actual_key.code != KeyCode::Text {
+                request = self.input_handler.handle_input(actual_key);
+            }
+        }
         if request == PlayerRequest::Quit {
             return false;
         }

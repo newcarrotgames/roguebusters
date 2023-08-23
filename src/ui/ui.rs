@@ -9,21 +9,25 @@ use tcod::{
     BackgroundFlag, Color, Console,
 };
 
+use super::dialogs::{inventory::InventoryUIModal, map::MapUIModal};
+
 type LineSet = [u8; 8];
 type Quad = [i32; 4];
 
 pub const UI_WIDTH: i32 = 20;
 pub const MESSAGES_HEIGHT: i32 = 15;
 
-const LINES_SINGLE: LineSet = [196, 179, 218, 191, 192, 217, 180, 195];
+// const LINES_SINGLE: LineSet = [196, 179, 218, 191, 192, 217, 180, 195];
 // const LINES_DOUBLE: LineSet = [205, 186, 201, 187, 200, 188];
-const LINES_SINGLE_DOUBLE: LineSet = [205, 179, 213, 184, 212, 190, 181, 198];
-const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
-
-const INVENTORY_POSITION: [i32; 4] = [10, 10, 50, 50];
-const MAP_POSITION: [i32; 4] = [5, 5, 113, 61];
+// const LINES_SINGLE_DOUBLE: LineSet = [205, 179, 213, 184, 212, 190, 181, 198];
+pub const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
 
 const NULLCHAR:char = 0 as char;
+
+pub trait UIModal {
+    fn render(&mut self, con: &mut Offscreen);
+	fn update(&mut self, con: &mut Offscreen, world: &World);
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum UIState {
@@ -35,6 +39,7 @@ pub enum UIState {
 pub struct UI {
     state: UIState,
     messages: Vec<String>,
+    modal: Option<Box<dyn UIModal>>,
 }
 
 impl UI {
@@ -42,6 +47,7 @@ impl UI {
         UI {
             state: UIState::None,
             messages: Vec::new(),
+            modal: None,
         }
     }
 
@@ -50,7 +56,7 @@ impl UI {
         let uix = SCREEN_WIDTH - UI_WIDTH;
 
         // map
-        self.draw_labeled_box(
+        UI::draw_labeled_box(
             con,
             [
                 0,
@@ -64,7 +70,7 @@ impl UI {
         );
 
         // side bar
-        self.draw_labeled_box(
+        UI::draw_labeled_box(
             con,
             [
                 SCREEN_WIDTH - UI_WIDTH,
@@ -78,7 +84,7 @@ impl UI {
         );
 
         // message log
-        self.draw_labeled_box(
+        UI::draw_labeled_box(
             con,
             [
                 0,
@@ -98,7 +104,7 @@ impl UI {
         }
         for i in messages_offset..self.messages.len() as i32 {
             let msg = self.messages.get(i as usize).unwrap().clone();
-            self.puts(
+            UI::puts(
                 con,
                 2,
                 SCREEN_HEIGHT - MESSAGES_HEIGHT + 3 + (i - messages_offset) as i32,
@@ -107,104 +113,48 @@ impl UI {
             );
         }
 
-        match self.state {
-            UIState::Inventory => self.render_dialog(
-                con,
-                INVENTORY_POSITION,
-                WHITE,
-                LINES_DOUBLE_SINGLE,
-                "Inventory",
-            ),
-            UIState::Map => {
-                self.render_dialog(con, MAP_POSITION, WHITE, LINES_DOUBLE_SINGLE, "Map")
-            }
-            UIState::None => (),
+        // draw modals
+        if self.modal.is_some() {
+            self.modal.as_mut().unwrap().render(con);
         }
     }
 
     pub fn set_state(&mut self, state: UIState) {
-        self.state = state;
-    }
-
-    pub fn update(&mut self, con: &mut Offscreen, world: &World) {
-        if self.state == UIState::Inventory {
-            let player_storage = world.read_storage::<Player>();
-            let inventory_storage = world.read_storage::<Inventory>();
-            for (_, inventory) in (&player_storage, &inventory_storage).join() {
-                for (i, item) in inventory.items().iter().enumerate() {
-                    self.puts(
-                        con,
-                        INVENTORY_POSITION[0] + 2,
-                        INVENTORY_POSITION[1] + 1 + i as i32,
-                        item.name.as_str(),
-                        WHITE,
-                    );
-                }
-            }
-        } else if self.state == UIState::Map {
-            // draw map view
-            let map = world.read_resource::<City>();
-            let map_x_scale = MAP_WIDTH / (MAP_POSITION[2] - MAP_POSITION[0] - 2);
-            let map_y_scale = MAP_HEIGHT / (MAP_POSITION[3] - MAP_POSITION[1] - 2);
-            for my in MAP_POSITION[1] + 1..MAP_POSITION[3] {
-                for mx in MAP_POSITION[0] + 1..MAP_POSITION[2]  {
-                    let x = mx - MAP_POSITION[0];
-                    let y = my - MAP_POSITION[1];
-                    let wall = map.data[(y * map_y_scale) as usize][(x * map_x_scale) as usize];
-                    con.set_default_foreground(WHITE);
-                    let mut c = 176 as char;
-                    if wall.bg_color == BLUE {
-                        con.set_default_background(BLUE);
-                        c = ' ' as char;
-                    } else {
-                        con.set_default_background(BLACK);
-                    }
-                    
-                    if wall.building_id == 0 && (wall.char == 32 as char || wall.char == 0 as char) && wall.bg_color == BLACK {
-                        c = ' ';
-                    }
-                    con.put_char(mx, my, c, BackgroundFlag::Set);
-                }
-            }
-
-            con.set_default_background(BLACK);
-
-            // draw player
-            let player_storage = world.read_storage::<Player>();
-            let position_storage = world.read_storage::<Position>();
-            for (_, player_position) in (&player_storage, &position_storage).join() {
-                con.put_char(
-                    MAP_POSITION[0] + (player_position.x as i32 / map_x_scale),
-                    MAP_POSITION[1] + (player_position.y as i32 / map_y_scale),
-                    '@',
-                    BackgroundFlag::None,
-                );
-            }
+        if state == UIState::Inventory {
+            self.modal = Some(Box::new(InventoryUIModal::new()));
+        } else if state == UIState::Map {
+            self.modal = Some(Box::new(MapUIModal::new()));
+        } else if state == UIState::None {
+            self.modal = None;
         }
     }
 
-    fn render_dialog(
-        &mut self,
-        con: &mut Offscreen,
-        pos: Quad,
-        col: Color,
-        set: LineSet,
-        title: &str,
-    ) {
-        self.fill(con, pos, WHITE, ' ');
-        self.draw_labeled_box(con, pos, col, set, title);
+    pub fn update(&mut self, con: &mut Offscreen, world: &World) {
+        if self.modal.is_some() {
+            self.modal.as_mut().unwrap().update(con, world);
+        }
     }
 
-    fn draw_labeled_box(
-        &mut self,
+    pub fn render_dialog(
         con: &mut Offscreen,
         pos: Quad,
         col: Color,
         set: LineSet,
         title: &str,
     ) {
-        self.line_rect(con, pos, col, set);
-        self.puts(
+        UI::fill(con, pos, WHITE, ' ');
+        UI::draw_labeled_box(con, pos, col, set, title);
+    }
+
+    pub fn draw_labeled_box(
+        con: &mut Offscreen,
+        pos: Quad,
+        col: Color,
+        set: LineSet,
+        title: &str,
+    ) {
+        UI::line_rect(con, pos, col, set);
+        UI::puts(
             con,
             pos[0] + 3,
             pos[1],
@@ -225,14 +175,14 @@ impl UI {
         self.messages.push(msg.to_string());
     }
 
-    pub fn puts(&mut self, con: &mut Offscreen, x: i32, y: i32, s: &str, col: Color) {
+    pub fn puts(con: &mut Offscreen, x: i32, y: i32, s: &str, col: Color) {
         con.set_default_foreground(col);
         for (i, c) in s.chars().enumerate() {
             con.put_char(x + i as i32, y, c, BackgroundFlag::None);
         }
     }
 
-    pub fn line_rect(&mut self, con: &mut Offscreen, pos: Quad, col: Color, set: LineSet) {
+    pub fn line_rect(con: &mut Offscreen, pos: Quad, col: Color, set: LineSet) {
         // rect properties struct
         con.set_default_foreground(col);
         con.set_default_background(BLACK);
@@ -253,7 +203,7 @@ impl UI {
         con.put_char(pos[2], pos[3], set[5] as char, BackgroundFlag::Set);
     }
 
-    fn fill(&mut self, con: &mut Offscreen, pos: Quad, col: Color, char: char) {
+    pub fn fill(con: &mut Offscreen, pos: Quad, col: Color, char: char) {
         con.set_default_foreground(col);
         con.set_default_background(Color::new(32, 32, 16));
         for x in pos[0] + 1..pos[2] {

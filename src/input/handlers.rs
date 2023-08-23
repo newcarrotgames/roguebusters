@@ -6,10 +6,6 @@ pub trait InputHandler {
     fn handle_input(&mut self, key: Key) -> PlayerRequest;
 }
 
-pub struct InputEvent {
-    key: Key
-}
-
 pub struct DefaultInputHandler {}
 
 impl DefaultInputHandler {

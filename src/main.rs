@@ -11,7 +11,6 @@ use tcod::console::*;
 // };
 
 mod game;
-mod ui;
 mod names;
 
 mod input {
@@ -33,6 +32,7 @@ mod components {
     pub mod name;
     pub mod inventory;
     pub mod item;
+    pub mod equipped;
 }
 
 mod systems {
@@ -43,6 +43,14 @@ mod systems {
 mod city {
     pub mod city;
     pub mod building;
+}
+
+mod ui {
+    pub mod ui;
+    pub mod dialogs {
+        pub mod inventory;
+        pub mod map;
+    }
 }
 
 use crate::deser::prefabs::Prefabs;

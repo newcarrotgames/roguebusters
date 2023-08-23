@@ -1,5 +1,5 @@
 use super::city::{Coord, Direction, Grid, Rect, DIRECTIONS};
-use crate::{city::city::Tile, deser::prefabs};
+use crate::{city::city::{Tile, TileId}, deser::{prefabs::{self, Prefabs, Prefab}, generators::Generator}};
 use rand::Rng;
 use std::fmt;
 use log::{info, error};
@@ -16,6 +16,8 @@ pub const DIR_WEST: usize = 3;
 const SUBDIVISION_SIZE_LIMIT: i32 = 32;
 const SUBDIVISION_WIDTH_LIMIT: i32 = 5;
 const SUBDIVISION_HEIGHT_LIMIT: i32 = 5;
+
+const NULLCHAR: char = 0 as char;
 
 /*
 
@@ -543,6 +545,76 @@ impl Space {
                         has_door = true;
                     }
                 }
+            }
+        }
+    }
+
+    pub fn fill_space(&mut self, gen: &Generator, prefabs: &Prefabs, data: &mut Grid) {
+        let mut times = 0;
+        let mut rng = rand::thread_rng();
+        for rule in gen.rules.rules.iter() {
+            // log::info!("rule: {:?}", rule);
+            let prefab = prefabs.get(rule.name.as_str());
+            // log::info!("self.rect: {}", self.rect);
+            match rule.frequency.as_str() {
+                "one" => loop {
+                    let x = rng.gen_range(self.rect.x1..self.rect.x2 - 2);
+                    let y = rng.gen_range(self.rect.y1..self.rect.y2 - 2);
+                    if self.can_place_prefab(data, x, y, prefab) {
+                        self.draw_prefab(x, y, prefab, self.building_id, data);
+                        break;
+                    }
+                    times += 1;
+                    if times > 10 {
+                        break
+                    }
+                },
+                "many" => {
+                    for y in self.rect.y1..self.rect.y2 - 2 {
+                        for x in self.rect.x1..self.rect.x2 - 2 {
+                            let range_limit = (1.0 / rule.chance) as usize;
+                            if rng.gen_range(0..range_limit) == 0 {
+                                if self.can_place_prefab(data, x, y, prefab) {
+                                    self.draw_prefab(x, y, prefab, self.building_id, data);
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    fn draw_prefab(&mut self, x: i32, y: i32, prefab: &Prefab, building_id: i32, data: &mut Grid) {
+        for (py, row) in prefab.data.rows.iter().enumerate() {
+            for (px, cell) in row.cells.iter().enumerate() {
+                data[y as usize + py][x as usize + px] = Tile::from_cell(cell, building_id);
+            }
+        }
+    }
+
+    fn can_place_prefab(&self, data: &mut Grid, x: i32, y: i32, prefab: &Prefab) -> bool {
+        for py in 0..prefab.height + 1 {
+            for px in 0..prefab.width + 1 {
+                let tile = data[(y + py) as usize][(x + px) as usize];
+                // log::info!("tile: {:?}", tile);
+                if tile.tile_id != TileId::Interior {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    pub fn fill(&mut self, gen: &Generator, prefabs: &Prefabs, data: &mut Grid) {
+        for space in self.partitions.iter_mut() {
+            if space.partitions.len() > 0 {
+                log::info!("space has partitions, continuing to traverse partiontions tree...");
+                space.fill(gen, prefabs, data);
+            } else {
+                log::info!("space has no partions, attempting to fill it with useful stuff...");
+                space.fill_space(gen, prefabs, data);
             }
         }
     }
