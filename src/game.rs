@@ -1,22 +1,29 @@
 use crate::{
+    city::city::City,
     components::{
-        inventory::Inventory, item::Item, name::Name, player::Player, position::Position,
-        renderable::Renderable, target::Target, equipped::Equipped,
+        equipped::Equipped, inventory::Inventory, item::Item, name::Name, player::Player,
+        position::Position, renderable::Renderable, target::Target,
     },
     deser::{items::Items, prefabs::Prefabs},
+    input::handlers::{
+        DefaultInputHandler, DefaultPlayerRequestHandler, InputHandler, PlayerRequestHandler,
+    },
     names::{NameType, Names},
+    render::renderer::Renderer,
     systems::{item_search::ItemSearch, simple_path::SimplePath},
-    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City, input::handlers::{InputHandler, DefaultInputHandler}, ui::ui::{UI, MESSAGES_HEIGHT, UI_WIDTH, UIState}, render::renderer::Renderer,
+    ui::{
+        modals::modal_request::ModalPlayerRequest,
+        ui::UI,
+    },
+    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
 };
-use specs::{
-    Builder, Dispatcher, DispatcherBuilder, Entity, Join, World,
-    WorldExt,
-};
+use specs::{Builder, Dispatcher, DispatcherBuilder, Join, World, WorldExt};
 use tcod::{
     colors::WHITE,
-    console::{blit, Offscreen, Root},
-    map::{FovAlgorithm, Map as FovMap},
-    BackgroundFlag, Color, Console, input::{KEY_PRESSED, KEY_PRESS, KeyCode},
+    console::{Offscreen, Root},
+    input::{KeyCode, KEY_PRESSED},
+    map::FovAlgorithm,
+    Console, Map as FovMap,
 };
 
 const TORCH_RADIUS: i32 = 75;
@@ -34,6 +41,7 @@ pub struct Game<'a> {
     pub fov: FovMap,
     pub ui: UI,
     pub input_handler: Box<dyn InputHandler>,
+    pub request_handler: Box<dyn PlayerRequestHandler>,
     pub renderer: Renderer,
 }
 
@@ -152,8 +160,10 @@ impl Game<'_> {
             })
             .build();
 
+        // add city/map grid as resource
         world.insert(map);
 
+        // this may not be needed
         let mut view_offset = [(position.x - 50.0) as i32, (position.y - 30.0) as i32];
         if view_offset[0] < 0 {
             view_offset[0] = 0;
@@ -161,11 +171,9 @@ impl Game<'_> {
         if view_offset[1] < 0 {
             view_offset[1] = 0;
         }
-
         if view_offset[0] > MAP_WIDTH - SCREEN_WIDTH {
             view_offset[0] = MAP_WIDTH - SCREEN_WIDTH
         }
-
         if view_offset[0] > MAP_HEIGHT - SCREEN_HEIGHT {
             view_offset[0] = MAP_HEIGHT - SCREEN_HEIGHT
         }
@@ -174,11 +182,12 @@ impl Game<'_> {
 
         world.insert(GameState::new());
 
-        log::info!("done creating game, returning player");
-
         let input_handler: Box<dyn InputHandler> = Box::new(DefaultInputHandler::new());
-
+        let request_handler: Box<dyn PlayerRequestHandler> =
+            Box::new(DefaultPlayerRequestHandler::new());
         let renderer = Renderer::new(view_offset);
+
+        log::info!("Done creating game, returning...");
 
         Game {
             root,
@@ -189,82 +198,23 @@ impl Game<'_> {
             ui,
             input_handler,
             renderer,
+            request_handler,
         }
-    }
-
-    // pub fn handle_request(&mut self, request: PlayerRequest) -> bool {
-    //     let update;
-
-    //     match request {
-    //         PlayerRequest::WieldItem => update = true,
-    //         PlayerRequest::DropItem => update = true,
-    //         PlayerRequest::PickupItem => {
-    //             self.pickup_item();
-    //             update = true;
-    //         }
-    //         PlayerRequest::UseItem => update = true,
-    //         PlayerRequest::Quit => update = false,
-    //         PlayerRequest::None => update = false,
-    //         PlayerRequest::Move(x, y) => {
-    //             self.move_player_by(x as f32, y as f32);
-    //             update = true;
-    //         }
-    //         PlayerRequest::Wait => update = true,
-    //         PlayerRequest::ToggleFullscreen => {
-    //             let fullscreen = self.root.is_fullscreen();
-    //             self.root.set_fullscreen(!fullscreen);
-    //             update = false;
-    //         }
-    //         PlayerRequest::ViewInventory => {
-    //             self.ui.set_state(UIState::Inventory);
-    //             update = false;
-    //         }
-    //         PlayerRequest::ViewMap => {
-    //             self.ui.set_state(UIState::Map);
-    //             update = false;
-    //         }
-    //         PlayerRequest::CloseCurrentView => {
-    //             self.ui.set_state(UIState::None);
-    //             update = false;
-    //         }
-    //         PlayerRequest::ModalRequest(_) => todo!(),
-    //     }
-
-    //     return update;
-    // }
-
-    fn get_player_request(&mut self) -> PlayerRequest {
-        let mut game_state = self.world.write_resource::<GameState>();
-        let request = game_state.pop_player_request();
-        request
     }
 
     pub fn update(&mut self) -> bool {
-        let mut request:PlayerRequest = PlayerRequest::None;
-        let key = self.root.check_for_keypress(KEY_PRESSED);
-        if key != None {
-            let actual_key = key.unwrap();
-            // log::info!("key pressed: {:?}", actual_key);
-            if actual_key.code != KeyCode::Text {
-                request = self.input_handler.handle_input(actual_key);
-            }
-        }
-        
-        if request == PlayerRequest::Quit {
-            return false;
-        }
-
-        if self.handle_request(request) {
-            self.update_game();
-        }
-        true
+        self.input_handler.handle_input(&self.root, &self.world);
+        self.update_game()
     }
 
-    pub fn update_game(&mut self) {
+    pub fn update_game(&mut self) -> bool {
         self.dispatcher.dispatch(&mut self.world);
         self.world.maintain();
         let player_pos = self.get_player_pos();
         let mut game_state = self.world.write_resource::<GameState>();
+        if game_state.peek_player_request() == PlayerRequest::Quit {
+            return false;
+        }
         while game_state.has_messages() {
             self.ui.add_message(game_state.pop_message().as_str());
         }
@@ -275,10 +225,12 @@ impl Game<'_> {
             FOV_LIGHT_WALLS,
             FOV_ALGO,
         );
+        true
     }
 
     pub fn render(&mut self) {
-        self.renderer.render(&mut self.con, &self.world, &mut self.root, &self.fov);
+        self.renderer
+            .render(&mut self.con, &self.world, &mut self.root, &self.fov);
     }
 
     pub fn get_player_pos(&self) -> Position {
@@ -289,19 +241,6 @@ impl Game<'_> {
             position = Position { x: pos.x, y: pos.y }
         }
         return position;
-    }
-
-    // 
-    pub fn blocked(&self, x: f32, y: f32) -> bool {
-        let map = self.world.read_resource::<City>();
-        return map.data[y as usize][x as usize].blocked;
-    }
-
-    
-
-    pub(crate) fn request(&mut self, req: PlayerRequest) {
-        let mut game_state = self.world.write_resource::<GameState>();
-        game_state.set_player_request(req);
     }
 }
 
@@ -319,49 +258,53 @@ pub enum PlayerRequest {
     ViewMap,
     Wait,
     WieldItem,
-    ModalRequest(ModalPlayerRequest)
+    ModalRequest(ModalPlayerRequest),
 }
 
 #[derive(Default)]
 pub struct GameState {
-    player_request: Option<PlayerRequest>,
     messages: Vec<String>,
+    player_request: Option<PlayerRequest>,
 }
 
 impl GameState {
     fn new() -> GameState {
         GameState {
-            player_request: None,
             messages: Vec::new(),
+            player_request: None,
         }
     }
 
-    pub fn set_player_request(&mut self, req: PlayerRequest) {
-        self.player_request = Some(req);
-    }
-
-    pub fn get_player_request(&mut self) -> Option<PlayerRequest> {
-        self.player_request
+    pub fn push_player_request(&mut self, request: PlayerRequest) {
+        self.player_request = Some(request);
     }
 
     pub fn pop_player_request(&mut self) -> PlayerRequest {
-        if self.player_request == None || self.player_request == Some(PlayerRequest::None) {
+        if self.player_request == None {
             return PlayerRequest::None;
         }
-        let r = self.player_request;
-        self.player_request = Some(PlayerRequest::None);
-        r.unwrap()
+        let request:PlayerRequest = self.player_request.unwrap();
+        self.player_request = None;
+        request
     }
 
-    pub fn add_message(&mut self, msg: String) {
+    pub fn has_player_request(&self) -> bool {
+        self.player_request != None
+    }
+
+    pub fn peek_player_request(&self) -> PlayerRequest {
+        self.player_request.unwrap_or(PlayerRequest::None)
+    }
+
+    pub fn push_message(&mut self, msg: String) {
         self.messages.push(msg);
-    }
-
-    pub fn has_messages(&self) -> bool {
-        self.messages.len() > 0
     }
 
     pub fn pop_message(&mut self) -> String {
         self.messages.pop().unwrap_or_default()
+    }
+
+    pub fn has_messages(&self) -> bool {
+        self.messages.len() > 0
     }
 }

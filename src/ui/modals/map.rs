@@ -1,12 +1,12 @@
 use crate::{
     components::{player::Player, position::Position},
-    MAP_HEIGHT, MAP_WIDTH, city::city::City, ui::ui::{UIModal, LINES_DOUBLE_SINGLE, UI}, input::handlers::InputHandler, game::PlayerRequest,
+    MAP_HEIGHT, MAP_WIDTH, city::city::City, ui::ui::{UIModal, LINES_DOUBLE_SINGLE, UI}, input::handlers::InputHandler, game::{PlayerRequest, GameState},
 };
 use specs::{Join, World, WorldExt};
 use tcod::{
-	console::Offscreen, 
+	console::{Offscreen, Root}, 
 	colors::{WHITE, BLUE, BLACK}, 
-	input::{KeyCode::*, Key},
+	input::{KeyCode::{*, self}, Key, KEY_PRESSED},
 	Console, 
 	BackgroundFlag};
 
@@ -75,8 +75,16 @@ impl MapInputHandler {
 }
 
 impl InputHandler for MapInputHandler {
-    fn handle_input(&mut self, key: Key) -> PlayerRequest {
-        match key {
+    fn handle_input(&mut self, root: &Root, world: &World) {
+		let key = root.check_for_keypress(KEY_PRESSED);
+        if key == None {
+            return;
+        }
+        let actual_key = key.unwrap();
+        if actual_key.code == KeyCode::Text {	// not sure why tcod does this
+            return;
+        }
+        let request = match actual_key {
             Key {
                 code: Up | NumPad8,
                 ..
@@ -96,7 +104,10 @@ impl InputHandler for MapInputHandler {
 
             // unknown key
             _ => PlayerRequest::None,
-        }
+        };
+
+		let mut game_state = world.write_resource::<GameState>();
+        game_state.push_player_request(request);
     }
 }
 

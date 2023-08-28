@@ -1,3 +1,4 @@
+use crate::city::city::City;
 use crate::components::inventory::Inventory;
 use crate::components::item::Item;
 use crate::components::player::Player;
@@ -10,11 +11,13 @@ use specs::Join;
 use specs::World;
 use specs::WorldExt;
 use tcod::console::Root;
+use tcod::input::KEY_PRESSED;
 use tcod::input::Key;
+use tcod::input::KeyCode;
 use tcod::input::KeyCode::*;
 
 pub trait InputHandler {
-    fn handle_input(&mut self, key: Key) -> PlayerRequest;
+    fn handle_input(&mut self, root: &Root, world: &World);
 }
 
 pub struct DefaultInputHandler {}
@@ -26,18 +29,23 @@ impl DefaultInputHandler {
 }
 
 impl InputHandler for DefaultInputHandler {
-    fn handle_input(&mut self, key: Key) -> PlayerRequest {
-        // info!("key: {:?}", key);
+    fn handle_input(&mut self, root: &Root, world: &World) {
+        let key = root.check_for_keypress(KEY_PRESSED);
+        if key == None {
+            return;
+        }
+        let actual_key = key.unwrap();
+        if actual_key.code == KeyCode::Text {
+            return;
+        }
 
-        match key {
+        let request = match actual_key {
             // Alt+Enter: toggle fullscreen
             Key {
                 code: Enter,
                 alt: true,
                 ..
-            } => {
-                return PlayerRequest::ToggleFullscreen;
-            }
+            } => PlayerRequest::ToggleFullscreen,
 
             // movement keys
             Key {
@@ -101,12 +109,15 @@ impl InputHandler for DefaultInputHandler {
 
             // unknown key
             _ => PlayerRequest::None
-        }
+        };
+
+        let mut game_state = world.write_resource::<GameState>();
+        game_state.push_player_request(request);
     }
 }
 
 pub trait PlayerRequestHandler {
-    fn handle_request(&mut self, request: PlayerRequest, world: &World, root: &Root) -> bool;
+    fn handle_request(&mut self, request: PlayerRequest, world: &World, root: &mut Root) -> bool;
 }
 
 pub struct DefaultPlayerRequestHandler {}
@@ -136,16 +147,16 @@ impl DefaultPlayerRequestHandler {
                 for (_, inventory) in (&player_storage, &mut inventories).join() {
                     if inventory.push_item(item.clone()) {
                         ents_to_remove.push(entity.clone());
-                        game_state.add_message(format!("You pick up a {}", item.name));
+                        game_state.push_message(format!("You pick up a {}", item.name));
                         log::info!("inventory: {:?}", inventory);
                     } else {
-                        game_state.add_message(format!("You can not pick up the {}", item.name));
+                        game_state.push_message(format!("You can not pick up the {}", item.name));
                     }
                 }
             }
         }
         if !item_found {
-            game_state.add_message(format!("There is nothing to pick up."));
+            game_state.push_message(format!("There is nothing to pick up."));
         }
         for e in ents_to_remove {
             positions.remove(e);
@@ -156,11 +167,16 @@ impl DefaultPlayerRequestHandler {
         let mut pos_storage = world.write_storage::<Position>();
         let player_storage = world.read_storage::<Player>();
         for (pos, _) in (&mut pos_storage, &player_storage).join() {
-            if !self.blocked(pos.x + dx, pos.y + dy) {
+            if !self.blocked(pos.x + dx, pos.y + dy, world) {
                 pos.x += dx;
                 pos.y += dy;
             }
         }
+    }
+
+    pub fn blocked(&self, x: f32, y: f32, world: &World) -> bool {
+        let map = world.read_resource::<City>();
+        return map.data[y as usize][x as usize].blocked;
     }
 
     fn set_ui_state(&self, ui_state: UIState, world: &World) {
@@ -169,8 +185,8 @@ impl DefaultPlayerRequestHandler {
 }
 
 impl PlayerRequestHandler for DefaultPlayerRequestHandler {
-    pub fn handle_request(&mut self, request: PlayerRequest, world: &World, root: &Root) -> bool {
-        let update;
+    fn handle_request(&mut self, request: PlayerRequest, world: &World, root: &mut Root) -> bool {
+        let mut update = false;
 
         match request {
             PlayerRequest::WieldItem => update = true,
@@ -188,8 +204,7 @@ impl PlayerRequestHandler for DefaultPlayerRequestHandler {
             }
             PlayerRequest::Wait => update = true,
             PlayerRequest::ToggleFullscreen => {
-                let fullscreen = root.is_fullscreen();
-                root.set_fullscreen(!fullscreen);
+                root.set_fullscreen(!root.is_fullscreen());
                 update = false;
             }
             PlayerRequest::ViewInventory => {
@@ -204,12 +219,11 @@ impl PlayerRequestHandler for DefaultPlayerRequestHandler {
                 self.set_ui_state(UIState::None, world);
                 update = false;
             }
-            PlayerRequest::ModalRequest(_) => todo!(),
+            _ => {}
         }
 
         return update;
     }
 
     // todo: this needs to be a system so all players inherit the behavior
-    
 }

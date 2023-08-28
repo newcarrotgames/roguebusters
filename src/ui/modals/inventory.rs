@@ -1,17 +1,19 @@
 use crate::{
     components::{inventory::Inventory, player::Player},
-    game::PlayerRequest,
+    game::{PlayerRequest, GameState},
     input::handlers::InputHandler,
     ui::ui::{UIModal, LINES_DOUBLE_SINGLE, UI},
 };
 use specs::{Join, World, WorldExt};
-use tcod::input::KeyCode::*;
+use tcod::{input::{KeyCode::{*, self}, KEY_PRESSED}, console::Root};
 use tcod::{
     colors::{RED, WHITE},
     console::Offscreen,
     input::Key,
     Color,
 };
+
+use super::modal_request::ModalPlayerRequest;
 
 const INVENTORY_POSITION: [i32; 4] = [10, 10, 50, 50];
 
@@ -67,24 +69,37 @@ impl InventoryInputHandler {
 }
 
 impl InputHandler for InventoryInputHandler {
-    fn handle_input(&mut self, key: Key) -> PlayerRequest {
-        match key {
+    fn handle_input(&mut self, root: &Root, world: &World) {
+        let key = root.check_for_keypress(KEY_PRESSED);
+        if key == None {
+            return;
+        }
+        let actual_key = key.unwrap();
+        if actual_key.code == KeyCode::Text {
+            return;
+        }
+        
+        let request = match actual_key {
             Key {
                 code: tcod::input::KeyCode::Up | NumPad8,
                 ..
-            } => PlayerRequest::Move(0, -1),
+            } => PlayerRequest::ModalRequest(ModalPlayerRequest::InventoryRequest(InventoryModalPlayerRequest::PreviousItem)),
             Key {
                 code: Down | NumPad2,
                 ..
-            } => PlayerRequest::Move(0, 1),
+            } => PlayerRequest::ModalRequest(ModalPlayerRequest::InventoryRequest(InventoryModalPlayerRequest::NextItem)),
 
             // unknown key
             _ => PlayerRequest::None,
-        }
+        };
+
+        let mut game_state = world.write_resource::<GameState>();
+        game_state.push_player_request(request);
     }
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum InventoryModalPlayerRequest { 
-
+    NextItem,
+    PreviousItem,
 }

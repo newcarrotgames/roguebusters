@@ -24,7 +24,7 @@ impl<'a> System<'a> for ItemSearch {
         }
         for (item, pos) in (&items, &mut positions).join() {
             if player_position == *pos {
-                game_state.add_message(format!("You see a {}", item.name));
+                game_state.push_message(format!("You see a {}", item.name));
             }
         }
     }
