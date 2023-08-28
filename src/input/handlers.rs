@@ -1,4 +1,15 @@
+use crate::components::inventory::Inventory;
+use crate::components::item::Item;
+use crate::components::player::Player;
+use crate::components::position::Position;
+use crate::game::GameState;
 use crate::game::PlayerRequest;
+use crate::ui::ui::UIState;
+use specs::Entity;
+use specs::Join;
+use specs::World;
+use specs::WorldExt;
+use tcod::console::Root;
 use tcod::input::Key;
 use tcod::input::KeyCode::*;
 
@@ -92,4 +103,113 @@ impl InputHandler for DefaultInputHandler {
             _ => PlayerRequest::None
         }
     }
+}
+
+pub trait PlayerRequestHandler {
+    fn handle_request(&mut self, request: PlayerRequest, world: &World, root: &Root) -> bool;
+}
+
+pub struct DefaultPlayerRequestHandler {}
+
+impl DefaultPlayerRequestHandler {
+    pub fn new() -> Self {
+        DefaultPlayerRequestHandler {}
+    }
+
+    fn pickup_item(&mut self, world: &World) {
+        log::info!("pickup item");
+        let mut player_position: Position = Position::zero();
+        let mut positions = world.write_storage::<Position>();
+        let player_storage = world.read_storage::<Player>();
+        let items = world.read_storage::<Item>();
+        let mut inventories = world.write_storage::<Inventory>();
+        let entities = world.entities();
+        let mut ents_to_remove: Vec<Entity> = Vec::new();
+        for (pos, _) in (&mut positions, &player_storage).join() {
+            player_position = pos.clone();
+        }
+        let mut game_state = world.write_resource::<GameState>();
+        let mut item_found = false;
+        for (entity, item, pos) in (&entities, &items, &mut positions).join() {
+            if player_position == *pos {
+                item_found = true;
+                for (_, inventory) in (&player_storage, &mut inventories).join() {
+                    if inventory.push_item(item.clone()) {
+                        ents_to_remove.push(entity.clone());
+                        game_state.add_message(format!("You pick up a {}", item.name));
+                        log::info!("inventory: {:?}", inventory);
+                    } else {
+                        game_state.add_message(format!("You can not pick up the {}", item.name));
+                    }
+                }
+            }
+        }
+        if !item_found {
+            game_state.add_message(format!("There is nothing to pick up."));
+        }
+        for e in ents_to_remove {
+            positions.remove(e);
+        }
+    }
+
+    pub fn move_player_by(&mut self, dx: f32, dy: f32, world: &World) {
+        let mut pos_storage = world.write_storage::<Position>();
+        let player_storage = world.read_storage::<Player>();
+        for (pos, _) in (&mut pos_storage, &player_storage).join() {
+            if !self.blocked(pos.x + dx, pos.y + dy) {
+                pos.x += dx;
+                pos.y += dy;
+            }
+        }
+    }
+
+    fn set_ui_state(&self, ui_state: UIState, world: &World) {
+        todo!()
+    }
+}
+
+impl PlayerRequestHandler for DefaultPlayerRequestHandler {
+    pub fn handle_request(&mut self, request: PlayerRequest, world: &World, root: &Root) -> bool {
+        let update;
+
+        match request {
+            PlayerRequest::WieldItem => update = true,
+            PlayerRequest::DropItem => update = true,
+            PlayerRequest::PickupItem => {
+                self.pickup_item(world);
+                update = true;
+            }
+            PlayerRequest::UseItem => update = true,
+            PlayerRequest::Quit => update = false,
+            PlayerRequest::None => update = false,
+            PlayerRequest::Move(x, y) => {
+                self.move_player_by(x as f32, y as f32, world);
+                update = true;
+            }
+            PlayerRequest::Wait => update = true,
+            PlayerRequest::ToggleFullscreen => {
+                let fullscreen = root.is_fullscreen();
+                root.set_fullscreen(!fullscreen);
+                update = false;
+            }
+            PlayerRequest::ViewInventory => {
+                self.set_ui_state(UIState::Inventory, world);
+                update = false;
+            }
+            PlayerRequest::ViewMap => {
+                self.set_ui_state(UIState::Map, world);
+                update = false;
+            }
+            PlayerRequest::CloseCurrentView => {
+                self.set_ui_state(UIState::None, world);
+                update = false;
+            }
+            PlayerRequest::ModalRequest(_) => todo!(),
+        }
+
+        return update;
+    }
+
+    // todo: this needs to be a system so all players inherit the behavior
+    
 }

@@ -47,10 +47,15 @@ mod city {
 
 mod ui {
     pub mod ui;
-    pub mod dialogs {
+    pub mod modals {
+        pub mod modal_request;
         pub mod inventory;
         pub mod map;
     }
+}
+
+mod render {
+    pub mod renderer;
 }
 
 use crate::deser::prefabs::Prefabs;

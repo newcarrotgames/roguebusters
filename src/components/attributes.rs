@@ -3,6 +3,7 @@
 pub struct Attributes {
     brawn: u8,
     agility: u8,
+    stamina: u8,
     perception: u8,
     fortune: u8,
     charm: u8,

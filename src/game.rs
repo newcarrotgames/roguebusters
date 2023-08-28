@@ -6,7 +6,7 @@ use crate::{
     deser::{items::Items, prefabs::Prefabs},
     names::{NameType, Names},
     systems::{item_search::ItemSearch, simple_path::SimplePath},
-    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City, input::handlers::{InputHandler, DefaultInputHandler}, ui::ui::{UI, MESSAGES_HEIGHT, UI_WIDTH, UIState},
+    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City, input::handlers::{InputHandler, DefaultInputHandler}, ui::ui::{UI, MESSAGES_HEIGHT, UI_WIDTH, UIState}, render::renderer::Renderer,
 };
 use specs::{
     Builder, Dispatcher, DispatcherBuilder, Entity, Join, World,
@@ -29,13 +29,12 @@ const NUM_ITEMS: i32 = 100;
 pub struct Game<'a> {
     pub root: Root,
     pub con: Offscreen,
-    pub view_offset: [i32; 2],
     pub world: World,
     pub dispatcher: Dispatcher<'a, 'a>,
     pub fov: FovMap,
-    pub game_state: GameState,
     pub ui: UI,
     pub input_handler: Box<dyn InputHandler>,
+    pub renderer: Renderer,
 }
 
 impl Game<'_> {
@@ -71,6 +70,7 @@ impl Game<'_> {
         let mut fov = FovMap::new(w, h);
 
         // populate the FOV map, according to the generated map
+        // todo: FOV map will need to be recalculated when going up/down stairs
         for y in 0..h {
             for x in 0..w {
                 fov.set(
@@ -110,6 +110,7 @@ impl Game<'_> {
 
         log::info!("creating items");
 
+        // todo: should items static?
         let mut items = Items::new();
         items.load_all("data/items");
 
@@ -153,8 +154,6 @@ impl Game<'_> {
 
         world.insert(map);
 
-        let ui = UI::new();
-
         let mut view_offset = [(position.x - 50.0) as i32, (position.y - 30.0) as i32];
         if view_offset[0] < 0 {
             view_offset[0] = 0;
@@ -171,64 +170,68 @@ impl Game<'_> {
             view_offset[0] = MAP_HEIGHT - SCREEN_HEIGHT
         }
 
+        let ui = UI::new(view_offset);
+
         world.insert(GameState::new());
 
         log::info!("done creating game, returning player");
 
         let input_handler: Box<dyn InputHandler> = Box::new(DefaultInputHandler::new());
 
+        let renderer = Renderer::new(view_offset);
+
         Game {
             root,
             con,
-            view_offset,
             world,
             dispatcher,
             fov,
-            game_state: GameState::new(),
             ui,
             input_handler,
+            renderer,
         }
     }
 
-    pub fn handle_request(&mut self, request: PlayerRequest) -> bool {
-        let update;
+    // pub fn handle_request(&mut self, request: PlayerRequest) -> bool {
+    //     let update;
 
-        match request {
-            PlayerRequest::WieldItem => update = true,
-            PlayerRequest::DropItem => update = true,
-            PlayerRequest::PickupItem => {
-                self.pickup_item();
-                update = true;
-            }
-            PlayerRequest::UseItem => update = true,
-            PlayerRequest::Quit => update = false,
-            PlayerRequest::None => update = false,
-            PlayerRequest::Move(x, y) => {
-                self.move_player_by(x as f32, y as f32);
-                update = true;
-            }
-            PlayerRequest::Wait => update = true,
-            PlayerRequest::ToggleFullscreen => {
-                let fullscreen = self.root.is_fullscreen();
-                self.root.set_fullscreen(!fullscreen);
-                update = false;
-            }
-            PlayerRequest::ViewInventory => {
-                self.ui.set_state(UIState::Inventory);
-                update = false;
-            }
-            PlayerRequest::ViewMap => {
-                self.ui.set_state(UIState::Map);
-                update = false;
-            }
-            PlayerRequest::CloseCurrentView => {
-                self.ui.set_state(UIState::None);
-                update = false;
-            }
-        }
+    //     match request {
+    //         PlayerRequest::WieldItem => update = true,
+    //         PlayerRequest::DropItem => update = true,
+    //         PlayerRequest::PickupItem => {
+    //             self.pickup_item();
+    //             update = true;
+    //         }
+    //         PlayerRequest::UseItem => update = true,
+    //         PlayerRequest::Quit => update = false,
+    //         PlayerRequest::None => update = false,
+    //         PlayerRequest::Move(x, y) => {
+    //             self.move_player_by(x as f32, y as f32);
+    //             update = true;
+    //         }
+    //         PlayerRequest::Wait => update = true,
+    //         PlayerRequest::ToggleFullscreen => {
+    //             let fullscreen = self.root.is_fullscreen();
+    //             self.root.set_fullscreen(!fullscreen);
+    //             update = false;
+    //         }
+    //         PlayerRequest::ViewInventory => {
+    //             self.ui.set_state(UIState::Inventory);
+    //             update = false;
+    //         }
+    //         PlayerRequest::ViewMap => {
+    //             self.ui.set_state(UIState::Map);
+    //             update = false;
+    //         }
+    //         PlayerRequest::CloseCurrentView => {
+    //             self.ui.set_state(UIState::None);
+    //             update = false;
+    //         }
+    //         PlayerRequest::ModalRequest(_) => todo!(),
+    //     }
 
-        return update;
-    }
+    //     return update;
+    // }
 
     fn get_player_request(&mut self) -> PlayerRequest {
         let mut game_state = self.world.write_resource::<GameState>();
@@ -246,9 +249,11 @@ impl Game<'_> {
                 request = self.input_handler.handle_input(actual_key);
             }
         }
+        
         if request == PlayerRequest::Quit {
             return false;
         }
+
         if self.handle_request(request) {
             self.update_game();
         }
@@ -272,66 +277,8 @@ impl Game<'_> {
         );
     }
 
-    // pub fn get_player_tile(&mut self) -> Tile {
-    //     return self.get_tile(self.get_player_pos());
-    // }
-
-    pub fn render_map(&mut self) {
-        // let player_tile = self.get_player_tile();
-        let mut map = self.world.write_resource::<City>();
-        for vy in 0..self.root.height() - MESSAGES_HEIGHT {
-            for vx in 0..self.root.width() - UI_WIDTH {
-                let x = vx + self.view_offset[0];
-                let y = vy + self.view_offset[1];
-                let mut wall = map.data[y as usize][x as usize];
-                let visible = self.fov.is_in_fov(x, y);
-                // let char:char;
-                // if wall.building_id > 0 && wall.building_id != player_tile.building_id {
-                //     char = wall.exterior_char;
-                // } else {
-                //     char = wall.char;
-                // }
-                if visible {
-                    self.con
-                        .set_char_background(vx, vy, wall.bg_color, BackgroundFlag::Set);
-                    self.con.set_default_foreground(wall.fg_color);
-                    self.con.put_char(vx, vy, wall.char, BackgroundFlag::None);
-                    wall.seen = true;
-                    map.data[y as usize][x as usize] = wall;
-                } else if wall.seen {
-                    self.con.set_char_background(
-                        vx,
-                        vy,
-                        self.fade(wall.bg_color),
-                        BackgroundFlag::Set,
-                    );
-                    self.con.set_default_foreground(self.fade(wall.fg_color));
-                    self.con.put_char(vx, vy, wall.char, BackgroundFlag::None);
-                }
-            }
-        }
-    }
-
-    pub fn render_entities(&mut self) {
-        let pos_storage = self.world.read_storage::<Position>();
-        let ren_storage = self.world.read_storage::<Renderable>();
-        for (pos, ren) in (&pos_storage, &ren_storage).join() {
-            let cx = pos.x as i32 - self.view_offset[0];
-            let cy = pos.y as i32 - self.view_offset[1];
-
-            // check if offscreen
-            if cx < 0 || cy < 0 || cx > SCREEN_WIDTH - 20 || cy > SCREEN_HEIGHT - MESSAGES_HEIGHT {
-                continue;
-            }
-
-            let visible = self.fov.is_in_fov(pos.x as i32, pos.y as i32);
-            if !visible {
-                continue;
-            }
-
-            self.con.set_default_foreground(WHITE);
-            self.con.put_char(cx, cy, ren.char, BackgroundFlag::None);
-        }
+    pub fn render(&mut self) {
+        self.renderer.render(&mut self.con, &self.world, &mut self.root, &self.fov);
     }
 
     pub fn get_player_pos(&self) -> Position {
@@ -344,125 +291,35 @@ impl Game<'_> {
         return position;
     }
 
-    pub fn render_done(&mut self) {
-        blit(
-            &self.con,
-            (0, 0),
-            (SCREEN_WIDTH, SCREEN_HEIGHT),
-            &mut self.root,
-            (0, 0),
-            1.0,
-            1.0,
-        );
-    }
-
-    pub fn render(&mut self) {
-        self.con.clear();
-        // render the screen
-        self.render_map();
-        self.render_entities();
-        self.ui.render(&mut self.con);
-        self.ui.update(&mut self.con, &self.world);
-        self.render_done();
-        self.root.flush();
-    }
-
+    // 
     pub fn blocked(&self, x: f32, y: f32) -> bool {
         let map = self.world.read_resource::<City>();
         return map.data[y as usize][x as usize].blocked;
     }
 
-    pub fn move_player_by(&mut self, dx: f32, dy: f32) {
-        let mut pos_storage = self.world.write_storage::<Position>();
-        let player_storage = self.world.read_storage::<Player>();
-        for (pos, _) in (&mut pos_storage, &player_storage).join() {
-            if !self.blocked(pos.x + dx, pos.y + dy) {
-                pos.x += dx;
-                pos.y += dy;
-                let map = self.world.read_resource::<City>();
-                if self.view_offset[0] == 0
-                    || self.view_offset[1] == 0
-                    || self.view_offset[0] >= map.width
-                    || self.view_offset[1] >= map.height
-                {
-                    continue;
-                }
-                if pos.x as i32 - self.view_offset[0] > self.root.width() - 63 {
-                    self.view_offset[0] += 1;
-                }
-                if pos.y as i32 - self.view_offset[1] > self.root.height() - 35 {
-                    self.view_offset[1] += 1;
-                }
-                if pos.x as i32 - self.view_offset[0] < 40 {
-                    self.view_offset[0] -= 1;
-                }
-                if pos.y as i32 - self.view_offset[1] < 25 {
-                    self.view_offset[1] -= 1;
-                }
-            }
-        }
-    }
-
-    fn fade(&self, col: Color) -> Color {
-        return Color::new(col.r / 4, col.g / 4, col.b / 4);
-    }
+    
 
     pub(crate) fn request(&mut self, req: PlayerRequest) {
         let mut game_state = self.world.write_resource::<GameState>();
         game_state.set_player_request(req);
     }
-
-    fn pickup_item(&mut self) {
-        log::info!("pickup item");
-        let mut player_position: Position = Position::zero();
-        let mut positions = self.world.write_storage::<Position>();
-        let player_storage = self.world.read_storage::<Player>();
-        let items = self.world.read_storage::<Item>();
-        let mut inventories = self.world.write_storage::<Inventory>();
-        let entities = self.world.entities();
-        let mut ents_to_remove: Vec<Entity> = Vec::new();
-        for (pos, _) in (&mut positions, &player_storage).join() {
-            player_position = pos.clone();
-        }
-        let mut game_state = self.world.write_resource::<GameState>();
-        let mut item_found = false;
-        for (entity, item, pos) in (&entities, &items, &mut positions).join() {
-            if player_position == *pos {
-                item_found = true;
-                for (_, inventory) in (&player_storage, &mut inventories).join() {
-                    if inventory.push_item(item.clone()) {
-                        ents_to_remove.push(entity.clone());
-                        game_state.add_message(format!("You pick up a {}", item.name));
-                        log::info!("inventory: {:?}", inventory);
-                    } else {
-                        game_state.add_message(format!("You can not pick up the {}", item.name));
-                    }
-                }
-            }
-        }
-        if !item_found {
-            game_state.add_message(format!("There is nothing to pick up."));
-        }
-        for e in ents_to_remove {
-            positions.remove(e);
-        }
-    }
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
 pub enum PlayerRequest {
-    WieldItem,
+    CloseCurrentView,
     DropItem,
-    PickupItem,
-    UseItem,
-    Quit,
     Move(i32, i32),
     None,
-    Wait,
+    PickupItem,
+    Quit,
     ToggleFullscreen,
+    UseItem,
     ViewInventory,
     ViewMap,
-    CloseCurrentView,
+    Wait,
+    WieldItem,
+    ModalRequest(ModalPlayerRequest)
 }
 
 #[derive(Default)]

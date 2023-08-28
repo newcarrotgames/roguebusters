@@ -1,9 +1,14 @@
 use crate::{
     components::{player::Player, position::Position},
-    MAP_HEIGHT, MAP_WIDTH, city::city::City, ui::ui::{UIModal, LINES_DOUBLE_SINGLE, UI},
+    MAP_HEIGHT, MAP_WIDTH, city::city::City, ui::ui::{UIModal, LINES_DOUBLE_SINGLE, UI}, input::handlers::InputHandler, game::PlayerRequest,
 };
 use specs::{Join, World, WorldExt};
-use tcod::{console::Offscreen, colors::{WHITE, BLUE, BLACK}, Console, BackgroundFlag};
+use tcod::{
+	console::Offscreen, 
+	colors::{WHITE, BLUE, BLACK}, 
+	input::{KeyCode::*, Key},
+	Console, 
+	BackgroundFlag};
 
 const MAP_POSITION: [i32; 4] = [5, 5, 113, 61];
 
@@ -59,4 +64,44 @@ impl UIModal for MapUIModal {
 			);
 		}
     }
+}
+
+pub struct MapInputHandler {}
+
+impl MapInputHandler {
+    pub fn new() -> Self {
+        MapInputHandler {}
+    }
+}
+
+impl InputHandler for MapInputHandler {
+    fn handle_input(&mut self, key: Key) -> PlayerRequest {
+        match key {
+            Key {
+                code: Up | NumPad8,
+                ..
+            } => PlayerRequest::Move(0, -1),
+            Key {
+                code: Down | NumPad2,
+                ..
+            } => PlayerRequest::Move(0, 1),
+			Key {
+                code: Left | NumPad4,
+                ..
+            } => PlayerRequest::Move(0, 1),
+			Key {
+                code: Right | NumPad6,
+                ..
+            } => PlayerRequest::Move(0, 1),
+
+            // unknown key
+            _ => PlayerRequest::None,
+        }
+    }
+}
+
+#[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+pub enum MapModalPlayerRequest { 
+	Zoom,
+	Move(i32, i32)
 }

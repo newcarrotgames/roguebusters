@@ -1,32 +1,29 @@
-use crate::{
-    components::{inventory::Inventory, player::Player, position::Position},
-    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, city::city::City,
-};
-use specs::{Join, World, WorldExt};
+use specs::World;
 use tcod::{
-    colors::{BLACK, BLUE, WHITE},
+    colors::{BLACK, WHITE},
     console::Offscreen,
-    BackgroundFlag, Color, Console,
+    BackgroundFlag, Color, Console
 };
 
-use super::dialogs::{inventory::InventoryUIModal, map::MapUIModal};
+use super::modals::{inventory::InventoryUIModal, map::MapUIModal};
 
 type LineSet = [u8; 8];
 type Quad = [i32; 4];
 
 pub const UI_WIDTH: i32 = 20;
 pub const MESSAGES_HEIGHT: i32 = 15;
+pub const MAP_SIZE: [i32; 2] = [40, 20];
 
 // const LINES_SINGLE: LineSet = [196, 179, 218, 191, 192, 217, 180, 195];
 // const LINES_DOUBLE: LineSet = [205, 186, 201, 187, 200, 188];
 // const LINES_SINGLE_DOUBLE: LineSet = [205, 179, 213, 184, 212, 190, 181, 198];
 pub const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
 
-const NULLCHAR:char = 0 as char;
+const NULLCHAR: char = 0 as char;
 
 pub trait UIModal {
     fn render(&mut self, con: &mut Offscreen);
-	fn update(&mut self, con: &mut Offscreen, world: &World);
+    fn update(&mut self, con: &mut Offscreen, world: &World);
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -38,85 +35,21 @@ pub enum UIState {
 
 pub struct UI {
     state: UIState,
-    messages: Vec<String>,
     modal: Option<Box<dyn UIModal>>,
+    view_offset: [i32; 2],
 }
 
 impl UI {
-    pub fn new() -> Self {
+    pub fn new(view_offset: [i32; 2]) -> Self {
         UI {
             state: UIState::None,
-            messages: Vec::new(),
             modal: None,
+            view_offset,
         }
     }
 
-    pub fn render(&mut self, con: &mut Offscreen) {
-        // draw UI
-        let uix = SCREEN_WIDTH - UI_WIDTH;
-
-        // map
-        UI::draw_labeled_box(
-            con,
-            [
-                0,
-                0,
-                SCREEN_WIDTH - UI_WIDTH - 1,
-                SCREEN_HEIGHT - MESSAGES_HEIGHT,
-            ],
-            WHITE,
-            LINES_DOUBLE_SINGLE,
-            "City",
-        );
-
-        // side bar
-        UI::draw_labeled_box(
-            con,
-            [
-                SCREEN_WIDTH - UI_WIDTH,
-                0,
-                SCREEN_WIDTH - 1,
-                SCREEN_HEIGHT - 1,
-            ],
-            WHITE,
-            LINES_DOUBLE_SINGLE,
-            "RogueBusters",
-        );
-
-        // message log
-        UI::draw_labeled_box(
-            con,
-            [
-                0,
-                SCREEN_HEIGHT - MESSAGES_HEIGHT + 1,
-                SCREEN_WIDTH - UI_WIDTH - 1,
-                SCREEN_HEIGHT - 1,
-            ],
-            WHITE,
-            LINES_DOUBLE_SINGLE,
-            "Messages",
-        );
-
-        // iterate self.messages
-        let mut messages_offset = 0;
-        if self.messages.len() as i32 >= MESSAGES_HEIGHT - 2 {
-            messages_offset = self.messages.len() as i32 - MESSAGES_HEIGHT + 3;
-        }
-        for i in messages_offset..self.messages.len() as i32 {
-            let msg = self.messages.get(i as usize).unwrap().clone();
-            UI::puts(
-                con,
-                2,
-                SCREEN_HEIGHT - MESSAGES_HEIGHT + 3 + (i - messages_offset) as i32,
-                &msg,
-                WHITE,
-            );
-        }
-
-        // draw modals
-        if self.modal.is_some() {
-            self.modal.as_mut().unwrap().render(con);
-        }
+    fn fade(col: Color) -> Color {
+        return Color::new(col.r / 4, col.g / 4, col.b / 4);
     }
 
     pub fn set_state(&mut self, state: UIState) {
@@ -135,24 +68,13 @@ impl UI {
         }
     }
 
-    pub fn render_dialog(
-        con: &mut Offscreen,
-        pos: Quad,
-        col: Color,
-        set: LineSet,
-        title: &str,
-    ) {
+    // I'm thinking these static methods should end up in some utility struct, but UI also makes sense
+    pub fn render_dialog(con: &mut Offscreen, pos: Quad, col: Color, set: LineSet, title: &str) {
         UI::fill(con, pos, WHITE, ' ');
         UI::draw_labeled_box(con, pos, col, set, title);
     }
 
-    pub fn draw_labeled_box(
-        con: &mut Offscreen,
-        pos: Quad,
-        col: Color,
-        set: LineSet,
-        title: &str,
-    ) {
+    pub fn draw_labeled_box(con: &mut Offscreen, pos: Quad, col: Color, set: LineSet, title: &str) {
         UI::line_rect(con, pos, col, set);
         UI::puts(
             con,
@@ -172,7 +94,6 @@ impl UI {
 
     pub fn add_message(&mut self, msg: &str) {
         log::info!("{}", msg);
-        self.messages.push(msg.to_string());
     }
 
     pub fn puts(con: &mut Offscreen, x: i32, y: i32, s: &str, col: Color) {
