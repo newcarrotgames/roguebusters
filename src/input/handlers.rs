@@ -117,7 +117,7 @@ impl InputHandler for DefaultInputHandler {
 }
 
 pub trait PlayerRequestHandler {
-    fn handle_request(&mut self, request: PlayerRequest, world: &World, root: &mut Root) -> bool;
+    fn handle_request(&mut self, world: &World, root: &mut Root) -> bool;
 }
 
 pub struct DefaultPlayerRequestHandler {}
@@ -178,45 +178,31 @@ impl DefaultPlayerRequestHandler {
         let map = world.read_resource::<City>();
         return map.data[y as usize][x as usize].blocked;
     }
-
-    fn set_ui_state(&self, ui_state: UIState, world: &World) {
-        todo!()
-    }
 }
 
 impl PlayerRequestHandler for DefaultPlayerRequestHandler {
-    fn handle_request(&mut self, request: PlayerRequest, world: &World, root: &mut Root) -> bool {
+    fn handle_request(&mut self, world: &World, root: &mut Root) -> bool {
         let mut update = false;
 
-        match request {
-            PlayerRequest::WieldItem => update = true,
-            PlayerRequest::DropItem => update = true,
-            PlayerRequest::PickupItem => {
-                self.pickup_item(world);
-                update = true;
-            }
-            PlayerRequest::UseItem => update = true,
-            PlayerRequest::Quit => update = false,
+        let mut game_state = world.write_resource::<GameState>();
+
+        match game_state.peek_player_request() {
             PlayerRequest::None => update = false,
+            PlayerRequest::Quit => update = false,
+            PlayerRequest::Wait => update = true,
             PlayerRequest::Move(x, y) => {
                 self.move_player_by(x as f32, y as f32, world);
+                game_state.pop_player_request();
                 update = true;
             }
-            PlayerRequest::Wait => update = true,
+            PlayerRequest::PickupItem => {
+                self.pickup_item(world);
+                game_state.pop_player_request();
+                update = true;
+            }
             PlayerRequest::ToggleFullscreen => {
                 root.set_fullscreen(!root.is_fullscreen());
-                update = false;
-            }
-            PlayerRequest::ViewInventory => {
-                self.set_ui_state(UIState::Inventory, world);
-                update = false;
-            }
-            PlayerRequest::ViewMap => {
-                self.set_ui_state(UIState::Map, world);
-                update = false;
-            }
-            PlayerRequest::CloseCurrentView => {
-                self.set_ui_state(UIState::None, world);
+                game_state.pop_player_request();
                 update = false;
             }
             _ => {}

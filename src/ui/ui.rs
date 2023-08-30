@@ -1,9 +1,11 @@
-use specs::World;
+use specs::{World, WorldExt};
 use tcod::{
     colors::{BLACK, WHITE},
     console::Offscreen,
     BackgroundFlag, Color, Console
 };
+
+use crate::game::{GameState,PlayerRequest};
 
 use super::modals::{inventory::InventoryUIModal, map::MapUIModal};
 
@@ -63,8 +65,22 @@ impl UI {
     }
 
     pub fn update(&mut self, con: &mut Offscreen, world: &World) {
+        // give modals dibs on player requests
         if self.modal.is_some() {
             self.modal.as_mut().unwrap().update(con, world);
+        }
+        let mut game_state = world.write_resource::<GameState>();
+        let mut pop_request = true;
+        match game_state.peek_player_request() {
+            PlayerRequest::CloseCurrentView => self.set_state(UIState::None),
+            PlayerRequest::ViewInventory => self.set_state(UIState::Inventory),
+            PlayerRequest::ViewMap => self.set_state(UIState::Map),
+            // ignore other requests
+            _ => pop_request = false
+        }
+        if pop_request {
+            log::info!("UPDATE: {:?}", game_state.peek_player_request());
+            game_state.pop_player_request();
         }
     }
 

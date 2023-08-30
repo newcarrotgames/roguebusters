@@ -204,20 +204,21 @@ impl Game<'_> {
 
     pub fn update(&mut self) -> bool {
         self.input_handler.handle_input(&self.root, &self.world);
-        self.update_game()
+        self.ui.update(&mut self.con, &self.world);
+        let update_game = self.request_handler.handle_request(&self.world, &mut self.root);
+        if update_game {
+            log::info!("updating game");
+            self.update_game();
+        }
+        let mut game_state = self.world.write_resource::<GameState>();
+        let player_request = game_state.pop_player_request();
+        player_request != PlayerRequest::Quit
     }
 
     pub fn update_game(&mut self) -> bool {
         self.dispatcher.dispatch(&mut self.world);
         self.world.maintain();
         let player_pos = self.get_player_pos();
-        let mut game_state = self.world.write_resource::<GameState>();
-        if game_state.peek_player_request() == PlayerRequest::Quit {
-            return false;
-        }
-        while game_state.has_messages() {
-            self.ui.add_message(game_state.pop_message().as_str());
-        }
         self.fov.compute_fov(
             player_pos.x as i32,
             player_pos.y as i32,

@@ -83,7 +83,7 @@ impl InputHandler for InventoryInputHandler {
             Key {
                 code: tcod::input::KeyCode::Up | NumPad8,
                 ..
-            } => PlayerRequest::ModalRequest(ModalPlayerRequest::InventoryRequest(InventoryModalPlayerRequest::PreviousItem)),
+            } => PlayerRequest::ModalRequest(ModalPlayerRequest::InventoryRequest(InventoryModalPlayerRequest::PreviousItem)),  // seems a bit wordy?
             Key {
                 code: Down | NumPad2,
                 ..
