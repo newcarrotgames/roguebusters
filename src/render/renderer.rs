@@ -3,14 +3,14 @@ use crate::{
     components::{
         player::Player, position::Position, renderable::Renderable,
     },
-    ui::ui::UI,
+    ui::ui::{UI, UIElement},
     SCREEN_HEIGHT, SCREEN_WIDTH,
 };
 use specs::{Join, World, WorldExt};
 use tcod::{
     colors::WHITE,
     console::{Offscreen, blit, Root},
-    BackgroundFlag, Color, Console, Map as FovMap,
+    BackgroundFlag, Console, Map as FovMap,
 };
 
 type LineSet = [u8; 8];
@@ -21,14 +21,9 @@ pub const MAP_SIZE: [i32; 2] = [54, 100];
 
 pub const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
 
-pub trait UIModal {
-    fn render(&mut self, con: &mut Offscreen);
-    fn update(&mut self, con: &mut Offscreen, world: &World);
-}
-
 pub struct Renderer {
     messages: Vec<String>,
-    modal: Option<Box<dyn UIModal>>,
+    modal: Option<Box<dyn UIElement>>,
     view_offset: [i32; 2],
 }
 
@@ -42,19 +37,7 @@ impl Renderer {
     }
 
     pub fn render_ui(&mut self, con: &mut Offscreen) {
-        // map
-        UI::draw_labeled_box(
-            con,
-            [
-                0,
-                0,
-                SCREEN_WIDTH - UI_WIDTH - 1,
-                SCREEN_HEIGHT - MESSAGES_HEIGHT,
-            ],
-            WHITE,
-            LINES_DOUBLE_SINGLE,
-            "City",
-        );
+        
 
         // side bar
         UI::draw_labeled_box(
@@ -98,11 +81,6 @@ impl Renderer {
                 &msg,
                 WHITE,
             );
-        }
-
-        // draw modals
-        if self.modal.is_some() {
-            self.modal.as_mut().unwrap().render(con);
         }
     }
 
@@ -149,10 +127,6 @@ impl Renderer {
             con.set_default_foreground(WHITE);
             con.put_char(cx, cy, ren.char, BackgroundFlag::None);
         }
-    }
-
-    fn fade(&self, col: Color) -> Color {
-        return Color::new(col.r / 4, col.g / 4, col.b / 4);
     }
 
     pub fn render(&mut self, con: &mut Offscreen, world: &World, root: &mut Root, fov: &FovMap) {

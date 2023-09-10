@@ -1,18 +1,20 @@
 use crate::{
     city::city::City,
     components::{
-        equipped::Equipped, inventory::Inventory, item::Item, name::Name, player::Player,
-        position::Position, renderable::Renderable, target::Target,
+        attributes::Attributes, inventory::Inventory, item::Item, name::Name, player::Player,
+        position::Position, renderable::Renderable, target::Target, combatant::Combatant,
     },
     deser::{items::Items, prefabs::Prefabs},
     input::handlers::{
         DefaultInputHandler, DefaultPlayerRequestHandler, InputHandler, PlayerRequestHandler,
     },
     names::{NameType, Names},
-    render::renderer::Renderer,
-    systems::{item_search::ItemSearch, simple_path::SimplePath},
+    systems::{item_search::ItemSearch, simple_path::SimplePath, combat::combat::Combat},
     ui::{
-        modals::modal_request::ModalPlayerRequest,
+        modals::{
+            inventory::InventoryInputHandler, map::MapInputHandler,
+            modal_request::ModalPlayerRequest, crosshairs::CrosshairsInputHandler,
+        },
         ui::UI,
     },
     MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
@@ -20,8 +22,7 @@ use crate::{
 use specs::{Builder, Dispatcher, DispatcherBuilder, Join, World, WorldExt};
 use tcod::{
     colors::WHITE,
-    console::{Offscreen, Root},
-    input::{KeyCode, KEY_PRESSED},
+    console::{blit, Offscreen, Root},
     map::FovAlgorithm,
     Console, Map as FovMap,
 };
@@ -29,8 +30,8 @@ use tcod::{
 const TORCH_RADIUS: i32 = 75;
 const FOV_LIGHT_WALLS: bool = true;
 const FOV_ALGO: FovAlgorithm = FovAlgorithm::Basic;
-const NUM_NPCS: i32 = 100;
-const NUM_ITEMS: i32 = 100;
+const NUM_NPCS: i32 = 1000;
+const NUM_ITEMS: i32 = 1000;
 
 // todo: break this up?
 pub struct Game<'a> {
@@ -42,7 +43,6 @@ pub struct Game<'a> {
     pub ui: UI,
     pub input_handler: Box<dyn InputHandler>,
     pub request_handler: Box<dyn PlayerRequestHandler>,
-    pub renderer: Renderer,
 }
 
 impl Game<'_> {
@@ -63,12 +63,14 @@ impl Game<'_> {
         world.register::<Item>();
         world.register::<Name>();
         world.register::<Inventory>();
-        world.register::<Equipped>();
+        world.register::<Attributes>();
+        world.register::<Combatant>();
 
         // create specs dispatcher
         let dispatcher = DispatcherBuilder::new()
             .with(SimplePath, "simple_path", &[])
             .with(ItemSearch, "item_search", &[])
+            .with(Combat, "combat", &[])
             .build();
 
         log::info!("creating city map");
@@ -112,7 +114,8 @@ impl Game<'_> {
                 .with(Name {
                     name: names.get_random_name(NameType::AnyFullName),
                 })
-                .with(Equipped::new())
+                .with(Attributes::random())
+                .with(Inventory::new())
                 .build();
         }
 
@@ -128,12 +131,7 @@ impl Game<'_> {
             let position = map.get_random_target();
             world
                 .create_entity()
-                .with(Item {
-                    name: item.name.clone(),
-                    item_type: item.item_type.clone(),
-                    subtype: item.subtype.clone(),
-                    price: item.price,
-                })
+                .with(Item::from_itemdata(item.clone()))
                 .with(Renderable {
                     char: item.char as char,
                     color: WHITE,
@@ -158,6 +156,10 @@ impl Game<'_> {
                 char: '@',
                 color: WHITE,
             })
+            .with(Name {
+                name: names.get_random_name(NameType::AnyFullName),
+            })
+            .with(Attributes::random())
             .build();
 
         // add city/map grid as resource
@@ -185,7 +187,6 @@ impl Game<'_> {
         let input_handler: Box<dyn InputHandler> = Box::new(DefaultInputHandler::new());
         let request_handler: Box<dyn PlayerRequestHandler> =
             Box::new(DefaultPlayerRequestHandler::new());
-        let renderer = Renderer::new(view_offset);
 
         log::info!("Done creating game, returning...");
 
@@ -197,20 +198,34 @@ impl Game<'_> {
             fov,
             ui,
             input_handler,
-            renderer,
             request_handler,
         }
     }
 
     pub fn update(&mut self) -> bool {
         self.input_handler.handle_input(&self.root, &self.world);
-        self.ui.update(&mut self.con, &self.world);
-        let update_game = self.request_handler.handle_request(&self.world, &mut self.root);
+        self.ui.update(&self.world);
+        let update_game = self
+            .request_handler
+            .handle_request(&self.world, &mut self.root);
         if update_game {
-            log::info!("updating game");
             self.update_game();
         }
         let mut game_state = self.world.write_resource::<GameState>();
+
+        // swap input and request handlers in for modals
+        match game_state.peek_player_request() {
+            PlayerRequest::ViewInventory => {
+                self.input_handler = Box::new(InventoryInputHandler::new())
+            }
+            PlayerRequest::ViewMap => self.input_handler = Box::new(MapInputHandler::new()),
+            PlayerRequest::Selection => self.input_handler = Box::new(CrosshairsInputHandler::new()),
+            PlayerRequest::CloseCurrentView => {
+                self.ui.close_current_view();
+                self.input_handler = Box::new(DefaultInputHandler::new())
+            }
+            _ => {}
+        }
         let player_request = game_state.pop_player_request();
         player_request != PlayerRequest::Quit
     }
@@ -229,9 +244,20 @@ impl Game<'_> {
         true
     }
 
+    // todo: stop calling this every frame (when possible)
     pub fn render(&mut self) {
-        self.renderer
-            .render(&mut self.con, &self.world, &mut self.root, &self.fov);
+        self.con.clear();
+        self.ui.render(&mut self.con, &self.world, &self.fov);
+        self.root.flush();
+        blit(
+            &self.con,
+            (0, 0),
+            (SCREEN_WIDTH, SCREEN_HEIGHT),
+            &mut self.root,
+            (0, 0),
+            1.0,
+            1.0,
+        );
     }
 
     pub fn get_player_pos(&self) -> Position {
@@ -257,8 +283,10 @@ pub enum PlayerRequest {
     UseItem,
     ViewInventory,
     ViewMap,
+    Selection,
     Wait,
     WieldItem,
+    Selected(i32, i32),
     ModalRequest(ModalPlayerRequest),
 }
 
@@ -266,6 +294,7 @@ pub enum PlayerRequest {
 pub struct GameState {
     messages: Vec<String>,
     player_request: Option<PlayerRequest>,
+    view_offset: [i32; 2],
 }
 
 impl GameState {
@@ -273,6 +302,7 @@ impl GameState {
         GameState {
             messages: Vec::new(),
             player_request: None,
+            view_offset: [0, 0],
         }
     }
 
@@ -284,13 +314,9 @@ impl GameState {
         if self.player_request == None {
             return PlayerRequest::None;
         }
-        let request:PlayerRequest = self.player_request.unwrap();
+        let request: PlayerRequest = self.player_request.unwrap();
         self.player_request = None;
         request
-    }
-
-    pub fn has_player_request(&self) -> bool {
-        self.player_request != None
     }
 
     pub fn peek_player_request(&self) -> PlayerRequest {
@@ -307,5 +333,13 @@ impl GameState {
 
     pub fn has_messages(&self) -> bool {
         self.messages.len() > 0
+    }
+
+    pub fn set_view_offset(&mut self, view_offset: [i32; 2]) {
+        self.view_offset = view_offset;
+    }
+
+    pub fn get_view_offset(&self) -> [i32; 2] {
+        self.view_offset
     }
 }

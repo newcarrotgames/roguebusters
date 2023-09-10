@@ -2,7 +2,7 @@ use specs::{Join, ReadStorage, System, Write, WriteStorage};
 
 use crate::{
     components::{item::Item, player::Player, position::Position},
-    game::{GameState},
+    game::GameState,
 };
 
 pub struct ItemSearch;

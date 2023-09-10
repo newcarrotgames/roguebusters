@@ -32,12 +32,16 @@ mod components {
     pub mod name;
     pub mod inventory;
     pub mod item;
-    pub mod equipped;
+    pub mod attributes;
+    pub mod combatant;
 }
 
 mod systems {
     pub mod simple_path;
     pub mod item_search;
+    pub mod combat {
+        pub mod combat;
+    }
 }
 
 mod city {
@@ -51,11 +55,17 @@ mod ui {
         pub mod modal_request;
         pub mod inventory;
         pub mod map;
+        pub mod crosshairs;
+    }
+    pub mod elements {
+        pub mod city;
+        pub mod messages;
+        pub mod sidebar;
     }
 }
 
-mod render {
-    pub mod renderer;
+mod util {
+    pub mod rng;
 }
 
 use crate::deser::prefabs::Prefabs;
@@ -98,6 +108,7 @@ fn main() {
         .font_type(FontType::Greyscale)
         .size(SCREEN_WIDTH, SCREEN_HEIGHT)
         .title("RogueBusters")
+        // .fullscreen(true)
         .init();
     let con = Offscreen::new(MAP_WIDTH, MAP_HEIGHT);
     tcod::system::set_fps(LIMIT_FPS);

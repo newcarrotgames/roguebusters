@@ -1,4 +1,15 @@
 <items>
+	<!-- melee weapons -->
+	<item>
+		<name>Blackjack</name>
+		<type>weapon</type>
+		<subtype>melee</subtype>
+		<damage>4</damage>
+		<rate>1</rate>
+		<accuracy>0.8</accuracy>
+		<price>3</price>
+		<char>173</char>
+	</item>
 	<!-- revolvers -->
 	<item>
 		<name>.22 Revolver</name>
