@@ -34,6 +34,7 @@ mod components {
     pub mod item;
     pub mod attributes;
     pub mod combatant;
+    pub mod npc;
 }
 
 mod systems {

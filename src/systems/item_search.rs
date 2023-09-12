@@ -7,6 +7,7 @@ use crate::{
 
 pub struct ItemSearch;
 
+// todo: chunks?
 impl<'a> System<'a> for ItemSearch {
     type SystemData = (
         Write<'a, GameState>,

@@ -1,6 +1,7 @@
 use crate::city::city::City;
 use crate::components::combatant;
 use crate::components::combatant::Combatant;
+use crate::components::inventory::EquipLocation;
 use crate::components::inventory::Inventory;
 use crate::components::item::Item;
 use crate::components::player::Player;
@@ -181,13 +182,28 @@ impl DefaultPlayerRequestHandler {
         return map.data[y as usize][x as usize].blocked;
     }
 
-    pub fn attack(&self, world: &World, x: f32, y: f32) {
+    pub fn attack(&self, world: &World, x: f32, y: f32, game_state: &mut GameState) {
+        let player_storage = world.read_storage::<Player>();
+        let inventory_storage = world.read_storage::<Inventory>();
+        let pos_storage = world.read_storage::<Position>();
+        let ents = world.entities();
+
+        // get players's inventory
+        let player_inv = (&player_storage, &inventory_storage)
+            .join()
+            .map(|(_, inv)| inv)
+            .last()
+            .expect("No player inventory found!");
+
+        // check if player has a weapon equipped
+        if player_inv.equipped_item(EquipLocation::RightHand) == None {
+            game_state.push_message(format!("You do not have an equipped weapon."));
+            return;
+        };
+
         log::info!("attack: x: {}, y: {}", x, y);
         // get player entity
         // let mut combatant = Combatant{entity: Entity::, target: 0};
-        let player_storage = world.read_storage::<Player>();
-        let pos_storage = world.read_storage::<Position>();
-        let ents = world.entities();
 
         let player_ent = (&ents, &player_storage)
             .join()
@@ -198,11 +214,15 @@ impl DefaultPlayerRequestHandler {
         let target_ent = (&ents, &pos_storage)
             .join()
             .filter(|(_ent, pos)| pos.x == x && pos.y == y)
-            .last()
-            .expect("No target entity found!");
+            .last();
+
+        if target_ent == None {
+            game_state.push_message(format!("No target found!"));
+            return;
+        }
 
         let mut combatants = world.write_storage::<Combatant>();
-        let result = combatants.insert(target_ent.0, Combatant { entity: player_ent });
+        let result = combatants.insert(target_ent.unwrap().0, Combatant { entity: player_ent });
 
         match result {
             Ok(_) => log::info!("inserted combatant"),
@@ -242,6 +262,7 @@ impl PlayerRequestHandler for DefaultPlayerRequestHandler {
                     world,
                     (x + view_offset[0]) as f32,
                     (y + view_offset[1]) as f32,
+                    &mut game_state,
                 );
                 // game_state.pop_player_request();
                 game_state.push_player_request(PlayerRequest::CloseCurrentView);

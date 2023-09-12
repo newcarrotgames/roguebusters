@@ -6,13 +6,13 @@ use crate::util::rng::Dice;
 #[derive(Component, Debug)]
 #[storage(VecStorage)]
 pub struct Attributes {
-    brawn: u8,
-    agility: u8,
-    stamina: u8,
-    perception: u8,
-    fortune: u8,
-    charm: u8,
-    health: u8,
+    brawn: i32,
+    agility: i32,
+    stamina: i32,
+    perception: i32,
+    fortune: i32,
+    charm: i32,
+    health: i32,
 }
 
 impl Attributes {
@@ -42,59 +42,59 @@ impl Attributes {
         attributes
     }
 
-    pub fn brawn(&self) -> u8 {
+    pub fn brawn(&self) -> i32 {
         self.brawn
     }
 
-    pub fn agility(&self) -> u8 {
+    pub fn agility(&self) -> i32 {
         self.agility
     }
 
-    pub fn stamina(&self) -> u8 {
+    pub fn stamina(&self) -> i32 {
         self.stamina
     }
 
-    pub fn perception(&self) -> u8 {
+    pub fn perception(&self) -> i32 {
         self.perception
     }
 
-    pub fn fortune(&self) -> u8 {
+    pub fn fortune(&self) -> i32 {
         self.fortune
     }
 
-    pub fn charm(&self) -> u8 {
+    pub fn charm(&self) -> i32 {
         self.charm
     }
 
-    pub fn set_brawn(&mut self, brawn: u8) {
+    pub fn set_brawn(&mut self, brawn: i32) {
         self.brawn = brawn;
     }
 
-    pub fn set_agility(&mut self, agility: u8) {
+    pub fn set_agility(&mut self, agility: i32) {
         self.agility = agility;
     }
 
-    pub fn set_stamina(&mut self, stamina: u8) {
+    pub fn set_stamina(&mut self, stamina: i32) {
         self.stamina = stamina;
     }
 
-    pub fn set_perception(&mut self, perception: u8) {
+    pub fn set_perception(&mut self, perception: i32) {
         self.perception = perception;
     }
 
-    pub fn set_fortune(&mut self, fortune: u8) {
+    pub fn set_fortune(&mut self, fortune: i32) {
         self.fortune = fortune;
     }
 
-    pub fn set_charm(&mut self, charm: u8) {
+    pub fn set_charm(&mut self, charm: i32) {
         self.charm = charm;
     }
 
-    pub fn health(&self) -> u8 {
+    pub fn health(&self) -> i32 {
         self.health
     }
 
-    pub fn set_health(&mut self, health: u8) {
+    pub fn set_health(&mut self, health: i32) {
         self.health = health;
     }
 }

@@ -2,7 +2,7 @@ use crate::{
     city::city::City,
     components::{
         attributes::Attributes, inventory::Inventory, item::Item, name::Name, player::Player,
-        position::Position, renderable::Renderable, target::Target, combatant::Combatant,
+        position::Position, renderable::Renderable, target::Target, combatant::Combatant, npc::NPC,
     },
     deser::{items::Items, prefabs::Prefabs},
     input::handlers::{
@@ -102,6 +102,7 @@ impl Game<'_> {
             let target = map.get_random_target();
             world
                 .create_entity()
+                .with(NPC::new())
                 .with(position)
                 .with(Renderable {
                     char: 2 as char,
@@ -205,6 +206,8 @@ impl Game<'_> {
     pub fn update(&mut self) -> bool {
         self.input_handler.handle_input(&self.root, &self.world);
         self.ui.update(&self.world);
+        // todo: store update_game value in game_state and 
+        // not as handle_request's return value
         let update_game = self
             .request_handler
             .handle_request(&self.world, &mut self.root);

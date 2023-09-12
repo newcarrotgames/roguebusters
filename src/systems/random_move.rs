@@ -22,22 +22,3 @@ impl<'a> System<'a> for RandomMove {
         }
     }
 }
-
-
-// pub struct Renderable;
-
-// impl<'a> System<'a> for Draw {
-//     type SystemData = WriteStorage<'a, Object>;
-//     fn run(&mut self, mut obj: Self::SystemData) {
-//         for obj in obj.join() {
-//             con.set_default_foreground(self.color);
-//             let cx = self.x - view_offset[0];
-//             let cy = self.y - view_offset[1];
-//             // check if offscreen
-//             if cx < 0 || cy < 0  || cx > SCREEN_WIDTH || cy > SCREEN_HEIGHT  {
-//                 return;
-//             }
-//             con.put_char(cx, cy, self.char, BackgroundFlag::None);
-//         }
-//     }
-// }

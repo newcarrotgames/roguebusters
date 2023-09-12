@@ -64,11 +64,11 @@ pub struct ItemData {
     #[yaserde(rename = "type")]
     pub item_type: String,
     pub subtype: String,
-    pub range: u32,
-    pub damage: u32,
-    pub rate: u32,
+    pub range: i32,
+    pub damage: i32,
+    pub rate: i32,
     pub accuracy: f32,
-    pub ammo: u32,
+    pub ammo: i32,
     pub price: f32,
     pub char: u8,
 }
