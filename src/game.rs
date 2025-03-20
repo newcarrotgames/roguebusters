@@ -1,23 +1,14 @@
 use crate::{
-    city::city::City,
-    components::{
-        attributes::Attributes, inventory::Inventory, item::Item, name::Name, player::Player,
-        position::Position, renderable::Renderable, target::Target, combatant::Combatant, npc::NPC,
-    },
-    deser::{items::Items, prefabs::Prefabs},
-    input::handlers::{
+    city::city::City, components::{
+        attributes::Attributes, combatant::Combatant, inventory::Inventory, item::Item, name::Name, npc::NPC, player::Player, position::Position, renderable::Renderable, target::Target
+    }, deser::{items::Items, prefabs::Prefabs}, input::handlers::{
         DefaultInputHandler, DefaultPlayerRequestHandler, InputHandler, PlayerRequestHandler,
-    },
-    names::{NameType, Names},
-    systems::{item_search::ItemSearch, simple_path::SimplePath, combat::combat::Combat},
-    ui::{
+    }, names::{NameType, Names}, service::screen::ScreenService, systems::{combat::combat::Combat, item_search::ItemSearch, simple_path::SimplePath}, ui::{
         modals::{
-            inventory::InventoryInputHandler, map::MapInputHandler,
-            modal_request::ModalPlayerRequest, crosshairs::CrosshairsInputHandler,
+            crosshairs::CrosshairsInputHandler, inventory::InventoryInputHandler, map::MapInputHandler, modal_request::ModalPlayerRequest
         },
         ui::UI,
-    },
-    MAP_HEIGHT, MAP_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH,
+    }, MAP_HEIGHT, MAP_WIDTH
 };
 use specs::{Builder, Dispatcher, DispatcherBuilder, Join, World, WorldExt};
 use tcod::{
@@ -50,7 +41,7 @@ impl Game<'_> {
         let w = con.width();
         let h = con.height();
 
-        log::info!("creating specs world");
+        log::debug!("creating specs world");
 
         // create specs world
         let mut world = World::new();
@@ -65,6 +56,7 @@ impl Game<'_> {
         world.register::<Inventory>();
         world.register::<Attributes>();
         world.register::<Combatant>();
+        world.register::<NPC>();
 
         // create specs dispatcher
         let dispatcher = DispatcherBuilder::new()
@@ -73,7 +65,7 @@ impl Game<'_> {
             .with(Combat, "combat", &[])
             .build();
 
-        log::info!("creating city map");
+        log::debug!("creating city map");
         let mut map = City::new(w, h);
         map.build(prefabs);
 
@@ -94,7 +86,7 @@ impl Game<'_> {
 
         let names = Names::new();
 
-        log::info!("creating npcs");
+        log::debug!("creating npcs");
 
         // add npcs
         for _ in 0..NUM_NPCS {
@@ -120,7 +112,7 @@ impl Game<'_> {
                 .build();
         }
 
-        log::info!("creating items");
+        log::debug!("creating items");
 
         // todo: should items static?
         let mut items = Items::new();
@@ -141,7 +133,7 @@ impl Game<'_> {
                 .build();
         }
 
-        log::info!("creating player");
+        log::debug!("creating player");
 
         // add player
         let position = map.get_random_target();
@@ -174,11 +166,11 @@ impl Game<'_> {
         if view_offset[1] < 0 {
             view_offset[1] = 0;
         }
-        if view_offset[0] > MAP_WIDTH - SCREEN_WIDTH {
-            view_offset[0] = MAP_WIDTH - SCREEN_WIDTH
+        if view_offset[0] > MAP_WIDTH - ScreenService::get_width() {
+            view_offset[0] = MAP_WIDTH - ScreenService::get_width()
         }
-        if view_offset[0] > MAP_HEIGHT - SCREEN_HEIGHT {
-            view_offset[0] = MAP_HEIGHT - SCREEN_HEIGHT
+        if view_offset[0] > MAP_HEIGHT - ScreenService::get_height() {
+            view_offset[0] = MAP_HEIGHT - ScreenService::get_height()
         }
 
         let ui = UI::new(view_offset);
@@ -189,7 +181,7 @@ impl Game<'_> {
         let request_handler: Box<dyn PlayerRequestHandler> =
             Box::new(DefaultPlayerRequestHandler::new());
 
-        log::info!("Done creating game, returning...");
+        log::debug!("Done creating game, returning...");
 
         Game {
             root,
@@ -255,7 +247,7 @@ impl Game<'_> {
         blit(
             &self.con,
             (0, 0),
-            (SCREEN_WIDTH, SCREEN_HEIGHT),
+            (ScreenService::get_width(), ScreenService::get_height()),
             &mut self.root,
             (0, 0),
             1.0,

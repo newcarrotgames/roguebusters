@@ -24,7 +24,7 @@ impl InputHandler for DefaultInputHandler {
             return;
         }
 
-        // info!("key: {:?}", key);
+        // debug!("key: {:?}", key);
 
         match key.unwrap() {
             Key {

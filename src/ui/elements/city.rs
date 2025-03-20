@@ -1,13 +1,14 @@
 use crate::{
     city::city::City,
     components::{player::Player, position::Position, renderable::Renderable},
-    ui::ui::{UIElement, LINES_DOUBLE_SINGLE, MAP_SIZE, MESSAGES_HEIGHT, UI, UI_WIDTH, UIState},
-    SCREEN_HEIGHT, SCREEN_WIDTH, game::GameState,
+    game::GameState,
+    service::screen::ScreenService,
+    ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI},
 };
 use specs::{Join, World, WorldExt};
 use tcod::{colors::WHITE, console::Offscreen, BackgroundFlag, Console, Map};
 
-const INVENTORY_POSITION: [i32; 4] = [10, 10, 50, 50];
+const MOVEMENT_VIEW_OFFSET:i32 = 4;
 
 pub struct CityUIElement {
     view_offset: [i32; 2],
@@ -24,33 +25,36 @@ impl UIElement for CityUIElement {
         let map = world.read_resource::<City>();
         if self.view_offset[0] <= 0
             || self.view_offset[1] <= 0
-            || self.view_offset[0] >= map.width - 63
-            || self.view_offset[1] >= map.height - 35
+            || self.view_offset[0] >= map.width - ScreenService::map_area_size()[0]
+            || self.view_offset[1] >= map.height - ScreenService::map_area_size()[1]
         {
             return;
         }
         let pos_storage = world.read_storage::<Position>();
         let player_storage = world.read_storage::<Player>();
         let mut pos: Position = Position::zero();
+        let screen_center_x:i32 = ScreenService::map_area_size()[0] / 2;
+        let screen_center_y:i32 = ScreenService::map_area_size()[1] / 2;
+
         for (p, _) in (&pos_storage, &player_storage).join() {
             pos = Position { x: p.x, y: p.y }
         }
-        if pos.x as i32 - self.view_offset[0] > SCREEN_WIDTH - 63 {
+        if pos.x as i32 - self.view_offset[0] > screen_center_x + MOVEMENT_VIEW_OFFSET {
             self.view_offset[0] += 1;
         }
-        if pos.y as i32 - self.view_offset[1] > SCREEN_HEIGHT - 35 {
+        if pos.y as i32 - self.view_offset[1] > screen_center_y + MOVEMENT_VIEW_OFFSET {
             self.view_offset[1] += 1;
         }
-        if pos.x as i32 - self.view_offset[0] < 40 {
+        if pos.x as i32 - self.view_offset[0] < screen_center_x - MOVEMENT_VIEW_OFFSET {
             self.view_offset[0] -= 1;
         }
-        if pos.y as i32 - self.view_offset[1] < 25 {
+        if pos.y as i32 - self.view_offset[1] < screen_center_y - MOVEMENT_VIEW_OFFSET {
             self.view_offset[1] -= 1;
         }
 
         let mut game_state = world.write_resource::<GameState>();
         game_state.set_view_offset(self.view_offset);
-        // log::info!("update: {} {}", self.view_offset[0], self.view_offset[1]);
+        // log::debug!("update: {} {}", self.view_offset[0], self.view_offset[1]);
     }
 
     fn render(&mut self, con: &mut Offscreen, world: &World, fov: &Map) {
@@ -59,23 +63,18 @@ impl UIElement for CityUIElement {
             [
                 0,
                 0,
-                SCREEN_WIDTH - UI_WIDTH - 1,
-                SCREEN_HEIGHT - MESSAGES_HEIGHT,
+                ScreenService::map_area_size()[0] - 1,
+                ScreenService::map_area_size()[1] - 1,
             ],
             WHITE,
             LINES_DOUBLE_SINGLE,
             "City",
         );
-        // log::info!(
-        //     "render: {} {}",
-        //     SCREEN_WIDTH - UI_WIDTH - 1,
-        //     SCREEN_HEIGHT - MESSAGES_HEIGHT
-        // );
         let mut map = world.write_resource::<City>();
 
-		// render environment
-        for vy in 1..MAP_SIZE[0] {
-            for vx in 1..MAP_SIZE[1] {
+        // render environment
+        for vy in 1..ScreenService::map_area_size()[1] - 1 {
+            for vx in 1..ScreenService::map_area_size()[0] - 1 {
                 let x = vx + self.view_offset[0];
                 let y = vy + self.view_offset[1];
                 let mut wall = map.data[y as usize][x as usize];
@@ -94,15 +93,19 @@ impl UIElement for CityUIElement {
             }
         }
 
-		// render entities
-		let pos_storage = world.read_storage::<Position>();
+        // render entities
+        let pos_storage = world.read_storage::<Position>();
         let ren_storage = world.read_storage::<Renderable>();
         for (pos, ren) in (&pos_storage, &ren_storage).join() {
             let cx = pos.x as i32 - self.view_offset[0];
             let cy = pos.y as i32 - self.view_offset[1];
 
             // check if offscreen
-            if cx < 1 || cy < 1 || cx > SCREEN_WIDTH - 22 || cy > SCREEN_HEIGHT - MESSAGES_HEIGHT {
+            if cx < 1
+                || cy < 1
+                || cx > ScreenService::map_area_size()[0]
+                || cy > ScreenService::map_area_size()[1]
+            {
                 continue;
             }
 

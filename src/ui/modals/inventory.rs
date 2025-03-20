@@ -69,7 +69,7 @@ impl UIElement for InventoryUIElement {
                         for (_, inventory) in (&player_storage, &mut inventory_storage).join() {
                             let item = inventory.get_item(self.selected_item as usize);
                             inventory.equip(item.clone(), EquipLocation::RightHand);
-                            log::info!("Wielding item: {}", item.name);
+                            log::debug!("Wielding item: {}", item.name);
                             game_state.push_message(format!("Wielding item: {}", item.name));
                         }
                     }

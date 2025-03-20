@@ -13,10 +13,6 @@ type Coord = [i32; 2];
 type LineSet = [u8; 8];
 type Quad = [i32; 4];
 
-pub const UI_WIDTH: i32 = 20;
-pub const MESSAGES_HEIGHT: i32 = 15;
-pub const MAP_SIZE: [i32; 2] = [53, 99];
-
 // const LINES_SINGLE: LineSet = [196, 179, 218, 191, 192, 217, 180, 195];
 // const LINES_DOUBLE: LineSet = [205, 186, 201, 187, 200, 188];
 // const LINES_SINGLE_DOUBLE: LineSet = [205, 179, 213, 184, 212, 190, 181, 198];
@@ -88,7 +84,7 @@ impl UI {
                 for (pos, _) in (&position_storage, &player_storage).join() {
                     let view_offset = game_state.get_view_offset();
                     let cursor_pos = [pos.x as i32 - view_offset[0], pos.y as i32 - view_offset[1]];
-                    log::info!("cursor_pos: {:?}", cursor_pos);
+                    log::debug!("cursor_pos: {:?}", cursor_pos);
                     self.elements.push(Box::new(CrosshairsUIElement::new(cursor_pos)));
                 }
             }

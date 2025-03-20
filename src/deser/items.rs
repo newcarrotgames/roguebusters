@@ -26,7 +26,7 @@ impl Items {
             if entry.file_type().is_dir() {
                 continue;
             }
-            log::info!("loading {}", entry.path().display());
+            log::debug!("loading {}", entry.path().display());
             let items = ItemCollection::from_xml(entry.path());
             self.items.extend(items.items);
         }

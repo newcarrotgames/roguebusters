@@ -100,7 +100,7 @@ impl InputHandler for DefaultInputHandler {
 
             // shoot/selection
             Key { printable: 's', .. } => {
-                log::info!("SELECTION!!");
+                log::debug!("SELECTION!!");
                 PlayerRequest::Selection
             }
 
@@ -132,7 +132,7 @@ impl DefaultPlayerRequestHandler {
     }
 
     fn pickup_item(&mut self, world: &World, game_state: &mut GameState) {
-        log::info!("pickup item");
+        log::debug!("pickup item");
         let mut player_position: Position = Position::zero();
         let mut positions = world.write_storage::<Position>();
         let player_storage = world.read_storage::<Player>();
@@ -151,7 +151,7 @@ impl DefaultPlayerRequestHandler {
                     if inventory.push_item(item.clone()) {
                         ents_to_remove.push(entity.clone());
                         game_state.push_message(format!("You pick up a {}", item.name));
-                        log::info!("inventory: {:?}", inventory);
+                        log::debug!("inventory: {:?}", inventory);
                     } else {
                         game_state.push_message(format!("You can not pick up the {}", item.name));
                     }
@@ -201,7 +201,7 @@ impl DefaultPlayerRequestHandler {
             return;
         };
 
-        log::info!("attack: x: {}, y: {}", x, y);
+        log::debug!("attack: x: {}, y: {}", x, y);
         // get player entity
         // let mut combatant = Combatant{entity: Entity::, target: 0};
 
@@ -225,8 +225,8 @@ impl DefaultPlayerRequestHandler {
         let result = combatants.insert(target_ent.unwrap().0, Combatant { entity: player_ent });
 
         match result {
-            Ok(_) => log::info!("inserted combatant"),
-            Err(_) => log::info!("failed to insert combatant"),
+            Ok(_) => log::debug!("inserted combatant"),
+            Err(_) => log::debug!("failed to insert combatant"),
         }
     }
 }

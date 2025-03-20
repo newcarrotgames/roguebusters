@@ -15,10 +15,6 @@ use tcod::{
 
 type LineSet = [u8; 8];
 
-pub const UI_WIDTH: i32 = 20;
-pub const MESSAGES_HEIGHT: i32 = 15;
-pub const MAP_SIZE: [i32; 2] = [54, 100];
-
 pub const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
 
 pub struct Renderer {

@@ -5,8 +5,8 @@ use crate::{
         name::Name,
         player::Player,
     },
-    ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI, UI_WIDTH},
-    SCREEN_HEIGHT, SCREEN_WIDTH,
+    ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI},
+    service::screen::ScreenService
 };
 use specs::{Join, World, WorldExt};
 use tcod::{colors::WHITE, console::Offscreen, Map};
@@ -27,10 +27,10 @@ impl UIElement for SidebarUIElement {
         UI::draw_labeled_box(
             con,
             [
-                SCREEN_WIDTH - UI_WIDTH,
+                ScreenService::sidebar_position()[0],
                 0,
-                SCREEN_WIDTH - 1,
-                SCREEN_HEIGHT - 1,
+                ScreenService::get_width() - 1,
+                ScreenService::get_height() - 1,
             ],
             WHITE,
             LINES_DOUBLE_SINGLE,
@@ -42,14 +42,14 @@ impl UIElement for SidebarUIElement {
         for (_, name) in (&player_storage, &name_storage).join() {
             UI::puts(
                 con,
-                SCREEN_WIDTH - UI_WIDTH + 2,
+                ScreenService::sidebar_position()[0] + 2,
                 2,
                 &format!("Name:"),
                 WHITE,
             );
             UI::puts(
                 con,
-                SCREEN_WIDTH - UI_WIDTH + 2,
+                ScreenService::sidebar_position()[0] + 2,
                 4,
                 &format!("{}", name.name),
                 WHITE,
@@ -60,42 +60,42 @@ impl UIElement for SidebarUIElement {
         for (_, attrs) in (&player_storage, &attributes_storage).join() {
             UI::puts(
                 con,
-                SCREEN_WIDTH - UI_WIDTH + 2,
+                ScreenService::sidebar_position()[0] + 2,
                 6,
                 &format!("Brawn:      {:2}", attrs.brawn()),
                 WHITE,
             );
             UI::puts(
                 con,
-                SCREEN_WIDTH - UI_WIDTH + 2,
+                ScreenService::sidebar_position()[0] + 2,
                 7,
                 &format!("Agility:    {:2}", attrs.agility()),
                 WHITE,
             );
             UI::puts(
                 con,
-                SCREEN_WIDTH - UI_WIDTH + 2,
+                ScreenService::sidebar_position()[0] + 2,
                 8,
                 &format!("Stamina:    {:2}", attrs.stamina()),
                 WHITE,
             );
             UI::puts(
                 con,
-                SCREEN_WIDTH - UI_WIDTH + 2,
+                ScreenService::sidebar_position()[0] + 2,
                 9,
                 &format!("Perception: {:2}", attrs.perception()),
                 WHITE,
             );
             UI::puts(
                 con,
-                SCREEN_WIDTH - UI_WIDTH + 2,
+                ScreenService::sidebar_position()[0] + 2,
                 10,
                 &format!("Fortune:    {:2}", attrs.fortune()),
                 WHITE,
             );
             UI::puts(
                 con,
-                SCREEN_WIDTH - UI_WIDTH + 2,
+                ScreenService::sidebar_position()[0] + 2,
                 11,
                 &format!("Charm:      {:2}", attrs.charm()),
                 WHITE,
@@ -106,7 +106,7 @@ impl UIElement for SidebarUIElement {
         for (_, inventory) in (&player_storage, &inventory_storage).join() {
             UI::puts(
                 con,
-                SCREEN_WIDTH - UI_WIDTH + 2,
+                ScreenService::sidebar_position()[0] + 2,
                 13,
                 &format!("Wielding:"),
                 WHITE,
@@ -121,7 +121,7 @@ impl UIElement for SidebarUIElement {
             } else {
                 s = "Nothing";
             }
-            UI::puts(con, SCREEN_WIDTH - UI_WIDTH + 2, 15, s, WHITE);
+            UI::puts(con, ScreenService::sidebar_position()[0] + 2, 15, s, WHITE);
         }
     }
 

@@ -39,7 +39,7 @@ impl Templates {
             if entry.file_type().is_dir() {
                 continue;
             }
-            log::info!("loading {}", entry.path().display());
+            log::debug!("loading {}", entry.path().display());
             let tc = TemplatesCollection::from_xml(entry.path());
             for t in tc.templates.iter() {
                 let tt = t.template_type.clone();

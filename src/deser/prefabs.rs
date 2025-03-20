@@ -27,7 +27,7 @@ impl Prefabs {
             if entry.file_type().is_dir() {
                 continue;
             }
-            log::info!("loading {}", entry.path().display());
+            log::debug!("loading {}", entry.path().display());
             let prefab = Prefab::from_xml(entry.path());
             self.prefabs.insert(String::from(prefab.name.as_str()), prefab); // quite sure this is wrong
         }

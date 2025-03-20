@@ -9,7 +9,7 @@ use crate::{
         prefabs::{Cell, Prefab, Prefabs},
     },
 };
-use log::{error, info};
+use log::{error, debug};
 use rand::Rng;
 use std::{collections::HashMap, error::Error, fmt};
 use tcod::{
@@ -343,7 +343,7 @@ impl City {
             }
 
             if previous_empty_blocks != empty_blocks {
-                info!("empty blocks: {}", empty_blocks);
+                debug!("empty blocks: {}", empty_blocks);
                 previous_empty_blocks = empty_blocks;
             }
 
@@ -356,8 +356,8 @@ impl City {
         let mut generators = Generators::new("data/generators");
         generators.load_all();
 
-        info!("horizontal guides: {:?}", horizontal_guides);
-        info!("vertical guides: {:?}", vertical_guides);
+        debug!("horizontal guides: {:?}", horizontal_guides);
+        debug!("vertical guides: {:?}", vertical_guides);
 
         let mut building_id = 0;
 
@@ -565,7 +565,7 @@ impl City {
 
         // subdivide buildings
         for building in buildings.iter_mut() {
-            info!("--------------------------- subdividing building ---------------------------");
+            debug!("--------------------------- subdividing building ---------------------------");
             Building::subdivide_space(&mut building.root(), &mut self.data, 0);
             Building::add_doors(&mut building.root(), &mut self.data);
             Building::add_stairs(building, &mut self.data);

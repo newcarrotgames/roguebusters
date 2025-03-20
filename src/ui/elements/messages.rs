@@ -1,6 +1,5 @@
 use crate::{
-    ui::ui::{UIElement, LINES_DOUBLE_SINGLE, MESSAGES_HEIGHT, UI, UI_WIDTH},
-    SCREEN_HEIGHT, SCREEN_WIDTH, game::GameState,
+    game::GameState, service::screen::{self, ScreenService}, ui::ui::{UIElement, LINES_DOUBLE_SINGLE, UI}
 };
 use specs::{World, WorldExt};
 use tcod::{colors::WHITE, console::Offscreen, Map};
@@ -34,26 +33,28 @@ impl UIElement for MessagesUIElement {
         UI::draw_labeled_box(
             con,
             [
-                0,
-                SCREEN_HEIGHT - MESSAGES_HEIGHT + 1,
-                SCREEN_WIDTH - UI_WIDTH - 1,
-                SCREEN_HEIGHT - 1,
+                ScreenService::messages_area_position()[0],
+                ScreenService::messages_area_position()[1],
+                ScreenService::messages_area_position()[0] + ScreenService::messages_area_size()[0] - 1,
+                ScreenService::messages_area_position()[1] + ScreenService::messages_area_size()[1] - 1,
             ],
             WHITE,
             LINES_DOUBLE_SINGLE,
             "Messages",
         );
-        
+
         let mut messages_offset = 0;
-        if self.messages.len() as i32 >= MESSAGES_HEIGHT - 2 {
-            messages_offset = self.messages.len() as i32 - MESSAGES_HEIGHT + 3;
+
+        if self.messages.len() as i32 >= ScreenService::messages_area_size()[1] - 2 {
+            messages_offset = self.messages.len() as i32 - ScreenService::messages_area_size()[1] + 2;
         }
+        
         for i in messages_offset..self.messages.len() as i32 {
             let msg = self.messages.get(i as usize).unwrap().clone();
             UI::puts(
                 con,
                 2,
-                SCREEN_HEIGHT - MESSAGES_HEIGHT + 2 + (i - messages_offset) as i32,
+                ScreenService::messages_area_position()[1] + 1 + (i - messages_offset) as i32,
                 &msg,
                 WHITE,
             );

@@ -2,7 +2,7 @@ use super::city::{Coord, Direction, Grid, Rect, DIRECTIONS};
 use crate::{city::city::{Tile, TileId}, deser::{prefabs::{self, Prefabs, Prefab}, generators::Generator}};
 use rand::Rng;
 use std::fmt;
-use log::{info, error};
+use log::{debug, error};
 
 pub const EXTERIOR: bool = true;
 pub const INTERIOR: bool = false;
@@ -122,7 +122,7 @@ impl Building {
 
     pub(crate) fn add_stairs(building: &mut Building, data: &mut Grid) {
         for floor in building.floors.iter_mut() {
-            info!("{}", floor);
+            debug!("{}", floor);
         }
     }
 
@@ -142,7 +142,7 @@ impl Building {
     // }
 
     // pub(crate) fn populate(space: &mut Space, data: &mut Grid, prefabs: ) {
-    //     log::info!("populating space");
+    //     log::debug!("populating space");
     // }
 }
 
@@ -301,7 +301,7 @@ impl Space {
             HORIZONTAL => self.rect.height() as i32,
         };
         let f = s / 4;
-        info!(
+        debug!(
             "a: {}, rect: {}, f: {}/{}, s: {}",
             axis,
             self.rect,
@@ -313,7 +313,7 @@ impl Space {
     }
 
     pub fn subdivide(&mut self, data: &mut Grid, depth: i32) {
-        info!(
+        debug!(
             "subdividing space: {}, width: {}, height: {}",
             self,
             self.rect.width(),
@@ -322,23 +322,23 @@ impl Space {
         let mut rng = rand::thread_rng();
 
         if depth > 0 && rng.gen_range(0..depth) > 0 {
-            info!("space missed coin toss, not subdividing");
+            debug!("space missed coin toss, not subdividing");
             return;
         }
 
         // check if the space is large enough to subdivide
         if self.rect.size() <= SUBDIVISION_SIZE_LIMIT {
-            info!("space is too small to subdivide");
+            debug!("space is too small to subdivide");
             return;
         }
 
         if self.rect.width() <= SUBDIVISION_WIDTH_LIMIT {
-            info!("space is beyond width limit");
+            debug!("space is beyond width limit");
             return;
         }
 
         if self.rect.height() <= SUBDIVISION_HEIGHT_LIMIT {
-            info!("space is beyond height limit");
+            debug!("space is beyond height limit");
             return;
         }
 
@@ -354,8 +354,8 @@ impl Space {
 
         let point = self.partition_point(axis);
 
-        info!("axis: {}", axis);
-        info!("point: {}", point);
+        debug!("axis: {}", axis);
+        debug!("point: {}", point);
 
         // create new spaces from partitions
         let space1: Space;
@@ -372,7 +372,7 @@ impl Space {
             walls[DIR_SOUTH] = INTERIOR;
 
             space1 = Space::with_walls(Rect { x1, y1, x2, y2 }, self.building_id, walls);
-            info!(
+            debug!(
                 "space1: {}, width: {}, height: {}",
                 space1,
                 space1.rect.width(),
@@ -386,7 +386,7 @@ impl Space {
             walls[DIR_NORTH] = INTERIOR;
 
             space2 = Space::with_walls(Rect { x1, y1, x2, y2 }, self.building_id, walls);
-            info!(
+            debug!(
                 "space2: {}, width: {}, height: {}",
                 space2,
                 space2.rect.width(),
@@ -402,7 +402,7 @@ impl Space {
             walls[DIR_EAST] = INTERIOR;
 
             space1 = Space::with_walls(Rect { x1, y1, x2, y2 }, self.building_id, walls);
-            info!(
+            debug!(
                 "space1: {}, width: {}, height: {}",
                 space1,
                 space1.rect.width(),
@@ -417,7 +417,7 @@ impl Space {
             walls[DIR_WEST] = INTERIOR;
 
             space2 = Space::with_walls(Rect { x1, y1, x2, y2 }, self.building_id, walls);
-            info!(
+            debug!(
                 "space2: {}, width: {}, height: {}",
                 space2,
                 space2.rect.width(),
@@ -429,14 +429,14 @@ impl Space {
         if space1.rect.width() <= SUBDIVISION_WIDTH_LIMIT
             || space2.rect.width() <= SUBDIVISION_WIDTH_LIMIT
         {
-            info!("one or both subdivided spaces were too small");
+            debug!("one or both subdivided spaces were too small");
             return;
         }
 
         if space1.rect.height() <= SUBDIVISION_HEIGHT_LIMIT
             || space2.rect.height() <= SUBDIVISION_HEIGHT_LIMIT
         {
-            info!("one or both subdivided spaces were too small");
+            debug!("one or both subdivided spaces were too small");
             return;
         }
 
@@ -450,7 +450,7 @@ impl Space {
         }
 
         if !has_exterior_wall {
-            info!("space has no exterior walls");
+            debug!("space has no exterior walls");
             return;
         }
 
@@ -463,7 +463,7 @@ impl Space {
         }
 
         if !has_exterior_wall {
-            info!("space has no exterior walls");
+            debug!("space has no exterior walls");
             return;
         }
 
@@ -553,9 +553,9 @@ impl Space {
         let mut times = 0;
         let mut rng = rand::thread_rng();
         for rule in gen.rules.rules.iter() {
-            // log::info!("rule: {:?}", rule);
+            // log::debug!("rule: {:?}", rule);
             let prefab = prefabs.get(rule.name.as_str());
-            // log::info!("self.rect: {}", self.rect);
+            // log::debug!("self.rect: {}", self.rect);
             match rule.frequency.as_str() {
                 "one" => loop {
                     let x = rng.gen_range(self.rect.x1..self.rect.x2 - 2);
@@ -598,7 +598,7 @@ impl Space {
         for py in 0..prefab.height + 1 {
             for px in 0..prefab.width + 1 {
                 let tile = data[(y + py) as usize][(x + px) as usize];
-                // log::info!("tile: {:?}", tile);
+                // log::debug!("tile: {:?}", tile);
                 if tile.tile_id != TileId::Interior {
                     return false;
                 }
@@ -610,10 +610,10 @@ impl Space {
     pub fn fill(&mut self, gen: &Generator, prefabs: &Prefabs, data: &mut Grid) {
         for space in self.partitions.iter_mut() {
             if space.partitions.len() > 0 {
-                log::info!("space has partitions, continuing to traverse partiontions tree...");
+                log::debug!("space has partitions, continuing to traverse partiontions tree...");
                 space.fill(gen, prefabs, data);
             } else {
-                log::info!("space has no partions, attempting to fill it with useful stuff...");
+                log::debug!("space has no partions, attempting to fill it with useful stuff...");
                 space.fill_space(gen, prefabs, data);
             }
         }

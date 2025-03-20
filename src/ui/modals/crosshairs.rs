@@ -49,7 +49,7 @@ impl UIElement for CrosshairsUIElement {
             PlayerRequest::ModalRequest(ModalPlayerRequest::CrosshairsRequest(request)) => {
                 match request {
                     CrosshairsModalPlayerRequest::Move(x, y) => {
-                        //log::info!("Moving crosshairs by {}, {}", x, y);
+                        //log::debug!("Moving crosshairs by {}, {}", x, y);
                         self.old_position = self.position;
                         self.position[0] += x;
                         self.position[1] += y;

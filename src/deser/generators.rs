@@ -27,12 +27,12 @@ impl Generators {
             if entry.file_type().is_dir() {
                 continue;
             }
-            log::info!("loading {}", entry.path().display());
+            log::debug!("loading {}", entry.path().display());
             let gen = Generator::from_xml(entry.path());
-            log::info!("gen {:?}", gen);
+            log::debug!("gen {:?}", gen);
             let gmap = self.generators.entry(gen.gen_type.clone()).or_insert_with(HashMap::new);
             gmap.insert(gen.name.clone(), gen);
-            log::info!("done loading {}", entry.path().display());
+            log::debug!("done loading {}", entry.path().display());
         }
     }
 
