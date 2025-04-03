@@ -5,6 +5,7 @@ use crate::{
     input::handlers::InputHandler,
     ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI},
     MAP_HEIGHT, MAP_WIDTH,
+    service::screen::ScreenService
 };
 use specs::{Join, World, WorldExt};
 use tcod::{
@@ -18,13 +19,23 @@ use tcod::{
     BackgroundFlag, Console, Map,
 };
 
-const MAP_POSITION: [i32; 4] = [5, 5, 113, 61];
-
-pub struct MapUIElement {}
+pub struct MapUIElement {
+    pos: [i32; 4]
+}
 
 impl MapUIElement {
     pub fn new() -> Self {
-        MapUIElement {}
+        MapUIElement {
+            pos: Self::calculate_self_pos()
+        }
+    }
+
+    fn calculate_self_pos() -> [i32; 4] {
+        let x1 = ScreenService::get_width() / 20;
+        let y1 = ScreenService::get_height() / 20;
+        let x2 = ScreenService::get_width() - x1;
+        let y2 = ScreenService::get_height() - y1;
+        [x1, y1, x2, y2]
     }
 }
 
@@ -34,15 +45,15 @@ impl UIElement for MapUIElement {
     }
 
     fn render(&mut self, con: &mut Offscreen, world: &World, fov: &Map) {
-        UI::render_dialog(con, MAP_POSITION, WHITE, LINES_DOUBLE_SINGLE, "Map");
+        UI::render_dialog(con, self.pos, WHITE, LINES_DOUBLE_SINGLE, "Map");
         // draw map view
         let map = world.read_resource::<City>();
-        let map_x_scale = MAP_WIDTH / (MAP_POSITION[2] - MAP_POSITION[0] - 2);
-        let map_y_scale = MAP_HEIGHT / (MAP_POSITION[3] - MAP_POSITION[1] - 2);
-        for my in MAP_POSITION[1] + 1..MAP_POSITION[3] {
-            for mx in MAP_POSITION[0] + 1..MAP_POSITION[2] {
-                let x = mx - MAP_POSITION[0];
-                let y = my - MAP_POSITION[1];
+        let map_x_scale = MAP_WIDTH / (self.pos[2] - self.pos[0] - 2);
+        let map_y_scale = MAP_HEIGHT / (self.pos[3] - self.pos[1] - 2);
+        for my in self.pos[1] + 1..self.pos[3] {
+            for mx in self.pos[0] + 1..self.pos[2] {
+                let x = mx - self.pos[0];
+                let y = my - self.pos[1];
                 let wall = map.data[(y * map_y_scale) as usize][(x * map_x_scale) as usize];
                 con.set_default_foreground(WHITE);
                 let mut c = 176 as char;
@@ -69,8 +80,8 @@ impl UIElement for MapUIElement {
         let position_storage = world.read_storage::<Position>();
         for (_, player_position) in (&player_storage, &position_storage).join() {
             con.put_char(
-                MAP_POSITION[0] + (player_position.x as i32 / map_x_scale),
-                MAP_POSITION[1] + (player_position.y as i32 / map_y_scale),
+                self.pos[0] + (player_position.x as i32 / map_x_scale),
+                self.pos[1] + (player_position.y as i32 / map_y_scale),
                 '@',
                 BackgroundFlag::None,
             );
