@@ -23,22 +23,16 @@ impl CityUIElement {
 impl UIElement for CityUIElement {
     fn update(&mut self, world: &World) {
         let map = world.read_resource::<City>();
-        if self.view_offset[0] <= 0
-            || self.view_offset[1] <= 0
-            || self.view_offset[0] >= map.width - ScreenService::map_area_size()[0]
-            || self.view_offset[1] >= map.height - ScreenService::map_area_size()[1]
-        {
-            return;
-        }
         let pos_storage = world.read_storage::<Position>();
         let player_storage = world.read_storage::<Player>();
         let mut pos: Position = Position::zero();
-        let screen_center_x:i32 = ScreenService::map_area_size()[0] / 2;
-        let screen_center_y:i32 = ScreenService::map_area_size()[1] / 2;
+        let screen_center_x: i32 = ScreenService::map_area_size()[0] / 2;
+        let screen_center_y: i32 = ScreenService::map_area_size()[1] / 2;
 
         for (p, _) in (&pos_storage, &player_storage).join() {
             pos = Position { x: p.x, y: p.y }
         }
+
         if pos.x as i32 - self.view_offset[0] > screen_center_x + MOVEMENT_VIEW_OFFSET {
             self.view_offset[0] += 1;
         }
@@ -52,9 +46,14 @@ impl UIElement for CityUIElement {
             self.view_offset[1] -= 1;
         }
 
+        // clamp per-axis so neither dimension scrolls past the map boundary
+        let max_x = (map.width - ScreenService::map_area_size()[0]).max(0);
+        let max_y = (map.height - ScreenService::map_area_size()[1]).max(0);
+        self.view_offset[0] = self.view_offset[0].clamp(0, max_x);
+        self.view_offset[1] = self.view_offset[1].clamp(0, max_y);
+
         let mut game_state = world.write_resource::<GameState>();
         game_state.set_view_offset(self.view_offset);
-        // log::debug!("update: {} {}", self.view_offset[0], self.view_offset[1]);
     }
 
     fn render(&mut self, con: &mut Offscreen, world: &World, fov: &Map) {

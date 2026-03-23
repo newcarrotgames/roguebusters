@@ -13,6 +13,7 @@ pub struct Item {
     pub accuracy: f32,
     pub ammo: i32,
     pub price: f32,
+    pub char: char,
 }
 
 impl Item {
@@ -27,6 +28,7 @@ impl Item {
             accuracy: clone.accuracy.clone(),
             ammo: clone.ammo,
             price: clone.price,
+            char: clone.char as char,
         }
     }
 }

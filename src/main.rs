@@ -46,6 +46,7 @@ mod components {
 mod systems {
     pub mod simple_path;
     pub mod item_search;
+    pub mod player_action;
     pub mod combat {
         pub mod combat;
     }
@@ -132,8 +133,9 @@ fn main() {
 
     log::debug!("creating tcod console");
     let root = Root::initializer()
-        .font("fonts/6YQgQ.png", FontLayout::AsciiInRow)
-        .font_type(FontType::Greyscale)
+        .font("fonts/tileset.png", FontLayout::AsciiInRow)
+        .font_dimensions(256, 175)
+        .font_type(FontType::Default)
         .size(ScreenService::get_width(), ScreenService::get_height())
         .title("RogueBusters")
         // .fullscreen(true)

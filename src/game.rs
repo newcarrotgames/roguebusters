@@ -2,8 +2,8 @@ use crate::{
     city::city::City, components::{
         attributes::Attributes, combatant::Combatant, inventory::Inventory, item::Item, name::Name, npc::NPC, player::Player, position::Position, renderable::Renderable, target::Target
     }, deser::{items::Items, prefabs::Prefabs}, input::handlers::{
-        DefaultInputHandler, DefaultPlayerRequestHandler, InputHandler, PlayerRequestHandler,
-    }, names::{NameType, Names}, service::screen::ScreenService, systems::{combat::combat::Combat, item_search::ItemSearch, simple_path::SimplePath}, ui::{
+        DefaultInputHandler, InputHandler,
+    }, names::{NameType, Names}, service::screen::ScreenService, systems::{combat::combat::Combat, item_search::ItemSearch, player_action::PlayerAction, simple_path::SimplePath}, ui::{
         modals::{
             crosshairs::CrosshairsInputHandler, inventory::InventoryInputHandler, map::MapInputHandler, modal_request::ModalPlayerRequest
         },
@@ -33,7 +33,6 @@ pub struct Game<'a> {
     pub fov: FovMap,
     pub ui: UI,
     pub input_handler: Box<dyn InputHandler>,
-    pub request_handler: Box<dyn PlayerRequestHandler>,
 }
 
 impl Game<'_> {
@@ -60,8 +59,9 @@ impl Game<'_> {
 
         // create specs dispatcher
         let dispatcher = DispatcherBuilder::new()
-            .with(SimplePath, "simple_path", &[])
-            .with(ItemSearch, "item_search", &[])
+            .with(PlayerAction, "player_action", &[])
+            .with(SimplePath, "simple_path", &["player_action"])
+            .with(ItemSearch, "item_search", &["player_action"])
             .with(Combat, "combat", &[])
             .build();
 
@@ -98,7 +98,7 @@ impl Game<'_> {
                 .with(position)
                 .with(Renderable {
                     char: 2 as char,
-                    color: WHITE,
+                    color: tcod::colors::Color { r: 100, g: 100, b: 100 },
                 })
                 .with(Target {
                     x: target.x,
@@ -147,7 +147,7 @@ impl Game<'_> {
             })
             .with(Renderable {
                 char: '@',
-                color: WHITE,
+                color: tcod::colors::YELLOW,
             })
             .with(Name {
                 name: names.get_random_name(NameType::AnyFullName),
@@ -158,28 +158,21 @@ impl Game<'_> {
         // add city/map grid as resource
         world.insert(map);
 
-        // this may not be needed
-        let mut view_offset = [(position.x - 50.0) as i32, (position.y - 30.0) as i32];
-        if view_offset[0] < 0 {
-            view_offset[0] = 0;
-        }
-        if view_offset[1] < 0 {
-            view_offset[1] = 0;
-        }
-        if view_offset[0] > MAP_WIDTH - ScreenService::get_width() {
-            view_offset[0] = MAP_WIDTH - ScreenService::get_width()
-        }
-        if view_offset[0] > MAP_HEIGHT - ScreenService::get_height() {
-            view_offset[0] = MAP_HEIGHT - ScreenService::get_height()
-        }
+        let map_area = ScreenService::map_area_size();
+        let view_offset = [
+            (position.x as i32 - map_area[0] / 2)
+                .clamp(0, MAP_WIDTH - map_area[0]),
+            (position.y as i32 - map_area[1] / 2)
+                .clamp(0, MAP_HEIGHT - map_area[1]),
+        ];
 
         let ui = UI::new(view_offset);
 
-        world.insert(GameState::new());
+        let mut initial_state = GameState::new();
+        initial_state.set_view_offset(view_offset);
+        world.insert(initial_state);
 
         let input_handler: Box<dyn InputHandler> = Box::new(DefaultInputHandler::new());
-        let request_handler: Box<dyn PlayerRequestHandler> =
-            Box::new(DefaultPlayerRequestHandler::new());
 
         log::debug!("Done creating game, returning...");
 
@@ -191,24 +184,33 @@ impl Game<'_> {
             fov,
             ui,
             input_handler,
-            request_handler,
         }
     }
 
     pub fn update(&mut self) -> bool {
         self.input_handler.handle_input(&self.root, &self.world);
-        self.ui.update(&self.world);
-        // todo: store update_game value in game_state and 
-        // not as handle_request's return value
-        let update_game = self
-            .request_handler
-            .handle_request(&self.world, &mut self.root);
-        if update_game {
+
+        let should_tick = {
+            let mut game_state = self.world.write_resource::<GameState>();
+            if game_state.peek_player_request() == PlayerRequest::ToggleFullscreen {
+                self.root.set_fullscreen(!self.root.is_fullscreen());
+                game_state.pop_player_request();
+            }
+            let tick = game_state.should_tick();
+            game_state.clear_tick();
+            tick
+        };
+
+        if should_tick {
             self.update_game();
         }
+
+        // update UI after the player has moved so the viewport scrolls to the new position
+        self.ui.update(&self.world);
+
         let mut game_state = self.world.write_resource::<GameState>();
 
-        // swap input and request handlers in for modals
+        // swap input handler for modals
         match game_state.peek_player_request() {
             PlayerRequest::ViewInventory => {
                 self.input_handler = Box::new(InventoryInputHandler::new())
@@ -290,6 +292,7 @@ pub struct GameState {
     messages: Vec<String>,
     player_request: Option<PlayerRequest>,
     view_offset: [i32; 2],
+    should_tick: bool,
 }
 
 impl GameState {
@@ -298,11 +301,33 @@ impl GameState {
             messages: Vec::new(),
             player_request: None,
             view_offset: [0, 0],
+            should_tick: false,
         }
     }
 
     pub fn push_player_request(&mut self, request: PlayerRequest) {
+        match request {
+            PlayerRequest::Move(_, _)
+            | PlayerRequest::PickupItem
+            | PlayerRequest::WieldItem
+            | PlayerRequest::DropItem
+            | PlayerRequest::Wait
+            | PlayerRequest::Selected(_, _) => {
+                self.should_tick = true;
+            }
+            _ => {}
+        }
         self.player_request = Some(request);
+    }
+
+    /// Returns true if the game simulation should advance a tick this frame,
+    /// which is set when the player issues an action that consumes a turn.
+    pub fn should_tick(&self) -> bool {
+        self.should_tick
+    }
+
+    pub fn clear_tick(&mut self) {
+        self.should_tick = false;
     }
 
     pub fn pop_player_request(&mut self) -> PlayerRequest {

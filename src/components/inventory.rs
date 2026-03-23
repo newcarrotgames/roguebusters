@@ -62,6 +62,15 @@ impl Inventory {
     pub(crate) fn get_item(&self, selected_item: usize) -> Item {
         self.items[selected_item].clone()
     }
+
+    pub fn remove_item(&mut self, item: &Item) -> bool {
+        if let Some(pos) = self.items.iter().position(|i| i == item) {
+            self.items.remove(pos);
+            true
+        } else {
+            false
+        }
+    }
 }
 
 pub enum EquipLocation {
