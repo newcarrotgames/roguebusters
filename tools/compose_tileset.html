@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tileset Composer — RogueBusters</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Consolas', 'Courier New', monospace;
+  background: #12121f;
+  color: #d0d0e0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+#header {
+  background: #1a1a30;
+  border-bottom: 2px solid #e94560;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+#header h1 { font-size: 13px; color: #e94560; letter-spacing: 3px; text-transform: uppercase; }
+.hdr-sep { color: #333; }
+.hdr-group { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.hdr-group label { color: #666; }
+.num-input {
+  width: 42px; background: #0d0d1a; color: #d0d0e0;
+  border: 1px solid #2a2a4a; padding: 3px 5px;
+  font-family: inherit; font-size: 12px; border-radius: 2px;
+  text-align: center;
+}
+.num-input:focus { outline: none; border-color: #e94560; }
+
+/* zoom toggle */
+.zoom-group { display: flex; }
+.zoom-btn {
+  background: #1a1a30; color: #888; border: 1px solid #2a2a4a;
+  padding: 3px 9px; font-family: inherit; font-size: 11px; cursor: pointer;
+  border-right: none;
+}
+.zoom-btn:last-child { border-right: 1px solid #2a2a4a; border-radius: 0 2px 2px 0; }
+.zoom-btn:first-child { border-radius: 2px 0 0 2px; }
+.zoom-btn:hover { background: #2a2a50; color: #d0d0e0; }
+.zoom-btn.active { background: #e94560; color: #fff; border-color: #e94560; }
+
+.hdr-right { margin-left: auto; display: flex; gap: 8px; }
+
+/* ── Buttons ── */
+button {
+  background: #1a1a30; color: #d0d0e0;
+  border: 1px solid #3a3a5a; padding: 5px 13px;
+  font-family: inherit; font-size: 12px; cursor: pointer; border-radius: 3px;
+}
+button:hover { background: #2a2a50; border-color: #5a5a8a; }
+button:active { background: #3a3a60; }
+.btn-primary { background: #7c2d45; border-color: #e94560; color: #fff; }
+.btn-primary:hover { background: #9c3d55; }
+.btn-danger { border-color: #6b2020; color: #e06060; }
+.btn-danger:hover { background: #2a1a1a; border-color: #c03030; }
+
+input[type=file] { display: none; }
+
+/* ── Main layout ── */
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Left: source tilesets ── */
+#panel-left {
+  width: 58%;
+  height: 100%;
+  border-right: 1px solid #2a2a4a;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ts-section {
+  background: #1a1a30;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.ts-header {
+  padding: 6px 10px;
+  background: #1e1e38;
+  border-bottom: 1px solid #2a2a4a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+}
+.ts-header:hover { background: #252545; }
+.ts-dot { color: #e94560; font-size: 10px; }
+.ts-name { color: #e0e0e0; flex: 1; }
+.ts-meta { color: #555; font-size: 11px; }
+.ts-collapse { color: #555; font-size: 10px; transition: transform 0.15s; }
+.ts-src-ctrl { display: flex; align-items: center; gap: 4px; margin-left: 6px; }
+.ts-src-ctrl label { color: #e94560; font-size: 10px; }
+.src-num { width: 36px; background: #0d0d1a; color: #d0d0e0; border: 1px solid #3a3a5a; padding: 1px 3px; font-family: inherit; font-size: 10px; border-radius: 2px; text-align: center; }
+.src-num:focus { outline: none; border-color: #e94560; }
+.src-auto-btn {
+  background: #0d0d1a; color: #888; border: 1px solid #3a3a5a;
+  padding: 1px 6px; font-family: inherit; font-size: 10px; cursor: pointer; border-radius: 2px;
+}
+.src-auto-btn:hover { background: #1a1a30; color: #e94560; border-color: #e94560; }
+
+/* source panel toolbar */
+#src-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 0 6px; flex-shrink: 0;
+  position: sticky; top: 0; z-index: 5;
+  background: #12121f;
+}
+#src-toolbar span { color: #444; font-size: 11px; }
+.ts-remove-btn {
+  background: none; border: none; color: #444; font-size: 13px;
+  cursor: pointer; padding: 0 3px; line-height: 1; margin-left: 4px;
+}
+.ts-remove-btn:hover { color: #e94560; }
+/* undo flash */
+@keyframes undoFlash { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.undo-flash { animation: undoFlash 0.25s ease; }
+.ts-body { overflow: auto; position: relative; }
+.ts-body canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: crosshair;
+}
+
+#placeholder {
+  color: #444; font-size: 13px; text-align: center;
+  padding: 60px 20px; line-height: 2;
+}
+#placeholder strong { color: #666; }
+
+/* ── Right: output + controls ── */
+#panel-right {
+  width: 42%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel-section {
+  background: #1a1a30;
+  border: 1px solid #2a2a4a;
+  border-radius: 4px;
+  padding: 10px;
+}
+.section-title {
+  font-size: 10px; color: #555; text-transform: uppercase;
+  letter-spacing: 1.5px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title span { color: #7070b0; }
+
+#output-wrap { overflow: auto; }
+#output-canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: crosshair;
+}
+
+/* selected tile preview */
+#sel-box {
+  display: flex; align-items: center; gap: 10px;
+  background: #12121f; border: 1px solid #2a2a4a;
+  border-radius: 3px; padding: 8px 10px;
+}
+#sel-canvas {
+  min-width: 40px; min-height: 40px;
+  max-width: 120px; max-height: 120px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #000; border: 1px solid #3a3a5a;
+  flex-shrink: 0;
+}
+#sel-label { font-size: 12px; color: #666; line-height: 1.6; }
+
+/* instructions */
+.instructions { font-size: 11px; color: #555; line-height: 1.9; }
+.instructions strong { color: #888; }
+.kbd {
+  background: #2a2a4a; border: 1px solid #4a4a6a;
+  padding: 1px 5px; border-radius: 2px; font-size: 10px; color: #aaa;
+}
+
+/* export textarea */
+#export-ta {
+  width: 100%; height: 150px; resize: vertical;
+  background: #0a0a14; color: #78d97c; font-family: inherit;
+  font-size: 11px; padding: 8px; border: 1px solid #2a2a4a;
+  border-radius: 3px; line-height: 1.5;
+}
+#export-ta:focus { outline: none; border-color: #4a4a8a; }
+
+/* slot count badge */
+#slot-count { font-size: 11px; color: #555; }
+#slot-count.has-content { color: #78d97c; }
+
+/* tooltip */
+#tooltip {
+  position: fixed; z-index: 999;
+  background: rgba(0,0,0,0.9); color: #ffd700;
+  font-size: 11px; font-family: inherit;
+  padding: 3px 8px; border-radius: 3px;
+  pointer-events: none; display: none;
+  border: 1px solid #333; white-space: nowrap;
+}
+
+/* scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #12121f; }
+::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4a4a7a; }
+
+.row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+</style>
+</head>
+<body>
+
+<div id="tooltip"></div>
+
+<!-- ══ HEADER ═════════════════════════════════════════════════════════════ -->
+<div id="header">
+  <h1>Tileset Composer</h1>
+  <span class="hdr-sep">|</span>
+  <div class="hdr-group">
+    <label>Tile</label>
+    <input class="num-input" type="number" id="tw" value="16" min="1" max="256">
+    <span style="color:#444">×</span>
+    <input class="num-input" type="number" id="th" value="16" min="1" max="256">
+    <label>px</label>
+  </div>
+  <span class="hdr-sep">|</span>
+  <div class="hdr-group">
+    <label title="Default source tile size applied to each newly loaded tileset">Default src px</label>
+    <input class="num-input" type="number" id="stw" value="64" min="1" max="512">
+    <span style="color:#444">×</span>
+    <input class="num-input" type="number" id="sth" value="64" min="1" max="512">
+  </div>
+  <span class="hdr-sep">|</span>
+  <div class="hdr-group">
+    <label>Output grid</label>
+    <input class="num-input" type="number" id="out-cols" value="16" min="1" max="256">
+    <span style="color:#444">×</span>
+    <input class="num-input" type="number" id="out-rows" value="16" min="1" max="256">
+  </div>
+  <span class="hdr-sep">|</span>
+  <div class="hdr-group">
+    <label>Zoom</label>
+    <div class="zoom-group">
+      <button class="zoom-btn" data-z="1">1×</button>
+      <button class="zoom-btn active" data-z="2">2×</button>
+      <button class="zoom-btn" data-z="4">4×</button>
+      <button class="zoom-btn" data-z="8">8×</button>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <button onclick="document.getElementById('file-in').click()">＋ Load Tilesets</button>
+    <input type="file" id="file-in" accept="image/*" multiple>
+  </div>
+</div>
+
+<!-- ══ MAIN ═══════════════════════════════════════════════════════════════ -->
+<div id="main">
+
+  <!-- Left: source tilesets -->
+  <div id="panel-left">
+    <div id="src-toolbar">
+      <button onclick="collapseAll()" style="font-size:11px;padding:3px 9px;">Collapse All</button>
+      <button onclick="expandAll()"   style="font-size:11px;padding:3px 9px;">Expand All</button>
+      <span style="margin-left:auto;color:#444;font-size:10px" id="ts-count"></span>
+    </div>
+    <div id="placeholder">
+      <strong>No tilesets loaded.</strong><br>
+      Click <strong>＋ Load Tilesets</strong> in the header<br>
+      to open one or more source images.
+    </div>
+  </div>
+
+  <!-- Right: output + controls -->
+  <div id="panel-right">
+
+    <div class="panel-section">
+      <div class="section-title">
+        Output Tileset
+        <span id="slot-count">0 / 256 slots filled</span>
+        <span style="margin-left:auto;display:flex;align-items:center;gap:5px;">
+          <span style="color:#555;font-size:10px;">zoom</span>
+          <div class="zoom-group" id="out-zoom-group">
+            <button class="zoom-btn" data-oz="1">1×</button>
+            <button class="zoom-btn" data-oz="2">2×</button>
+            <button class="zoom-btn" data-oz="4" style="background:#e94560;color:#fff;border-color:#e94560">4×</button>
+            <button class="zoom-btn" data-oz="8">8×</button>
+          </div>
+        </span>
+      </div>
+      <div id="output-wrap">
+        <canvas id="output-canvas"></canvas>
+      </div>
+    </div>
+
+    <div id="sel-box">
+      <canvas id="sel-canvas" width="40" height="40"></canvas>
+      <div id="sel-label">No tile selected.<br>Click a tile in a source grid to pick it.</div>
+    </div>
+
+    <div class="panel-section instructions">
+      <strong>1.</strong> Load tilesets — set <em>src px</em> first, click <strong>Auto</strong> if unsure<br>
+      <strong>2.</strong> Click a source tile to select it<br>
+      <strong>3.</strong> <span class="kbd">Ctrl+click</span> source tiles to toggle multi-select &nbsp; <span class="kbd">Shift+click</span> for rectangle<br>
+      <strong>4.</strong> Click/drag output to fill (single) or stamp (multi) <span class="kbd">LClick</span><br>
+      <strong>5.</strong> <span class="kbd">RClick</span> clears &nbsp; <span class="kbd">Del</span> clears hovered &nbsp; <span class="kbd">Esc</span> deselects &nbsp; <span class="kbd">Ctrl+Z</span> undo
+    </div>
+
+    <div class="panel-section">
+      <div class="section-title">Actions</div>
+      <div class="row">
+        <button class="btn-primary" onclick="exportPNG()" title="Download the composed tileset as a PNG (no Python needed)">Export PNG</button>
+        <button onclick="exportPython()" title="Generate MAPPINGS dict to paste into compose_tileset.py">Export Python</button>
+        <button onclick="undo()" title="Undo last change (Ctrl+Z)">Undo</button>
+      </div>
+      <div class="row" style="margin-top:5px">
+        <button onclick="saveProject()" title="Save full project — images + mapping + settings — into one file">Save Project</button>
+        <button onclick="document.getElementById('proj-in').click()" title="Load a previously saved project file (restores images + mapping)">Load Project</button>
+        <input type="file" id="proj-in" accept=".json">
+      </div>
+      <div class="row" style="margin-top:4px">
+        <button onclick="saveJSON()" title="Save mapping only (small file; re-load source images separately)">Save Mapping</button>
+        <button onclick="document.getElementById('json-in').click()" title="Load a mapping JSON (source images must already be loaded)">Load Mapping</button>
+        <button class="btn-danger" onclick="clearAll()">Clear All</button>
+        <input type="file" id="json-in" accept=".json">
+      </div>
+
+      <div style="margin-top:10px;border-top:1px solid #2a2a4a;padding-top:10px">
+        <div class="section-title" style="margin-bottom:7px">
+          Browser Storage
+          <span style="color:#555;font-size:10px;font-weight:normal;letter-spacing:0;text-transform:none;margin-left:4px">— stays between sessions, no file needed</span>
+        </div>
+        <div class="row" style="gap:5px">
+          <input type="text" id="proj-name" placeholder="project name…"
+            style="flex:1;min-width:0;background:#0d0d1a;color:#d0d0e0;border:1px solid #2a2a4a;
+                   padding:4px 7px;font-family:inherit;font-size:11px;border-radius:2px;">
+        </div>
+        <div class="row" style="margin-top:5px;gap:5px">
+          <button id="ls-save-btn" onclick="saveToStorage()" title="Save project (images + mapping) to browser localStorage">Save to Browser</button>
+          <button onclick="loadFromStorage()" title="Load the selected project from browser localStorage">Load from Browser</button>
+          <button onclick="deleteFromStorage()" class="btn-danger" title="Delete the selected project from browser localStorage">Delete</button>
+        </div>
+        <div class="row" style="margin-top:5px;gap:5px">
+          <select id="saved-projects"
+            onchange="document.getElementById('proj-name').value = this.value"
+            style="flex:1;min-width:0;background:#0d0d1a;color:#d0d0e0;border:1px solid #2a2a4a;
+                   padding:3px 6px;font-family:inherit;font-size:11px;border-radius:2px;cursor:pointer">
+            <option value="">— saved projects —</option>
+          </select>
+        </div>
+        <div id="storage-info" style="font-size:10px;color:#555;margin-top:5px;line-height:1.6"></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-title">Python MAPPINGS output</div>
+      <textarea id="export-ta" readonly placeholder="Click 'Export Python' to generate the MAPPINGS dict..."></textarea>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const S = {
+  tilesets:   [],    // [{name, img, srcW, srcH, cols, rows, canvas, hidden}]
+  mapping:    {},    // slot (0-based int) -> {tsIdx, col, row}
+  selected:   null,  // {tsIdx, col, row} | null
+  hoveredSlot: null, // currently hovered output slot index
+  zoom:       2,
+  outZoom:    4,
+  srcTileW:   64, srcTileH: 64,
+  tileW:       16, tileH:    16,
+  outCols:     16, outRows:  16,
+  undoStack:   [],   // snapshots of S.mapping for undo
+  multiTiles:  [],   // [{col, row}] additional tiles in selection (same tsIdx as S.selected)
+  shiftAnchor: null, // {col, row} for shift-click range start
+};
+
+// CP437 character table (index = codepoint 0-255)
+const CP437 = [
+  ' ','☺','☻','♥','♦','♣','♠','•','◘','○','◙','♂','♀','♪','♫','☼',
+  '►','◄','↕','‼','¶','§','▬','↨','↑','↓','→','←','∟','↔','▲','▼',
+  ' ','!','"','#','$','%','&',"'",'(',')','*','+',',','-','.','/',
+  '0','1','2','3','4','5','6','7','8','9',':',';','<','=','>','?',
+  '@','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O',
+  'P','Q','R','S','T','U','V','W','X','Y','Z','[','\\',']','^','_',
+  '`','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o',
+  'p','q','r','s','t','u','v','w','x','y','z','{','|','}','~','⌂',
+  'Ç','ü','é','â','ä','à','å','ç','ê','ë','è','ï','î','ì','Ä','Å',
+  'É','æ','Æ','ô','ö','ò','û','ù','ÿ','Ö','Ü','¢','£','¥','₧','ƒ',
+  'á','í','ó','ú','ñ','Ñ','ª','º','¿','⌐','¬','½','¼','¡','«','»',
+  '░','▒','▓','│','┤','╡','╢','╖','╕','╣','║','╗','╝','╜','╛','┐',
+  '└','┴','┬','├','─','┼','╞','╟','╚','╔','╩','╦','╠','═','╬','╧',
+  '╨','╤','╥','╙','╘','╒','╓','╫','╪','┘','┌','█','▄','▌','▐','▀',
+  'α','ß','Γ','π','Σ','σ','µ','τ','Φ','Θ','Ω','δ','∞','φ','ε','∩',
+  '≡','±','≥','≤','⌠','⌡','÷','≈','°','∙','·','√','ⁿ','²','■',' ',
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HEADER CONTROLS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function numInput(id, key) {
+  document.getElementById(id).addEventListener('change', e => {
+    const v = parseInt(e.target.value);
+    if (v > 0) { S[key] = v; redrawAll(); }
+  });
+}
+numInput('stw',      'srcTileW');  // default for future loads only
+numInput('sth',      'srcTileH');
+numInput('tw',       'tileW');
+numInput('th',       'tileH');
+numInput('out-cols', 'outCols');
+numInput('out-rows', 'outRows');
+
+document.querySelectorAll('.zoom-btn[data-z]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    S.zoom = parseInt(btn.dataset.z);
+    document.querySelectorAll('.zoom-btn[data-z]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    redrawAll();
+  });
+});
+
+document.querySelectorAll('.zoom-btn[data-oz]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    S.outZoom = parseInt(btn.dataset.oz);
+    document.querySelectorAll('.zoom-btn[data-oz]').forEach(b => {
+      b.classList.remove('active');
+      b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
+    });
+    btn.classList.add('active');
+    drawOutput();
+  });
+});
+
+document.getElementById('file-in').addEventListener('change', e => {
+  [...e.target.files].forEach(f => loadImageFile(f));
+  e.target.value = '';
+});
+
+document.getElementById('json-in').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if (d.srcTileW) { S.srcTileW = d.srcTileW; document.getElementById('stw').value      = d.srcTileW; }
+      if (d.srcTileH) { S.srcTileH = d.srcTileH; document.getElementById('sth').value      = d.srcTileH; }
+      if (d.tileW)    { S.tileW    = d.tileW;    document.getElementById('tw').value       = d.tileW; }
+      if (d.tileH)    { S.tileH    = d.tileH;    document.getElementById('th').value       = d.tileH; }
+      if (d.outCols)  { S.outCols  = d.outCols;  document.getElementById('out-cols').value = d.outCols; }
+      if (d.outRows)  { S.outRows  = d.outRows;  document.getElementById('out-rows').value = d.outRows; }
+      // Re-resolve mapping entries from saved tilesetName -> current tsIdx
+      // Also restore srcW/srcH/ofsX/ofsY onto matched tilesets
+      for (const [, entry] of Object.entries(d.mapping || {})) {
+        const tsIdx = S.tilesets.findIndex(ts => ts && ts.name === entry.tilesetName);
+        if (tsIdx !== -1) {
+          const ts = S.tilesets[tsIdx];
+          if (entry.srcW) ts.srcW = entry.srcW;
+          if (entry.srcH) ts.srcH = entry.srcH;
+          if (entry.ofsX != null) { ts.ofsX = entry.ofsX; const el = document.getElementById(`ts-ox-${tsIdx}`); if (el) el.value = entry.ofsX; }
+          if (entry.ofsY != null) { ts.ofsY = entry.ofsY; const el = document.getElementById(`ts-oy-${tsIdx}`); if (el) el.value = entry.ofsY; }
+        }
+      }
+      _restoreMapping(d.mapping || {});
+      updateSlotCount();
+      drawOutput();
+      alert('Mapping loaded. Any tilesets not yet loaded are shown as stubs — load their images to see them in the output.');
+    } catch (err) {
+      alert('Failed to parse JSON: ' + err.message);
+    }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// AUTO-DETECT TILE SIZE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Find all integer sizes (8–512) that divide `dim` exactly, scored by how
+ * "roguelike-friendly" they are (powers of two first, then near-powers).
+ */
+const TARGET_COLS = 16;  // ideal column count — guides auto-detect for any tile size
+
+function exactDivisors(dim, minSize = 8, maxSize = 512) {
+  const hits = [];
+  for (let s = minSize; s <= Math.min(dim, maxSize); s++) {
+    if (dim % s === 0) hits.push(s);
+  }
+  // Sort by "which tile size gives a column count closest to TARGET_COLS?"
+  // e.g. 256px image: 256/16=16 cols (wins) over 256/64=4 cols
+  //      1024px image: 1024/64=16 cols (wins) over 1024/32=32 cols
+  hits.sort((a, b) => Math.abs(dim / a - TARGET_COLS) - Math.abs(dim / b - TARGET_COLS));
+  return hits;
+}
+
+function autoDetect(tsIdx) {
+  const ts = S.tilesets[tsIdx];
+  if (!ts) return;
+  const wHits = exactDivisors(ts.img.width);
+  const hHits = exactDivisors(ts.img.height);
+
+  // Best W: first hit that is closest to current srcW or 64
+  const bestW = wHits.length > 0 ? wHits[0] : ts.srcW;
+  const bestH = hHits.length > 0 ? hHits[0] : ts.srcH;
+
+  const wOld = ts.srcW, hOld = ts.srcH;
+  ts.srcW = bestW;
+  ts.srcH = bestH;
+
+  document.getElementById('ts-sw-' + tsIdx).value = bestW;
+  document.getElementById('ts-sh-' + tsIdx).value = bestH;
+
+  redrawSource(tsIdx);
+  drawOutput();
+
+  const wMsg = wHits.length > 0
+    ? `Width: found ${wHits.slice(0,6).join(', ')} — set to ${bestW}px`
+    : `Width: no exact divisor found in 8-512 (${ts.img.width}px)`;
+  const hMsg = hHits.length > 0
+    ? `Height: found ${hHits.slice(0,6).join(', ')} — set to ${bestH}px`
+    : `Height: no exact divisor found in 8-512 (${ts.img.height}px)`;
+
+  const btn = document.getElementById('ts-auto-' + tsIdx);
+  if (wOld !== bestW || hOld !== bestH) {
+    console.info(`[${ts.name}] Auto: ${wMsg} | ${hMsg}`);
+    btn.textContent = 'Done';
+    btn.style.color = '#78d97c';
+  } else {
+    // No size change — grid already exact. Remind user about offset if ofs is 0.
+    btn.textContent = 'OK';
+    btn.style.color = '#78d97c';
+  }
+  setTimeout(() => { btn.textContent = 'Auto'; btn.style.color = ''; }, 1400);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SOURCE TILESET LOADING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function loadImageFile(file) {
+  const img = new Image();
+  img.onload = () => {
+    const tsIdx = S.tilesets.length;
+    // Each tileset carries its own source tile dimensions (from current global default)
+    const ts = { name: file.name, img, srcW: S.srcTileW, srcH: S.srcTileH, ofsX: 0, ofsY: 0, cols: 0, rows: 0, canvas: null };
+    S.tilesets.push(ts);
+    buildTilesetSection(tsIdx);
+    // Auto-detect the best tile size for this image immediately on load
+    // (silently — no button flash needed here)
+    const wHits = exactDivisors(ts.img.width);
+    const hHits = exactDivisors(ts.img.height);
+    if (wHits.length) { ts.srcW = wHits[0]; document.getElementById('ts-sw-' + tsIdx).value = wHits[0]; }
+    if (hHits.length) { ts.srcH = hHits[0]; document.getElementById('ts-sh-' + tsIdx).value = hHits[0]; }
+    redrawSource(tsIdx);
+    // Resolve any pending unresolved mapping entries for this tileset name
+    let resolved = 0;
+    for (const entry of Object.values(S.mapping)) {
+      if (entry.tsIdx === -1 && entry.tilesetName === file.name) {
+        entry.tsIdx = tsIdx;
+        resolved++;
+      }
+    }
+    if (resolved) { updateSlotCount(); drawOutput(); }
+    document.getElementById('placeholder').style.display = 'none';
+    updateTsCount();
+  };
+  const reader = new FileReader();
+  reader.onload = ev => { img.src = ev.target.result; };
+  reader.readAsDataURL(file);
+}
+
+function buildTilesetSection(tsIdx) {
+  const ts = S.tilesets[tsIdx];
+  const sec = document.createElement('div');
+  sec.className = 'ts-section';
+  sec.id = `tss-${tsIdx}`;
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'ts-header';
+  hdr.innerHTML =
+    `<span class="ts-dot">&#9632;</span>` +
+    `<span class="ts-name">${escHtml(ts.name)}</span>` +
+    `<span class="ts-src-ctrl" title="Pixel width/height of each tile slot in this source image. Must divide the image dimensions exactly for correct alignment.">` +
+      `<label>src px</label>` +
+      `<input class="src-num" type="number" id="ts-sw-${tsIdx}" value="${ts.srcW}" min="1" max="512">` +
+      `<span id="ts-sw-ok-${tsIdx}" style="font-size:11px" title="Whether src width divides image width exactly"></span>` +
+      `<span style="color:#444;font-size:10px">x</span>` +
+      `<input class="src-num" type="number" id="ts-sh-${tsIdx}" value="${ts.srcH}" min="1" max="512">` +
+      `<span id="ts-sh-ok-${tsIdx}" style="font-size:11px" title="Whether src height divides image height exactly"></span>` +
+      `<button class="src-auto-btn" id="ts-auto-${tsIdx}" title="Auto-detect: find the tile size that divides this image exactly">Auto</button>` +
+    `</span>` +
+    `<span class="ts-src-ctrl" title="Pixel offset of the first tile from the image edge. Use to compensate for borders/padding before the grid starts.">` +
+      `<label style="color:#7070b0">ofs</label>` +
+      `<input class="src-num" type="number" id="ts-ox-${tsIdx}" value="0" min="0" max="512" style="width:30px">` +
+      `<span style="color:#444;font-size:10px">x</span>` +
+      `<input class="src-num" type="number" id="ts-oy-${tsIdx}" value="0" min="0" max="512" style="width:30px">` +
+    `</span>` +
+    `<span class="ts-meta" id="ts-meta-${tsIdx}"></span>` +
+    `<button class="ts-remove-btn" id="ts-rm-${tsIdx}" title="Remove this tileset">✕</button>` +
+    `<span class="ts-collapse" id="ts-arrow-${tsIdx}">▼</span>`;
+  hdr.addEventListener('click', e => {
+    // Don't collapse when clicking inputs or buttons inside the header
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON') return;
+    const body = document.getElementById(`ts-body-${tsIdx}`);
+    const arrow = document.getElementById(`ts-arrow-${tsIdx}`);
+    const hidden = body.style.display === 'none';
+    body.style.display = hidden ? 'block' : 'none';
+    arrow.textContent = hidden ? '▼' : '▶';
+  });
+  // Wire per-tileset src size inputs + offset inputs + Auto button
+  setTimeout(() => {
+    ['ts-sw-' + tsIdx, 'ts-sh-' + tsIdx].forEach((id, axis) => {
+      document.getElementById(id).addEventListener('change', e => {
+        const v = parseInt(e.target.value);
+        if (v > 0) {
+          if (axis === 0) ts.srcW = v; else ts.srcH = v;
+          redrawSource(tsIdx);
+          drawOutput();
+        }
+      });
+    });
+    ['ts-ox-' + tsIdx, 'ts-oy-' + tsIdx].forEach((id, axis) => {
+      document.getElementById(id).addEventListener('change', e => {
+        const v = parseInt(e.target.value) || 0;
+        if (axis === 0) ts.ofsX = v; else ts.ofsY = v;
+        redrawSource(tsIdx);
+        drawOutput();
+      });
+    });
+    document.getElementById('ts-auto-' + tsIdx).addEventListener('click', e => {
+      e.stopPropagation();
+      autoDetect(tsIdx);
+    });
+    document.getElementById('ts-rm-' + tsIdx).addEventListener('click', e => {
+      e.stopPropagation();
+      removeTileset(tsIdx);
+    });
+  }, 0);
+
+  // Body with canvas
+  const body = document.createElement('div');
+  body.className = 'ts-body';
+  body.id = `ts-body-${tsIdx}`;
+
+  const canvas = document.createElement('canvas');
+  canvas.addEventListener('click',       e => onSrcClick(e, tsIdx));
+  canvas.addEventListener('mousemove',   e => onSrcHover(e, tsIdx));
+  canvas.addEventListener('mouseleave',      hideTooltip);
+  canvas.addEventListener('mousedown',   e => { if (e.shiftKey) e.preventDefault(); });
+
+  body.appendChild(canvas);
+  sec.appendChild(hdr);
+  sec.appendChild(body);
+  document.getElementById('panel-left').appendChild(sec);
+  ts.canvas = canvas;
+}
+
+function redrawSource(tsIdx) {
+  const ts = S.tilesets[tsIdx];
+  if (!ts) return;
+  const { zoom: z } = S;
+  const sw = ts.srcW, sh = ts.srcH;
+  const ox = ts.ofsX || 0, oy = ts.ofsY || 0;
+
+  ts.cols = Math.floor((ts.img.width  - ox) / sw);
+  ts.rows = Math.floor((ts.img.height - oy) / sh);
+
+  const cw = ts.cols * sw * z;
+  const ch = ts.rows * sh * z;
+  ts.canvas.width  = cw;
+  ts.canvas.height = ch;
+
+  const ctx = ts.canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  // Draw the source image at zoom, clipped to whole tiles, starting at the offset
+  ctx.drawImage(ts.img,
+    ox, oy, ts.cols * sw, ts.rows * sh,
+    0,  0,  cw, ch
+  );
+
+  // Grid overlay — lines at every srcW/srcH interval
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  for (let c = 0; c <= ts.cols; c++) {
+    ctx.beginPath(); ctx.moveTo(c*sw*z+0.5, 0); ctx.lineTo(c*sw*z+0.5, ch); ctx.stroke();
+  }
+  for (let r = 0; r <= ts.rows; r++) {
+    ctx.beginPath(); ctx.moveTo(0, r*sh*z+0.5); ctx.lineTo(cw, r*sh*z+0.5); ctx.stroke();
+  }
+
+  // Highlight selected tile(s)
+  if (S.selected && S.selected.tsIdx === tsIdx) {
+    drawSourceHighlights(tsIdx);
+  }
+
+  const trimX = (ts.img.width  - ox) - ts.cols * sw;
+  const trimY = (ts.img.height - oy) - ts.rows * sh;
+  const exactW = trimX === 0;
+  const exactH = trimY === 0;
+  const rescaled = sw !== S.tileW || sh !== S.tileH;
+
+  // Update exact-division indicators next to each input
+  const wOkEl = document.getElementById(`ts-sw-ok-${tsIdx}`);
+  const hOkEl = document.getElementById(`ts-sh-ok-${tsIdx}`);
+  if (wOkEl) {
+    wOkEl.textContent = exactW ? ' v' : ` +${trimX}`;
+    wOkEl.style.color = exactW ? '#78d97c' : '#e94560';
+    wOkEl.title = exactW
+      ? `${ts.img.width} / ${sw} = ${ts.cols} (exact)`
+      : `${ts.img.width} / ${sw} = ${ts.cols}.${trimX} — ${trimX}px remainder. Try Auto to fix.`;
+  }
+  if (hOkEl) {
+    hOkEl.textContent = exactH ? ' v' : ` +${trimY}`;
+    hOkEl.style.color = exactH ? '#78d97c' : '#e94560';
+    hOkEl.title = exactH
+      ? `${ts.img.height} / ${sh} = ${ts.rows} (exact)`
+      : `${ts.img.height} / ${sh} = ${ts.rows}.${trimY} — ${trimY}px remainder. Try Auto to fix.`;
+  }
+
+  const meta =
+    `${ts.cols}x${ts.rows} = ${ts.cols * ts.rows} tiles` +
+    (rescaled ? `  [${sw}x${sh} -> ${S.tileW}x${S.tileH}]` : '') +
+    (!exactW || !exactH ? `  (rem: ${trimX}x${trimY}px)` : '');
+  document.getElementById(`ts-meta-${tsIdx}`).textContent = meta;
+}
+
+function drawSourceHighlights(tsIdx) {
+  const ts = S.tilesets[tsIdx];
+  if (!ts || !S.selected || S.selected.tsIdx !== tsIdx) return;
+  const { zoom: z } = S;
+  const sw = ts.srcW, sh = ts.srcH;
+  const ctx = ts.canvas.getContext('2d');
+  const isMulti = S.multiTiles.length > 0;
+
+  // All selected tiles: primary first (red), then extras (gold)
+  const all = [{ col: S.selected.col, row: S.selected.row, primary: true },
+               ...S.multiTiles.map(t => ({ ...t, primary: false }))];
+
+  for (const { col, row, primary } of all) {
+    const color  = primary ? '#e94560' : '#ffd700';
+    const fillRGBA = primary ? 'rgba(233,69,96,0.18)' : 'rgba(255,215,0,0.18)';
+    ctx.fillStyle = fillRGBA;
+    ctx.fillRect(col*sw*z + 1, row*sh*z + 1, sw*z - 2, sh*z - 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(1.5, z * 0.5);
+    ctx.strokeRect(col*sw*z + 1, row*sh*z + 1, sw*z - 2, sh*z - 2);
+  }
+
+  // If rectangular (shift) selection: draw bounding-box outline too
+  if (isMulti) {
+    const cols = all.map(t => t.col), rows = all.map(t => t.row);
+    const minC = Math.min(...cols), maxC = Math.max(...cols);
+    const minR = Math.min(...rows), maxR = Math.max(...rows);
+    ctx.strokeStyle = 'rgba(255,215,0,0.6)';
+    ctx.lineWidth = Math.max(1, z * 0.5);
+    ctx.setLineDash([4, 3]);
+    ctx.strokeRect(minC*sw*z, minR*sh*z, (maxC-minC+1)*sw*z, (maxR-minR+1)*sh*z);
+    ctx.setLineDash([]);
+  }
+}
+
+function onSrcClick(e, tsIdx) {
+  const ts = S.tilesets[tsIdx];
+  const { zoom: z } = S;
+  const sw = ts.srcW, sh = ts.srcH;
+  const rect = ts.canvas.getBoundingClientRect();
+  const col = Math.floor((e.clientX - rect.left) / (sw * z));
+  const row = Math.floor((e.clientY - rect.top)  / (sh * z));
+  if (col < 0 || col >= ts.cols || row < 0 || row >= ts.rows) return;
+
+  const sameTileset = S.selected && S.selected.tsIdx === tsIdx;
+
+  if ((e.ctrlKey || e.metaKey) && sameTileset) {
+    // ── Ctrl+click: toggle tile in/out of multi-selection ──────────────────
+    const isAnchor = S.selected.col === col && S.selected.row === row;
+    if (isAnchor) {
+      // Clicking the anchor: promote first multi-tile to anchor, or deselect
+      if (S.multiTiles.length > 0) {
+        const next = S.multiTiles.shift();
+        S.selected = { tsIdx, ...next };
+        S.shiftAnchor = { ...S.selected };
+      } else {
+        S.selected = null; S.multiTiles = []; S.shiftAnchor = null;
+      }
+    } else {
+      const idx = S.multiTiles.findIndex(t => t.col === col && t.row === row);
+      if (idx >= 0) S.multiTiles.splice(idx, 1);  // remove
+      else          S.multiTiles.push({ col, row }); // add
+    }
+
+  } else if (e.shiftKey && sameTileset) {
+    // ── Shift+click: rectangular selection from anchor ──────────────────────
+    const anchor = S.shiftAnchor || { col: S.selected.col, row: S.selected.row };
+    const minC = Math.min(anchor.col, col), maxC = Math.max(anchor.col, col);
+    const minR = Math.min(anchor.row, row), maxR = Math.max(anchor.row, row);
+    S.selected   = { tsIdx, col: anchor.col, row: anchor.row };
+    S.multiTiles = [];
+    for (let r = minR; r <= maxR; r++)
+      for (let c = minC; c <= maxC; c++)
+        if (!(c === anchor.col && r === anchor.row))
+          S.multiTiles.push({ col: c, row: r });
+
+  } else {
+    // ── Normal click: single tile ───────────────────────────────────────────
+    S.selected   = { tsIdx, col, row };
+    S.multiTiles = [];
+    S.shiftAnchor = { col, row };
+  }
+
+  S.tilesets.forEach((_, i) => redrawSource(i));
+  updateSelPreview();
+}
+
+function updateSelPreview() {
+  const pv  = document.getElementById('sel-canvas');
+  const pCtx = pv.getContext('2d');
+
+  if (!S.selected) {
+    pv.width = pv.height = 40;
+    pCtx.clearRect(0, 0, 40, 40);
+    document.getElementById('sel-label').innerHTML =
+      'No tile selected.<br>Click a tile in a source grid to pick it.';
+    return;
+  }
+
+  const ts  = S.tilesets[S.selected.tsIdx];
+  const sw  = ts.srcW, sh = ts.srcH;
+  const all = [{ col: S.selected.col, row: S.selected.row }, ...S.multiTiles];
+  const minC = Math.min(...all.map(t => t.col));
+  const maxC = Math.max(...all.map(t => t.col));
+  const minR = Math.min(...all.map(t => t.row));
+  const maxR = Math.max(...all.map(t => t.row));
+  const gw = maxC - minC + 1, gh = maxR - minR + 1;
+
+  // Size preview: each tile cell at ~40px, but cap canvas at 120×120
+  const cell = Math.min(Math.floor(120 / Math.max(gw, gh)), 40);
+  pv.width  = gw * cell;
+  pv.height = gh * cell;
+  pv.style.width  = `${gw * cell}px`;
+  pv.style.height = `${gh * cell}px`;
+  pCtx.imageSmoothingEnabled = false;
+  pCtx.fillStyle = '#111';
+  pCtx.fillRect(0, 0, pv.width, pv.height);
+
+  // Draw all tiles at their relative positions (accounting for source offset)
+  const pOx = ts.ofsX || 0, pOy = ts.ofsY || 0;
+  for (const { col, row } of all)
+    pCtx.drawImage(ts.img, pOx + col*sw, pOy + row*sh, sw, sh,
+      (col-minC)*cell, (row-minR)*cell, cell, cell);
+
+  const isMulti   = S.multiTiles.length > 0;
+  const rescaled  = sw !== S.tileW || sh !== S.tileH;
+  document.getElementById('sel-label').innerHTML =
+    `<strong style="color:#e0e0e0">${escHtml(ts.name)}</strong>` +
+    (isMulti
+      ? `&nbsp;<span style="color:#ffd700">${all.length} tiles &nbsp;(${gw}&times;${gh})</span>`
+      : `&nbsp;tile&nbsp;<strong style="color:#ffd700">(${S.selected.col},\u00a0${S.selected.row})</strong>`) +
+    (rescaled ? `&nbsp;<span style="color:#e94560;font-size:10px">${sw}&rarr;${S.tileW}px</span>` : '') +
+    `<br><span style="color:#666">` +
+    (isMulti ? `Click output slot to stamp. <span class="kbd">Ctrl+click</span> toggles. <span class="kbd">Shift+click</span> range.`
+             : `Click or drag output slots to fill. <span class="kbd">Ctrl</span>/<span class="kbd">Shift</span> for multi-select.`) +
+    `</span>`;
+}
+
+function onSrcHover(e, tsIdx) {
+  const ts = S.tilesets[tsIdx];
+  const { zoom: z } = S;
+  const rect = ts.canvas.getBoundingClientRect();
+  const col = Math.floor((e.clientX - rect.left) / (ts.srcW * z));
+  const row = Math.floor((e.clientY - rect.top)  / (ts.srcH * z));
+  if (col < 0 || col >= ts.cols || row < 0 || row >= ts.rows) { hideTooltip(); return; }
+  showTooltip(e, `(${col}, ${row})`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// OUTPUT GRID
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const outCanvas = document.getElementById('output-canvas');
+let _outDragging = false;
+
+function selectionTiles() {
+  if (!S.selected) return [];
+  return [{ col: S.selected.col, row: S.selected.row }, ...S.multiTiles];
+}
+
+function paintOutputSlot(e) {
+  if (!S.selected) return;
+  const slot = slotFromOutputEvent(e);
+  if (slot === null) return;
+  const all = selectionTiles();
+
+  if (all.length === 1) {
+    // Single tile — fast path (also allows drag-to-fill)
+    const prev = S.mapping[slot];
+    if (prev && prev.tsIdx === S.selected.tsIdx &&
+        prev.col === S.selected.col && prev.row === S.selected.row) return;
+    S.mapping[slot] = { tsIdx: S.selected.tsIdx, col: S.selected.col, row: S.selected.row };
+  } else {
+    // Multi-tile stamp — place block relative to top-left of selection
+    const minC = Math.min(...all.map(t => t.col));
+    const minR = Math.min(...all.map(t => t.row));
+    const startC = slot % S.outCols;
+    const startR = Math.floor(slot / S.outCols);
+    for (const { col, row } of all) {
+      const oc = startC + (col - minC);
+      const or = startR + (row - minR);
+      if (oc < 0 || oc >= S.outCols || or < 0 || or >= S.outRows) continue;
+      S.mapping[or * S.outCols + oc] = { tsIdx: S.selected.tsIdx, col, row };
+    }
+  }
+  updateSlotCount();
+  drawOutput();
+}
+
+outCanvas.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || !S.selected) return;
+  pushUndo();
+  // Drag-to-fill only for single tile; multi-tile is stamp-on-click only
+  if (S.multiTiles.length === 0) {
+    _outDragging = true;
+    outCanvas.setPointerCapture(e.pointerId);
+  }
+  paintOutputSlot(e);
+});
+outCanvas.addEventListener('pointermove', e => {
+  const slot = slotFromOutputEvent(e);
+  S.hoveredSlot = slot;
+  if (_outDragging) {
+    paintOutputSlot(e);
+  } else {
+    drawOutput();
+    if (slot === null) { hideTooltip(); return; }
+    const ch  = CP437[slot] || '';
+    const col = slot % S.outCols;
+    const row = Math.floor(slot / S.outCols);
+    showTooltip(e, `slot ${slot}  (${col},${row})  CP437: '${ch}'`);
+  }
+});
+outCanvas.addEventListener('pointerup',     () => { _outDragging = false; });
+outCanvas.addEventListener('pointercancel', () => { _outDragging = false; });
+
+outCanvas.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const slot = slotFromOutputEvent(e);
+  if (slot === null) return;
+  pushUndo();
+  delete S.mapping[slot];
+  updateSlotCount();
+  drawOutput();
+});
+
+outCanvas.addEventListener('mouseleave', () => {
+  S.hoveredSlot = null;
+  hideTooltip();
+  drawOutput();
+});
+
+function slotFromOutputEvent(e) {
+  const oz = outZoom();
+  const { tileW: tw, tileH: th } = S;
+  const rect = outCanvas.getBoundingClientRect();
+  const col = Math.floor((e.clientX - rect.left)  / (tw * oz));
+  const row = Math.floor((e.clientY - rect.top)   / (th * oz));
+  if (col < 0 || col >= S.outCols || row < 0 || row >= S.outRows) return null;
+  return row * S.outCols + col;
+}
+
+function outZoom() { return S.outZoom; }
+
+function drawOutput() {
+  const { tileW: tw, tileH: th, outCols: oc, outRows: or_ } = S;
+  const oz = outZoom();
+  outCanvas.width  = oc * tw * oz;
+  outCanvas.height = or_ * th * oz;
+
+  const ctx = outCanvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  for (let slot = 0; slot < oc * or_; slot++) {
+    const col = slot % oc;
+    const row = Math.floor(slot / oc);
+    const px  = col * tw * oz;
+    const py  = row * th * oz;
+    const entry = S.mapping[slot];
+
+    if (entry && entry.tsIdx !== -1) {
+      const ts = S.tilesets[entry.tsIdx];
+      if (ts) {
+        // Draw from source at ts.srcW/srcH (accounting for offset), scale to output tileW/tileH
+        const ox = ts.ofsX || 0, oy = ts.ofsY || 0;
+        ctx.drawImage(ts.img,
+          ox + entry.col * ts.srcW, oy + entry.row * ts.srcH, ts.srcW, ts.srcH,
+          px, py, tw*oz, th*oz
+        );
+      }
+    } else {
+      // Checkerboard for empty slots
+      ctx.fillStyle = (col + row) % 2 === 0 ? '#181828' : '#141424';
+      ctx.fillRect(px, py, tw*oz, th*oz);
+    }
+
+    // CP437 label — dark background pill so it reads over any tile
+    const ch = CP437[slot];
+    if (ch && ch.trim()) {
+      const fs = Math.max(7, Math.floor(tw * oz / 2.8));
+      ctx.font = `bold ${fs}px monospace`;
+      const metrics = ctx.measureText(ch);
+      const lw = metrics.width;
+      const lh = fs;
+      const pad = 1;
+      // dark backing
+      ctx.fillStyle = 'rgba(0,0,0,0.72)';
+      ctx.fillRect(px, py, lw + pad * 2, lh + pad);
+      // bright label
+      ctx.fillStyle = '#ffd700';
+      ctx.fillText(ch, px + pad, py + lh - 1);
+    }
+  }
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+  ctx.lineWidth = 1;
+  for (let c = 0; c <= oc; c++) {
+    ctx.beginPath(); ctx.moveTo(c*tw*oz+0.5, 0); ctx.lineTo(c*tw*oz+0.5, outCanvas.height); ctx.stroke();
+  }
+  for (let r = 0; r <= or_; r++) {
+    ctx.beginPath(); ctx.moveTo(0, r*th*oz+0.5); ctx.lineTo(outCanvas.width, r*th*oz+0.5); ctx.stroke();
+  }
+
+  // Hover highlight / multi-tile stamp preview
+  if (S.hoveredSlot !== null) {
+    const hc = S.hoveredSlot % oc;
+    const hr = Math.floor(S.hoveredSlot / oc);
+
+    if (S.selected && S.multiTiles.length > 0) {
+      // Show where every tile in the block would land
+      const all  = selectionTiles();
+      const minC = Math.min(...all.map(t => t.col));
+      const minR = Math.min(...all.map(t => t.row));
+      ctx.setLineDash([3, 2]);
+      for (const { col: tc, row: tr } of all) {
+        const dc = hc + (tc - minC), dr = hr + (tr - minR);
+        if (dc < 0 || dc >= oc || dr < 0 || dr >= or_) continue;
+        const isPrimary = tc === S.selected.col && tr === S.selected.row;
+        ctx.strokeStyle = isPrimary ? 'rgba(233,69,96,0.9)' : 'rgba(255,215,0,0.75)';
+        ctx.lineWidth = isPrimary ? 2 : 1.5;
+        ctx.strokeRect(dc*tw*oz + 1, dr*th*oz + 1, tw*oz - 2, th*oz - 2);
+      }
+      ctx.setLineDash([]);
+    } else {
+      // Single tile cursor
+      ctx.strokeStyle = S.selected ? 'rgba(233,69,96,0.85)' : 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(hc*tw*oz + 1, hr*th*oz + 1, tw*oz - 2, th*oz - 2);
+    }
+  }
+}
+
+function updateSlotCount() {
+  const filled = Object.values(S.mapping).filter(e => e.tsIdx !== -1).length;
+  const total  = S.outCols * S.outRows;
+  const el = document.getElementById('slot-count');
+  el.textContent = `${filled} / ${total} slots filled`;
+  el.className = filled > 0 ? 'has-content' : '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXPORT / SAVE / LOAD / CLEAR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function exportPython() {
+  const lines = [
+    '# Paste this into tools/compose_tileset.py',
+    'MAPPINGS: dict[int, tuple[str, int, int]] = {'
+  ];
+
+  const sorted = Object.entries(S.mapping)
+    .map(([k, v]) => [parseInt(k), v])
+    .filter(([, v]) => v.tsIdx !== -1)
+    .sort(([a], [b]) => a - b);
+
+  for (const [slot, entry] of sorted) {
+    const ts = S.tilesets[entry.tsIdx];
+    const name = ts ? ts.name : `unknown_${entry.tsIdx}`;
+    const ch = CP437[slot] || '';
+    const chLabel = ch.trim() ? `'${ch}'` : `slot ${slot}`;
+    lines.push(`    ${slot}: ("tilesets/${name}", ${entry.col}, ${entry.row}),  # ${chLabel}`);
+  }
+  lines.push('}');
+  document.getElementById('export-ta').value = lines.join('\n');
+}
+
+/** Serialize S.mapping with tileset names so it's independent of load order. */
+function buildSerMapping() {
+  const serMapping = {};
+  for (const [slot, entry] of Object.entries(S.mapping)) {
+    const ts = S.tilesets[entry.tsIdx];
+    serMapping[slot] = {
+      tilesetName: ts ? ts.name : (entry.tilesetName || ''),
+      srcW:  ts ? ts.srcW  : entry.srcW,
+      srcH:  ts ? ts.srcH  : entry.srcH,
+      ofsX:  ts ? (ts.ofsX || 0) : (entry.ofsX || 0),
+      ofsY:  ts ? (ts.ofsY || 0) : (entry.ofsY || 0),
+      col: entry.col,
+      row: entry.row,
+    };
+  }
+  return serMapping;
+}
+
+function saveJSON() {
+  const serMapping = buildSerMapping();
+  const data = {
+    srcTileW: S.srcTileW, srcTileH: S.srcTileH,
+    tileW: S.tileW, tileH: S.tileH,
+    outCols: S.outCols, outRows: S.outRows,
+    mapping: serMapping,
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'tileset_mapping.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ─── Project save / load (includes embedded source images) ───────────────────
+
+/** Convert a loaded HTMLImageElement to a PNG data-URL via an offscreen canvas. */
+function imgToDataURL(img) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  c.getContext('2d').drawImage(img, 0, 0);
+  return c.toDataURL('image/png');
+}
+
+/** Build the full project data object (shared by file save and localStorage save). */
+function buildProjectData() {
+  const serMapping    = buildSerMapping();
+  const tilesetImages = S.tilesets
+    .filter(ts => !ts.hidden)
+    .map(ts => ({
+      name: ts.name,
+      srcW: ts.srcW, srcH: ts.srcH,
+      ofsX: ts.ofsX || 0, ofsY: ts.ofsY || 0,
+      dataURL: imgToDataURL(ts.img),
+    }));
+  return {
+    _type: 'tileset-composer-project',
+    _version: 1,
+    srcTileW: S.srcTileW, srcTileH: S.srcTileH,
+    tileW: S.tileW, tileH: S.tileH,
+    outCols: S.outCols, outRows: S.outRows,
+    zoom: S.zoom, outZoom: S.outZoom,
+    tilesets: tilesetImages,
+    mapping: serMapping,
+  };
+}
+
+function saveProject() {
+  const activeTilesets = S.tilesets.filter(ts => !ts.hidden);
+  if (activeTilesets.length === 0 && Object.keys(S.mapping).length === 0) {
+    alert('Nothing to save yet.'); return;
+  }
+
+  const data = buildProjectData();
+  const btn = document.querySelector('button[onclick="saveProject()"]');
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+
+  // Stringify asynchronously to avoid UI freeze on large images
+  setTimeout(() => {
+    const json = JSON.stringify(data);
+    const blob = new Blob([json], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'tileset_project.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    if (btn) { btn.textContent = 'Save Project'; btn.disabled = false; }
+  }, 20);
+}
+
+/** Restore a full project from a parsed data object (shared by file load and localStorage load). */
+function _loadProjectData(d, sourceName) {
+  if (d._type !== 'tileset-composer-project') {
+    if (!confirm('This file doesn\'t look like a project file (missing _type). Try to load anyway?')) return;
+  }
+
+  const setInput = (id, val) => { if (val == null) return; const el = document.getElementById(id); if (el) el.value = val; };
+  if (d.srcTileW) { S.srcTileW = d.srcTileW; setInput('stw', d.srcTileW); }
+  if (d.srcTileH) { S.srcTileH = d.srcTileH; setInput('sth', d.srcTileH); }
+  if (d.tileW)    { S.tileW    = d.tileW;    setInput('tw',  d.tileW); }
+  if (d.tileH)    { S.tileH    = d.tileH;    setInput('th',  d.tileH); }
+  if (d.outCols)  { S.outCols  = d.outCols;  setInput('out-cols', d.outCols); }
+  if (d.outRows)  { S.outRows  = d.outRows;  setInput('out-rows', d.outRows); }
+  if (d.zoom) {
+    S.zoom = d.zoom;
+    document.querySelectorAll('.zoom-btn[data-z]').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.z) === d.zoom);
+    });
+  }
+  if (d.outZoom) {
+    S.outZoom = d.outZoom;
+    document.querySelectorAll('.zoom-btn[data-oz]').forEach(b => {
+      const active = parseInt(b.dataset.oz) === d.outZoom;
+      b.classList.toggle('active', active);
+      b.style.background  = active ? '#e94560' : '';
+      b.style.color       = active ? '#fff'    : '';
+      b.style.borderColor = active ? '#e94560' : '';
+    });
+  }
+
+  S.tilesets = [];
+  S.mapping  = {};
+  S.selected = null;
+  S.multiTiles = [];
+  document.getElementById('panel-left').innerHTML = `
+    <div id="src-toolbar">
+      <button onclick="collapseAll()" style="font-size:11px;padding:3px 9px;">Collapse All</button>
+      <button onclick="expandAll()"   style="font-size:11px;padding:3px 9px;">Expand All</button>
+      <span style="margin-left:auto;color:#444;font-size:10px" id="ts-count"></span>
+    </div>
+    <div id="placeholder" style="display:none">
+      <strong>No tilesets loaded.</strong><br>
+      Click <strong>＋ Load Tilesets</strong> in the header to open one or more source images.
+    </div>`;
+
+  const savedImages = d.tilesets || [];
+  if (savedImages.length === 0) {
+    _restoreMapping(d.mapping || {});
+    updateSlotCount(); drawOutput();
+    alert('Project loaded (mapping only — no embedded images found).');
+    return;
+  }
+
+  let loaded = 0;
+  savedImages.forEach((saved, i) => {
+    const img = new Image();
+    img.onload = () => {
+      const ts = {
+        name: saved.name, img,
+        srcW: saved.srcW || S.srcTileW,
+        srcH: saved.srcH || S.srcTileH,
+        ofsX: saved.ofsX || 0, ofsY: saved.ofsY || 0,
+        cols: 0, rows: 0, canvas: null,
+      };
+      S.tilesets[i] = ts;
+      buildTilesetSection(i);
+      const oxEl = document.getElementById(`ts-ox-${i}`);
+      const oyEl = document.getElementById(`ts-oy-${i}`);
+      if (oxEl) oxEl.value = ts.ofsX;
+      if (oyEl) oyEl.value = ts.ofsY;
+      redrawSource(i);
+
+      loaded++;
+      if (loaded === savedImages.length) {
+        _restoreMapping(d.mapping || {});
+        updateSlotCount(); drawOutput();
+        const label = sourceName ? `"${sourceName}"` : 'project';
+        alert(`Loaded ${label}: ${loaded} tileset(s), ${Object.keys(S.mapping).length} mapped slots.`);
+      }
+    };
+    img.onerror = () => {
+      console.error(`Failed to decode embedded image: ${saved.name}`);
+      loaded++;
+      if (loaded === savedImages.length) {
+        _restoreMapping(d.mapping || {});
+        updateSlotCount(); drawOutput();
+      }
+    };
+    img.src = saved.dataURL;
+  });
+}
+
+document.getElementById('proj-in').addEventListener('change', e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    let d;
+    try { d = JSON.parse(ev.target.result); }
+    catch (err) { alert('Failed to parse project file: ' + err.message); return; }
+    _loadProjectData(d, f.name);
+  };
+  r.readAsText(f);
+  e.target.value = '';
+});
+
+/** Resolve saved mapping entries against the current S.tilesets array. */
+function _restoreMapping(serMapping) {
+  S.mapping = {};
+  for (const [slot, entry] of Object.entries(serMapping)) {
+    const tsIdx = S.tilesets.findIndex(ts => ts && ts.name === entry.tilesetName);
+    if (tsIdx !== -1) {
+      S.mapping[parseInt(slot)] = { tsIdx, col: entry.col, row: entry.row };
+    } else {
+      // Unresolved — keep as stub so saveJSON still round-trips correctly
+      S.mapping[parseInt(slot)] = {
+        tsIdx: -1, col: entry.col, row: entry.row,
+        tilesetName: entry.tilesetName,
+        srcW: entry.srcW, srcH: entry.srcH,
+        ofsX: entry.ofsX || 0, ofsY: entry.ofsY || 0,
+      };
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// LOCAL STORAGE — save / load / delete named projects
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const LS_PREFIX = 'tileset-composer:';
+
+function lsProjectKeys() {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(LS_PREFIX)) keys.push(k.slice(LS_PREFIX.length));
+  }
+  return keys.sort();
+}
+
+function refreshStorageList() {
+  const sel  = document.getElementById('saved-projects');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— saved projects —</option>';
+  const keys = lsProjectKeys();
+  keys.forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k;
+    opt.textContent = k;
+    sel.appendChild(opt);
+  });
+  // Restore previously selected entry if it still exists
+  if (prev && keys.includes(prev)) sel.value = prev;
+  updateStorageInfo();
+}
+
+function updateStorageInfo() {
+  const el   = document.getElementById('storage-info');
+  const keys = lsProjectKeys();
+  if (keys.length === 0) {
+    el.textContent = 'No projects saved in this browser.';
+    return;
+  }
+  let total = 0;
+  keys.forEach(k => { const v = localStorage.getItem(LS_PREFIX + k); if (v) total += v.length; });
+  const kb  = (total / 1024).toFixed(1);
+  const mb  = (total / (1024 * 1024)).toFixed(2);
+  el.textContent = `${keys.length} project${keys.length !== 1 ? 's' : ''} · ~${kb >= 1024 ? mb + ' MB' : kb + ' KB'} used`;
+}
+
+function _currentProjectName() {
+  return (document.getElementById('proj-name').value.trim() ||
+          document.getElementById('saved-projects').value).trim();
+}
+
+function saveToStorage() {
+  const name = document.getElementById('proj-name').value.trim();
+  if (!name) { alert('Enter a project name before saving.'); document.getElementById('proj-name').focus(); return; }
+  const activeTilesets = S.tilesets.filter(ts => !ts.hidden);
+  if (activeTilesets.length === 0 && Object.keys(S.mapping).length === 0) {
+    alert('Nothing to save yet.'); return;
+  }
+
+  const btn = document.getElementById('ls-save-btn');
+  if (btn) { btn.textContent = 'Saving…'; btn.disabled = true; }
+
+  // Build and stringify asynchronously so the UI can update first
+  setTimeout(() => {
+    try {
+      const data = buildProjectData();
+      localStorage.setItem(LS_PREFIX + name, JSON.stringify(data));
+      refreshStorageList();
+      document.getElementById('saved-projects').value = name;
+
+      const info = document.getElementById('storage-info');
+      info.style.color = '#78d97c';
+      info.textContent = `Saved "${name}" ✓`;
+      setTimeout(() => { info.style.color = ''; updateStorageInfo(); }, 2200);
+    } catch (err) {
+      if (err.name === 'QuotaExceededError') {
+        alert(
+          'Browser storage is full!\n\n' +
+          'The embedded images may be too large for the ~5 MB localStorage limit.\n' +
+          'Try:\n  • Deleting old projects\n  • Using "Save Project" (file download) instead'
+        );
+      } else {
+        alert('Save failed: ' + err.message);
+      }
+    }
+    if (btn) { btn.textContent = 'Save to Browser'; btn.disabled = false; }
+  }, 20);
+}
+
+function loadFromStorage() {
+  const name = _currentProjectName();
+  if (!name) { alert('Select a project from the list or type a name to load.'); return; }
+  const json = localStorage.getItem(LS_PREFIX + name);
+  if (!json) { alert(`No project named "${name}" found in browser storage.`); return; }
+  let d;
+  try { d = JSON.parse(json); }
+  catch (err) { alert('Failed to parse saved project: ' + err.message); return; }
+  _loadProjectData(d, name);
+}
+
+function deleteFromStorage() {
+  const name = _currentProjectName();
+  if (!name) { alert('Select a project to delete.'); return; }
+  if (!localStorage.getItem(LS_PREFIX + name)) {
+    alert(`No project named "${name}" found in browser storage.`); return;
+  }
+  if (!confirm(`Delete "${name}" from browser storage? This cannot be undone.`)) return;
+  localStorage.removeItem(LS_PREFIX + name);
+  document.getElementById('proj-name').value = '';
+  refreshStorageList();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+function clearAll() {
+  if (!confirm('Clear all slot assignments?')) return;
+  pushUndo();
+  S.mapping = {};
+  updateSlotCount();
+  drawOutput();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UNDO
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function pushUndo() {
+  S.undoStack.push(JSON.stringify(S.mapping));
+  if (S.undoStack.length > 30) S.undoStack.shift();
+}
+
+function undo() {
+  if (S.undoStack.length === 0) return;
+  S.mapping = JSON.parse(S.undoStack.pop());
+  updateSlotCount();
+  drawOutput();
+  // Brief flash to confirm
+  outCanvas.classList.add('undo-flash');
+  setTimeout(() => outCanvas.classList.remove('undo-flash'), 260);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COLLAPSE / EXPAND / REMOVE TILESETS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function collapseAll() {
+  document.querySelectorAll('.ts-body').forEach(b => { b.style.display = 'none'; });
+  document.querySelectorAll('.ts-collapse').forEach(a => { a.textContent = '▶'; });
+}
+
+function expandAll() {
+  S.tilesets.forEach((ts, i) => {
+    if (ts.hidden) return;
+    const body = document.getElementById(`ts-body-${i}`);
+    const arrow = document.getElementById(`ts-arrow-${i}`);
+    if (body)  body.style.display = 'block';
+    if (arrow) arrow.textContent = '▼';
+  });
+}
+
+function removeTileset(tsIdx) {
+  const ts = S.tilesets[tsIdx];
+  if (!ts) return;
+  ts.hidden = true;
+  // Clear mapping entries from this tileset
+  pushUndo();
+  for (const [slot, entry] of Object.entries(S.mapping)) {
+    if (entry.tsIdx === tsIdx) delete S.mapping[slot];
+  }
+  // Hide the DOM section
+  const sec = document.getElementById(`tss-${tsIdx}`);
+  if (sec) sec.style.display = 'none';
+  // Deselect if we were using this tileset
+  if (S.selected && S.selected.tsIdx === tsIdx) {
+    S.selected = null;
+    const pCtx = document.getElementById('sel-canvas').getContext('2d');
+    pCtx.clearRect(0, 0, 40, 40);
+    document.getElementById('sel-label').textContent = 'No tile selected.';
+  }
+  updateSlotCount();
+  updateTsCount();
+  drawOutput();
+}
+
+function updateTsCount() {
+  const visible = S.tilesets.filter(ts => !ts.hidden).length;
+  const el = document.getElementById('ts-count');
+  if (el) el.textContent = visible > 0 ? `${visible} tileset${visible !== 1 ? 's' : ''}` : '';
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXPORT PNG (direct browser download — no Python needed)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function exportPNG() {
+  const { tileW: tw, tileH: th, outCols: oc, outRows: or_ } = S;
+  const filled = Object.values(S.mapping).filter(e => e.tsIdx !== -1).length;
+  if (filled === 0) { alert('No slots filled yet. Place some tiles first.'); return; }
+
+  const canvas = document.createElement('canvas');
+  canvas.width  = oc * tw;
+  canvas.height = or_ * th;
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  for (let slot = 0; slot < oc * or_; slot++) {
+    const entry = S.mapping[slot];
+    if (!entry || entry.tsIdx === -1) continue;
+    const ts = S.tilesets[entry.tsIdx];
+    if (!ts || ts.hidden) continue;
+    const col = slot % oc;
+    const row = Math.floor(slot / oc);
+    const ox2 = ts.ofsX || 0, oy2 = ts.ofsY || 0;
+    ctx.drawImage(ts.img,
+      ox2 + entry.col * ts.srcW, oy2 + entry.row * ts.srcH, ts.srcW, ts.srcH,
+      col * tw, row * th, tw, th
+    );
+  }
+
+  canvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'tileset_composed.png';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }, 'image/png');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+document.addEventListener('keydown', e => {
+  // Don't fire when typing in an input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  if (e.key === 'Escape') {
+    S.selected = null; S.multiTiles = []; S.shiftAnchor = null;
+    S.tilesets.forEach((_, i) => redrawSource(i));
+    updateSelPreview();
+  }
+
+  if (e.key === 'Delete' && S.hoveredSlot !== null) {
+    pushUndo();
+    delete S.mapping[S.hoveredSlot];
+    updateSlotCount();
+    drawOutput();
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+    e.preventDefault();
+    undo();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function redrawAll() {
+  S.tilesets.forEach((ts, i) => { if (!ts.hidden) redrawSource(i); });
+  drawOutput();
+}
+
+const tooltip = document.getElementById('tooltip');
+function showTooltip(e, text) {
+  tooltip.textContent = text;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (e.clientX + 16) + 'px';
+  tooltip.style.top  = (e.clientY -  4) + 'px';
+}
+function hideTooltip() { tooltip.style.display = 'none'; }
+document.addEventListener('mousemove', e => {
+  if (tooltip.style.display !== 'none') {
+    tooltip.style.left = (e.clientX + 16) + 'px';
+    tooltip.style.top  = (e.clientY -  4) + 'px';
+  }
+});
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ─── init ───
+drawOutput();
+updateSlotCount();
+updateSelPreview();
+refreshStorageList();
+</script>
+</body>
+</html>
