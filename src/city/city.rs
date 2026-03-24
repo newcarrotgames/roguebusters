@@ -9,13 +9,10 @@ use crate::{
         prefabs::{Cell, Prefab, Prefabs},
     },
 };
+use bracket_lib::prelude::{Algorithm2D, BaseMap, Point, RGB};
 use log::{error, debug};
 use rand::Rng;
 use std::{collections::HashMap, error::Error, fmt};
-use tcod::{
-    colors::{BLACK, BLUE, DARK_AMBER, LIGHT_GREY, WHITE},
-    Color,
-};
 
 use super::building::Building;
 
@@ -137,8 +134,8 @@ pub struct Tile {
     pub block_sight: bool,
     pub building_id: i32,
     pub char: char,
-    pub bg_color: Color,
-    pub fg_color: Color,
+    pub bg_color: RGB,
+    pub fg_color: RGB,
     pub seen: bool,
 }
 
@@ -149,8 +146,8 @@ impl Tile {
             blocked: false,
             block_sight: false,
             building_id: 0,
-            bg_color: BLACK,
-            fg_color: WHITE,
+            bg_color: RGB::from_u8(0, 0, 0),
+            fg_color: RGB::from_u8(255, 255, 255),
             char: 0 as char,
             seen: false,
         }
@@ -162,8 +159,8 @@ impl Tile {
             blocked: true,
             block_sight: true,
             building_id: 0,
-            bg_color: Color::new(245, 245, 245),
-            fg_color: Color::new(235, 235, 235),
+            bg_color: RGB::from_u8(245, 245, 245),
+            fg_color: RGB::from_u8(235, 235, 235),
             char: 219 as char,
             seen: false,
         }
@@ -175,8 +172,8 @@ impl Tile {
             blocked: false,
             block_sight: false,
             building_id: 0,
-            bg_color: LIGHT_GREY,
-            fg_color: WHITE,
+            bg_color: RGB::from_u8(191, 191, 191),
+            fg_color: RGB::from_u8(255, 255, 255),
             char: ' ',
             seen: false,
         }
@@ -186,9 +183,9 @@ impl Tile {
         let char;
         match dir {
             Direction::NORTH => char = 220 as char,
-            Direction::EAST => char = 221 as char,
+            Direction::EAST  => char = 221 as char,
             Direction::SOUTH => char = 223 as char,
-            Direction::WEST => char = 222 as char,
+            Direction::WEST  => char = 222 as char,
         }
 
         Tile {
@@ -196,8 +193,8 @@ impl Tile {
             blocked: false,
             block_sight: true,
             building_id,
-            bg_color: LIGHT_GREY,
-            fg_color: DARK_AMBER,
+            bg_color: RGB::from_u8(191, 191, 191),
+            fg_color: RGB::from_u8(191, 127, 0),
             char,
             seen: false,
         }
@@ -205,7 +202,7 @@ impl Tile {
 
     pub fn stairs(building_id: i32, dir: VerticalDirection) -> Self {
         let char = match dir {
-            VerticalDirection::UP => 30 as char,
+            VerticalDirection::UP   => 30 as char,
             VerticalDirection::DOWN => 31 as char,
         };
         Tile {
@@ -213,8 +210,8 @@ impl Tile {
             blocked: false,
             block_sight: false,
             building_id,
-            bg_color: BLACK,
-            fg_color: WHITE,
+            bg_color: RGB::from_u8(0, 0, 0),
+            fg_color: RGB::from_u8(255, 255, 255),
             char,
             seen: false,
         }
@@ -226,8 +223,8 @@ impl Tile {
             blocked: true,
             block_sight: false,
             building_id: 0,
-            bg_color: BLUE,
-            fg_color: WHITE,
+            bg_color: RGB::from_u8(0, 0, 255),
+            fg_color: RGB::from_u8(255, 255, 255),
             char: ' ',
             seen: false,
         }
@@ -239,9 +236,9 @@ impl Tile {
             blocked: false,
             block_sight: false,
             building_id,
-            bg_color: BLACK,
-            fg_color: WHITE,
-            char: ' ' as char,
+            bg_color: RGB::from_u8(0, 0, 0),
+            fg_color: RGB::from_u8(255, 255, 255),
+            char: ' ',
             seen: false,
         }
     }
@@ -260,11 +257,11 @@ impl Tile {
     }
 
     // assumes "#RRGGBB" format
-    fn parse_hex_color(hex: &str) -> Color {
-        let r = u8::from_str_radix(&hex[1..3], 16).unwrap();
-        let g = u8::from_str_radix(&hex[3..5], 16).unwrap();
-        let b = u8::from_str_radix(&hex[5..7], 16).unwrap();
-        Color::new(r, g, b)
+    fn parse_hex_color(hex: &str) -> RGB {
+        let r = u8::from_str_radix(&hex[1..3], 16).unwrap_or(0);
+        let g = u8::from_str_radix(&hex[3..5], 16).unwrap_or(0);
+        let b = u8::from_str_radix(&hex[5..7], 16).unwrap_or(0);
+        RGB::from_u8(r, g, b)
     }
 }
 
@@ -762,5 +759,24 @@ struct FillTile {
 impl FillTile {
     fn new(x: i32, y: i32) -> Self {
         FillTile { x, y }
+    }
+}
+
+// ── FOV support ──────────────────────────────────────────────────────────────
+// bracket-lib's field_of_view() needs these two trait impls on the map type.
+
+impl Algorithm2D for City {
+    fn dimensions(&self) -> Point {
+        Point::new(self.width, self.height)
+    }
+}
+
+impl BaseMap for City {
+    fn is_opaque(&self, idx: usize) -> bool {
+        let x = idx % self.width as usize;
+        let y = idx / self.width as usize;
+        if y >= self.data.len() { return true; }
+        if x >= self.data[y].len() { return true; }
+        self.data[y][x].block_sight
     }
 }

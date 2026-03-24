@@ -1,3 +1,7 @@
+use bracket_lib::prelude::{BTerm, Point, RGB};
+use specs::{Join, World, WorldExt};
+use std::collections::HashSet;
+
 use crate::{
     city::city::City,
     components::{player::Player, position::Position, renderable::Renderable},
@@ -5,10 +9,8 @@ use crate::{
     service::screen::ScreenService,
     ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI},
 };
-use specs::{Join, World, WorldExt};
-use tcod::{colors::WHITE, console::Offscreen, BackgroundFlag, Console, Map};
 
-const MOVEMENT_VIEW_OFFSET:i32 = 4;
+const MOVEMENT_VIEW_OFFSET: i32 = 4;
 
 pub struct CityUIElement {
     view_offset: [i32; 2],
@@ -23,14 +25,14 @@ impl CityUIElement {
 impl UIElement for CityUIElement {
     fn update(&mut self, world: &World) {
         let map = world.read_resource::<City>();
-        let pos_storage = world.read_storage::<Position>();
+        let pos_storage    = world.read_storage::<Position>();
         let player_storage = world.read_storage::<Player>();
-        let mut pos: Position = Position::zero();
-        let screen_center_x: i32 = ScreenService::map_area_size()[0] / 2;
-        let screen_center_y: i32 = ScreenService::map_area_size()[1] / 2;
+        let mut pos        = Position::zero();
+        let screen_center_x = ScreenService::map_area_size()[0] / 2;
+        let screen_center_y = ScreenService::map_area_size()[1] / 2;
 
         for (p, _) in (&pos_storage, &player_storage).join() {
-            pos = Position { x: p.x, y: p.y }
+            pos = Position { x: p.x, y: p.y };
         }
 
         if pos.x as i32 - self.view_offset[0] > screen_center_x + MOVEMENT_VIEW_OFFSET {
@@ -46,8 +48,7 @@ impl UIElement for CityUIElement {
             self.view_offset[1] -= 1;
         }
 
-        // clamp per-axis so neither dimension scrolls past the map boundary
-        let max_x = (map.width - ScreenService::map_area_size()[0]).max(0);
+        let max_x = (map.width  - ScreenService::map_area_size()[0]).max(0);
         let max_y = (map.height - ScreenService::map_area_size()[1]).max(0);
         self.view_offset[0] = self.view_offset[0].clamp(0, max_x);
         self.view_offset[1] = self.view_offset[1].clamp(0, max_y);
@@ -56,38 +57,30 @@ impl UIElement for CityUIElement {
         game_state.set_view_offset(self.view_offset);
     }
 
-    fn render(&mut self, con: &mut Offscreen, world: &World, fov: &Map) {
+    fn render(&mut self, ctx: &mut BTerm, world: &World, visible: &HashSet<Point>) {
         UI::draw_labeled_box(
-            con,
-            [
-                0,
-                0,
-                ScreenService::map_area_size()[0] - 1,
-                ScreenService::map_area_size()[1] - 1,
-            ],
-            WHITE,
+            ctx,
+            [0, 0, ScreenService::map_area_size()[0] - 1, ScreenService::map_area_size()[1] - 1],
+            RGB::from_u8(255, 255, 255),
             LINES_DOUBLE_SINGLE,
             "City",
         );
+
         let mut map = world.write_resource::<City>();
 
-        // render environment
+        // render terrain
         for vy in 1..ScreenService::map_area_size()[1] - 1 {
             for vx in 1..ScreenService::map_area_size()[0] - 1 {
                 let x = vx + self.view_offset[0];
                 let y = vy + self.view_offset[1];
-                let mut wall = map.data[y as usize][x as usize];
-                let visible = fov.is_in_fov(x, y);
-                if visible {
-                    con.set_char_background(vx, vy, wall.bg_color, BackgroundFlag::Set);
-                    con.set_default_foreground(wall.fg_color);
-                    con.put_char(vx, vy, wall.char, BackgroundFlag::None);
-                    wall.seen = true;
-                    map.data[y as usize][x as usize] = wall;
-                } else if wall.seen {
-                    con.set_char_background(vx, vy, UI::fade(wall.bg_color), BackgroundFlag::Set);
-                    con.set_default_foreground(UI::fade(wall.fg_color));
-                    con.put_char(vx, vy, wall.char, BackgroundFlag::None);
+                let mut tile = map.data[y as usize][x as usize];
+                let is_visible = visible.contains(&Point::new(x, y));
+                if is_visible {
+                    ctx.set(vx, vy, tile.fg_color, tile.bg_color, tile.char as u16);
+                    tile.seen = true;
+                    map.data[y as usize][x as usize] = tile;
+                } else if tile.seen {
+                    ctx.set(vx, vy, UI::fade(tile.fg_color), UI::fade(tile.bg_color), tile.char as u16);
                 }
             }
         }
@@ -99,38 +92,27 @@ impl UIElement for CityUIElement {
             let cx = pos.x as i32 - self.view_offset[0];
             let cy = pos.y as i32 - self.view_offset[1];
 
-            // check if offscreen
-            if cx < 1
-                || cy < 1
+            if cx < 1 || cy < 1
                 || cx > ScreenService::map_area_size()[0]
                 || cy > ScreenService::map_area_size()[1]
             {
                 continue;
             }
 
-            let visible = fov.is_in_fov(pos.x as i32, pos.y as i32);
-            if !visible {
+            if !visible.contains(&Point::new(pos.x as i32, pos.y as i32)) {
                 continue;
             }
 
-            con.set_default_foreground(WHITE);
-            con.put_char(cx, cy, ren.char, BackgroundFlag::None);
+            // Use the floor tile's bg so entity sprites blend with the floor.
+            let mx   = (cx + self.view_offset[0]) as usize;
+            let my   = (cy + self.view_offset[1]) as usize;
+            let tile = map.data[my][mx];
+            ctx.set(cx, cy, ren.color, tile.bg_color, ren.char as u16);
         }
     }
 
-    fn state(&self) -> UIState {
-        UIState::Active
-    }
-
-    fn set_state(&mut self, new_state: UIState) {
-        todo!()
-    }
-
-    fn handle_event(&mut self, event: &str) {
-        todo!()
-    }
-
-    fn is_modal(&self) -> bool {
-        false
-    }
+    fn state(&self) -> UIState { UIState::Active }
+    fn set_state(&mut self, _new_state: UIState) { todo!() }
+    fn handle_event(&mut self, _event: &str) { todo!() }
+    fn is_modal(&self) -> bool { false }
 }

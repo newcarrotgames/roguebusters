@@ -1,8 +1,12 @@
-use crate::{
-    game::GameState, service::screen::{self, ScreenService}, ui::ui::{UIElement, LINES_DOUBLE_SINGLE, UI}
-};
+use bracket_lib::prelude::{BTerm, Point, RGB};
 use specs::{World, WorldExt};
-use tcod::{colors::WHITE, console::Offscreen, Map};
+use std::collections::HashSet;
+
+use crate::{
+    game::GameState,
+    service::screen::ScreenService,
+    ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI},
+};
 
 pub struct MessagesUIElement {
     messages: Vec<String>,
@@ -10,70 +14,55 @@ pub struct MessagesUIElement {
 
 impl MessagesUIElement {
     pub fn new() -> Self {
-        MessagesUIElement {
-            messages: Vec::new(),
-        }
+        MessagesUIElement { messages: Vec::new() }
     }
 }
 
 impl UIElement for MessagesUIElement {
     fn update(&mut self, world: &World) {
         let mut game_state = world.write_resource::<GameState>();
-        let mut messages: Vec<String> = Vec::new();
+        let mut msgs: Vec<String> = Vec::new();
         while game_state.has_messages() {
-            let msg = game_state.pop_message();
-            messages.push(msg);
+            msgs.push(game_state.pop_message());
         }
-        for x in messages.iter().rev() {
-            self.messages.push(x.clone());
+        for m in msgs.iter().rev() {
+            self.messages.push(m.clone());
         }
     }
 
-    fn render(&mut self, con: &mut Offscreen, world: &World, fov: &Map) {
+    fn render(&mut self, ctx: &mut BTerm, _world: &World, _visible: &HashSet<Point>) {
+        let mp = ScreenService::messages_area_position();
+        let ms = ScreenService::messages_area_size();
         UI::draw_labeled_box(
-            con,
-            [
-                ScreenService::messages_area_position()[0],
-                ScreenService::messages_area_position()[1],
-                ScreenService::messages_area_position()[0] + ScreenService::messages_area_size()[0] - 1,
-                ScreenService::messages_area_position()[1] + ScreenService::messages_area_size()[1] - 1,
-            ],
-            WHITE,
+            ctx,
+            [mp[0], mp[1], mp[0] + ms[0] - 1, mp[1] + ms[1] - 1],
+            RGB::from_u8(255, 255, 255),
             LINES_DOUBLE_SINGLE,
             "Messages",
         );
 
-        let mut messages_offset = 0;
+        let visible_rows = ms[1] - 2;
+        let offset = if self.messages.len() as i32 >= visible_rows {
+            self.messages.len() as i32 - visible_rows
+        } else {
+            0
+        };
 
-        if self.messages.len() as i32 >= ScreenService::messages_area_size()[1] - 2 {
-            messages_offset = self.messages.len() as i32 - ScreenService::messages_area_size()[1] + 2;
+        for i in offset..self.messages.len() as i32 {
+            if let Some(msg) = self.messages.get(i as usize) {
+                UI::puts(
+                    ctx,
+                    2,
+                    mp[1] + 1 + (i - offset),
+                    msg,
+                    RGB::from_u8(255, 255, 255),
+                );
+            }
         }
-        
-        for i in messages_offset..self.messages.len() as i32 {
-            let msg = self.messages.get(i as usize).unwrap().clone();
-            UI::puts(
-                con,
-                2,
-                ScreenService::messages_area_position()[1] + 1 + (i - messages_offset) as i32,
-                &msg,
-                WHITE,
-            );
-        }
     }
 
-    fn state(&self) -> crate::ui::ui::UIState {
-        crate::ui::ui::UIState::Active
-    }
-
-    fn set_state(&mut self, new_state: crate::ui::ui::UIState) {
-        todo!()
-    }
-
-    fn handle_event(&mut self, event: &str) {
-        todo!()
-    }
-
-    fn is_modal(&self) -> bool {
-        false
-    }
+    fn state(&self) -> UIState { UIState::Active }
+    fn set_state(&mut self, _new_state: UIState) { todo!() }
+    fn handle_event(&mut self, _event: &str) { todo!() }
+    fn is_modal(&self) -> bool { false }
 }

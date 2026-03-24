@@ -1,15 +1,10 @@
-use crate::game::GameState;
-use crate::game::PlayerRequest;
+use bracket_lib::prelude::{BTerm, VirtualKeyCode};
+use crate::game::{GameState, PlayerRequest};
 use specs::World;
 use specs::WorldExt;
-use tcod::console::Root;
-use tcod::input::Key;
-use tcod::input::KeyCode;
-use tcod::input::KeyCode::*;
-use tcod::input::KEY_PRESSED;
 
 pub trait InputHandler {
-    fn handle_input(&mut self, root: &Root, world: &World);
+    fn handle_input(&mut self, ctx: &BTerm, world: &World);
 }
 
 pub struct DefaultInputHandler {}
@@ -21,93 +16,42 @@ impl DefaultInputHandler {
 }
 
 impl InputHandler for DefaultInputHandler {
-    fn handle_input(&mut self, root: &Root, world: &World) {
-        let key = root.check_for_keypress(KEY_PRESSED);
-        if key == None {
-            return;
-        }
-        let actual_key = key.unwrap();
-        if actual_key.code == KeyCode::Text {
-            return;
-        }
+    fn handle_input(&mut self, ctx: &BTerm, world: &World) {
+        use VirtualKeyCode::*;
 
-        let request = match actual_key {
-            // Alt+Enter: toggle fullscreen
-            Key {
-                code: Enter,
-                alt: true,
-                ..
-            } => PlayerRequest::ToggleFullscreen,
+        let key = match ctx.key {
+            None => return,
+            Some(k) => k,
+        };
 
-            // movement keys
-            Key {
-                code: Up | NumPad8, ..
-            } => PlayerRequest::Move(0, -1),
-            Key {
-                code: Down | NumPad2,
-                ..
-            } => PlayerRequest::Move(0, 1),
-            Key {
-                code: Left | NumPad4,
-                ..
-            } => PlayerRequest::Move(-1, 0),
-            Key {
-                code: Right | NumPad6,
-                ..
-            } => PlayerRequest::Move(1, 0),
-            Key { code: NumPad9, .. } => PlayerRequest::Move(1, -1),
-            Key { code: NumPad7, .. } => PlayerRequest::Move(-1, -1),
-            Key { code: NumPad3, .. } => PlayerRequest::Move(1, 1),
-            Key { code: NumPad1, .. } => PlayerRequest::Move(-1, 1),
+        let request = match key {
+            // Alt+Enter: toggle fullscreen (no-op in bracket-lib; left as request for future use)
+            Return if ctx.alt => PlayerRequest::ToggleFullscreen,
 
-            // wield item on the ground
-            Key {
-                printable: 'w',
-                pressed: true,
-                ..
-            } => PlayerRequest::WieldItem,
+            // movement
+            Up     | Numpad8 => PlayerRequest::Move(0, -1),
+            Down   | Numpad2 => PlayerRequest::Move(0,  1),
+            Left   | Numpad4 => PlayerRequest::Move(-1, 0),
+            Right  | Numpad6 => PlayerRequest::Move( 1, 0),
+            Numpad9 => PlayerRequest::Move( 1, -1),
+            Numpad7 => PlayerRequest::Move(-1, -1),
+            Numpad3 => PlayerRequest::Move( 1,  1),
+            Numpad1 => PlayerRequest::Move(-1,  1),
 
-            // pickup item on the ground
-            Key {
-                printable: 'p',
-                pressed: true,
-                ..
-            } => PlayerRequest::PickupItem,
+            // actions
+            W => PlayerRequest::WieldItem,
+            P => PlayerRequest::PickupItem,
+            D => PlayerRequest::DropItem,
+            Period => PlayerRequest::Wait,
 
-            // drop equipped item
-            Key {
-                printable: 'd',
-                pressed: true,
-                ..
-            } => PlayerRequest::DropItem,
+            // views
+            I => PlayerRequest::ViewInventory,
+            M => PlayerRequest::ViewMap,
+            S => { log::debug!("SELECTION!!"); PlayerRequest::Selection }
 
-            // wait
-            Key {
-                printable: '.',
-                pressed: true,
-                ..
-            } => PlayerRequest::Wait,
+            // quit (Shift+Q)
+            Q if ctx.shift => PlayerRequest::Quit,
 
-            // inventory
-            Key { printable: 'i', .. } => PlayerRequest::ViewInventory,
-
-            // map
-            Key { printable: 'm', .. } => PlayerRequest::ViewMap,
-
-            // shoot/selection
-            Key { printable: 's', .. } => {
-                log::debug!("SELECTION!!");
-                PlayerRequest::Selection
-            }
-
-            // quit
-            Key {
-                printable: 'q',
-                shift: true,
-                ..
-            } => PlayerRequest::Quit,
-
-            // unknown key
             _ => PlayerRequest::None,
         };
 
@@ -115,4 +59,3 @@ impl InputHandler for DefaultInputHandler {
         game_state.push_player_request(request);
     }
 }
-

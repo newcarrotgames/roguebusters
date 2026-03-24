@@ -1,55 +1,33 @@
+use bracket_lib::prelude::{BTerm, Point, RGB, VirtualKeyCode};
+use specs::{World, WorldExt};
+use std::collections::HashSet;
+
 use crate::{
     game::{GameState, PlayerRequest},
     input::handlers::InputHandler,
     ui::ui::{UIElement, UIState},
 };
-use specs::{World, WorldExt};
-use tcod::{
-    colors::{DARKER_GREY, LIGHT_GREY},
-    console::Offscreen,
-    input::Key,
-    BackgroundFlag, Console,
-};
-use tcod::{
-    console::Root,
-    input::{
-        KeyCode::{self, *},
-        KEY_PRESSED,
-    },
-    Map,
-};
 
 use super::modal_request::ModalPlayerRequest;
 
 pub struct CrosshairsUIElement {
-    position: [i32; 2],
+    position:     [i32; 2],
     old_position: [i32; 2],
-    // old_bg: Option<Color>,
-    // old_fg: Option<Color>,
-    // old_char: Option<char>,
 }
 
 impl CrosshairsUIElement {
     pub fn new(position: [i32; 2]) -> Self {
-        CrosshairsUIElement {
-            position,
-            old_position: position,
-            // old_bg: None,
-            // old_fg: None,
-            // old_char: None,
-        }
+        CrosshairsUIElement { position, old_position: position }
     }
 }
 
 impl UIElement for CrosshairsUIElement {
     fn update(&mut self, world: &World) {
-        // grab game_state from world
         let mut game_state = world.write_resource::<GameState>();
         match game_state.peek_player_request() {
             PlayerRequest::ModalRequest(ModalPlayerRequest::CrosshairsRequest(request)) => {
                 match request {
                     CrosshairsModalPlayerRequest::Move(x, y) => {
-                        //log::debug!("Moving crosshairs by {}, {}", x, y);
                         self.old_position = self.position;
                         self.position[0] += x;
                         self.position[1] += y;
@@ -71,140 +49,66 @@ impl UIElement for CrosshairsUIElement {
         }
     }
 
-    fn render(&mut self, con: &mut Offscreen, _world: &World, _fov: &Map) {
-        // if self.old_position != self.position {
-        //     if self.old_bg != None {
-        //         con.set_char_background(
-        //             self.old_position[0],
-        //             self.old_position[1],
-        //             self.old_bg.unwrap(),
-        //             BackgroundFlag::Set,
-        //         );
-        //         con.set_char_foreground(
-        //             self.old_position[0],
-        //             self.old_position[1],
-        //             self.old_fg.unwrap(),
-        //         );
-        //         con.put_char(
-        //             self.old_position[0],
-        //             self.old_position[1],
-        //             self.old_char.unwrap(),
-        //             BackgroundFlag::None,
-        //         );
-        //     }
-        //     self.old_bg = Some(con.get_char_background(self.position[0], self.position[1]));
-        //     self.old_fg = Some(con.get_char_foreground(self.position[0], self.position[1]));
-        //     self.old_char = Some(con.get_char(self.position[0], self.position[1]));
-        // }
-        con.set_char_background(
+    fn render(&mut self, ctx: &mut BTerm, _world: &World, _visible: &HashSet<Point>) {
+        // Highlight the cursor cell: dark grey bg, light grey fg, space glyph.
+        ctx.set(
             self.position[0],
             self.position[1],
-            DARKER_GREY,
-            BackgroundFlag::Set,
+            RGB::from_u8(160, 160, 160),  // light grey fg
+            RGB::from_u8(63, 63, 63),     // dark grey bg
+            b' ' as u16,
         );
-        con.set_char_foreground(self.position[0], self.position[1], LIGHT_GREY);
-        // con.put_char(
-        //     self.position[0],
-        //     self.position[1],
-        //     '+',
-        //     BackgroundFlag::None,
-        // );
     }
 
-    fn state(&self) -> UIState {
-        UIState::Active
-    }
-
-    fn set_state(&mut self, new_state: UIState) {
-        todo!()
-    }
-
-    fn handle_event(&mut self, event: &str) {
-        todo!()
-    }
-
-    fn is_modal(&self) -> bool {
-        true
-    }
+    fn state(&self) -> UIState { UIState::Active }
+    fn set_state(&mut self, _new_state: UIState) { todo!() }
+    fn handle_event(&mut self, _event: &str) { todo!() }
+    fn is_modal(&self) -> bool { true }
 }
+
+// ── input handler ─────────────────────────────────────────────────────────────
 
 pub struct CrosshairsInputHandler {}
 
 impl CrosshairsInputHandler {
-    pub fn new() -> Self {
-        CrosshairsInputHandler {}
-    }
+    pub fn new() -> Self { CrosshairsInputHandler {} }
 }
 
 impl InputHandler for CrosshairsInputHandler {
-    fn handle_input(&mut self, root: &Root, world: &World) {
-        let key = root.check_for_keypress(KEY_PRESSED);
-        if key == None {
-            return;
-        }
-        let actual_key = key.unwrap();
-        if actual_key.code == KeyCode::Text {
-            return;
-        }
+    fn handle_input(&mut self, ctx: &BTerm, world: &World) {
+        use VirtualKeyCode::*;
+        let key = match ctx.key {
+            None    => return,
+            Some(k) => k,
+        };
 
-        let request = match actual_key {
-            // movement keys
-            Key { code: NumPad9, .. } => PlayerRequest::ModalRequest(
-                ModalPlayerRequest::CrosshairsRequest(CrosshairsModalPlayerRequest::Move(1, -1)),
+        let request = match key {
+            Numpad9  => req_move( 1, -1),
+            Up | Numpad8  => req_move( 0, -1),
+            Numpad7  => req_move(-1, -1),
+            Right | Numpad6 => req_move( 1,  0),
+            Left  | Numpad4 => req_move(-1,  0),
+            Numpad3  => req_move( 1,  1),
+            Down | Numpad2  => req_move( 0,  1),
+            Numpad1  => req_move(-1,  1),
+            Return | NumpadEnter => PlayerRequest::ModalRequest(
+                ModalPlayerRequest::CrosshairsRequest(CrosshairsModalPlayerRequest::Select),
             ),
-            Key {
-                code: Up | NumPad8, ..
-            } => PlayerRequest::ModalRequest(ModalPlayerRequest::CrosshairsRequest(
-                CrosshairsModalPlayerRequest::Move(0, -1),
-            )),
-            Key { code: NumPad7, .. } => PlayerRequest::ModalRequest(
-                ModalPlayerRequest::CrosshairsRequest(CrosshairsModalPlayerRequest::Move(-1, -1)),
-            ),
-            Key {
-                code: Right | NumPad6,
-                ..
-            } => PlayerRequest::ModalRequest(ModalPlayerRequest::CrosshairsRequest(
-                CrosshairsModalPlayerRequest::Move(1, 0),
-            )),
-            Key {
-                code: Left | NumPad4,
-                ..
-            } => PlayerRequest::ModalRequest(ModalPlayerRequest::CrosshairsRequest(
-                CrosshairsModalPlayerRequest::Move(-1, 0),
-            )),
-            Key { code: NumPad3, .. } => PlayerRequest::ModalRequest(
-                ModalPlayerRequest::CrosshairsRequest(CrosshairsModalPlayerRequest::Move(1, 1)),
-            ),
-            Key {
-                code: Down | NumPad2,
-                ..
-            } => PlayerRequest::ModalRequest(ModalPlayerRequest::CrosshairsRequest(
-                CrosshairsModalPlayerRequest::Move(0, 1),
-            )),
-            Key { code: NumPad1, .. } => PlayerRequest::ModalRequest(
-                ModalPlayerRequest::CrosshairsRequest(CrosshairsModalPlayerRequest::Move(-1, 1)),
-            ),
-
-            // select
-            Key {
-                code: Enter | NumPadEnter,
-                ..
-            } => PlayerRequest::ModalRequest(ModalPlayerRequest::CrosshairsRequest(
-                CrosshairsModalPlayerRequest::Select,
-            )),
-
-            // cancel
-            Key { code: Escape, .. } => PlayerRequest::ModalRequest(
+            Escape => PlayerRequest::ModalRequest(
                 ModalPlayerRequest::CrosshairsRequest(CrosshairsModalPlayerRequest::Cancel),
             ),
-
-            // unknown key
             _ => PlayerRequest::None,
         };
 
         let mut game_state = world.write_resource::<GameState>();
         game_state.push_player_request(request);
     }
+}
+
+fn req_move(dx: i32, dy: i32) -> PlayerRequest {
+    PlayerRequest::ModalRequest(ModalPlayerRequest::CrosshairsRequest(
+        CrosshairsModalPlayerRequest::Move(dx, dy),
+    ))
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]

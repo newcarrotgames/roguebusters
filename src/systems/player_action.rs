@@ -1,5 +1,5 @@
+use bracket_lib::prelude::RGB;
 use specs::{Builder, Entities, Join, LazyUpdate, Read, ReadStorage, System, Write, WorldExt, WriteStorage};
-use tcod::colors::WHITE;
 
 use crate::{
     city::city::City,
@@ -160,7 +160,7 @@ impl<'a> System<'a> for PlayerAction {
                                     .with(drop_pos)
                                     .with(Renderable {
                                         char: item_char,
-                                        color: WHITE,
+                                        color: RGB::from_u8(255, 255, 255),
                                     })
                                     .build();
                             });
