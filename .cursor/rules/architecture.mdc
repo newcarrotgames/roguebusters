@@ -1,0 +1,55 @@
+---
+description: Core architecture principles for Roguebusters
+alwaysApply: true
+---
+
+# Roguebusters Architecture
+
+This is a Rust roguelike using **bracket-lib** (rendering/input) and **specs** (ECS).
+
+## ECS Is the Foundation
+
+- **Components** = pure data structs (`#[derive(Component)]` in `src/components/`)
+- **Systems** = pure behavior unit structs implementing `specs::System` in `src/systems/`
+- **Entities** = IDs created via `world.create_entity().with(...).build()`
+- **Resources** = shared world state inserted via `world.insert(...)` (e.g. `City`, `GameState`)
+- System execution order is fixed in `DispatcherBuilder` in `game.rs`
+
+## Modularity & Encapsulation
+
+- One concern per module. Keep modules small and focused.
+- Never reach across module boundaries except through well-defined types (components, resources, traits).
+- Prefer **composition over inheritance** — build behavior by combining components, not by nesting logic.
+- Shared behavior = a `trait` (e.g. `UIElement`). Avoid duplicating logic across modules.
+
+## Module Structure
+
+```
+src/
+  components/   ← ECS data (one file per component)
+  systems/      ← ECS behavior (one file per system)
+  city/         ← Map and city generation
+  deser/        ← XML/data loading (prefabs, items, templates)
+  ui/           ← Rendering (elements/, modals/)
+  input/        ← Keyboard/input handling
+  service/      ← Layout/screen helpers
+  util/         ← Shared utilities (rng, etc.)
+```
+
+- All modules are declared from `main.rs`. Add new modules there.
+- Mirror directory structure with `mod` declarations.
+
+## Parallelism
+
+`specs` can run systems in parallel automatically — systems with non-overlapping `SystemData` are scheduled concurrently by the dispatcher. This project is currently **single-threaded** (no `rayon` dependency, no `parallel` feature on `specs`). The architecture already supports parallelism; it can be enabled later by adding rayon and using `par_join`.
+
+To keep the door open:
+- Declare only the storages a system truly needs in `SystemData`
+- Systems that share a `WriteStorage` for the same component cannot run in parallel
+- Prefer `ReadStorage` over `WriteStorage` wherever possible
+
+## Game Loop
+
+`Game::tick` (bracket-lib) → read input → optional sim tick (specs dispatcher) → UI render
+
+Never put simulation logic in the UI layer. Never put rendering in systems.

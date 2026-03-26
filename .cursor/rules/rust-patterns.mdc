@@ -1,0 +1,74 @@
+---
+description: Rust coding conventions for Roguebusters
+globs: src/**/*.rs
+alwaysApply: false
+---
+
+# Rust Patterns for Roguebusters
+
+## Encapsulation via Traits
+
+Use traits for shared behavior, not code duplication:
+
+```rust
+// ✅ GOOD — polymorphism through traits
+pub trait UIElement {
+    fn render(&self, ctx: &mut BTerm, state: &GameState);
+}
+
+// ❌ BAD — copying render logic into each UI struct
+```
+
+## Components Are Pure Data
+
+Components hold state only — no methods beyond simple accessors:
+
+```rust
+// ✅ GOOD
+#[derive(Component)]
+#[storage(VecStorage)]
+pub struct Attributes {
+    pub strength: i32,
+    pub agility: i32,
+}
+
+// ❌ BAD — logic in a component
+impl Attributes {
+    pub fn apply_damage(&mut self, ...) { ... }  // this belongs in a system
+}
+```
+
+## Systems Are Pure Behavior
+
+Systems read/write components and resources. They do not own state. Declare only what the system truly needs — two systems sharing a `WriteStorage` for the same component cannot run in parallel:
+
+```rust
+pub struct MySystem;
+impl<'a> System<'a> for MySystem {
+    type SystemData = (
+        ReadStorage<'a, Position>,   // prefer Read over Write where possible
+        WriteStorage<'a, Attributes>,
+        Read<'a, GameState>,
+        // ❌ don't pull in storages the system doesn't use
+    );
+    fn run(&mut self, (pos, mut attrs, state): Self::SystemData) { ... }
+}
+```
+
+## Visibility
+
+- Default to private (`pub(crate)` or no `pub`)
+- Only expose what crosses a module boundary
+- Resources in `GameState` are the cross-cutting exception
+
+## Naming
+
+- `snake_case` for modules, functions, variables
+- `PascalCase` for types, traits, enums
+- Systems: noun phrase (`PlayerAction`, `NPCBehavior`, `SimplePath`)
+- Components: noun, describes what the entity *has* (`Position`, `Combatant`, `Inventory`)
+
+## Error Handling
+
+- Use `Option`/`Result` — never `unwrap()` in game loop paths
+- Prefer `if let` / `match` over `.unwrap()` or `.expect()` in hot paths
