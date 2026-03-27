@@ -45,6 +45,7 @@ impl InputHandler for DefaultInputHandler {
             Period => PlayerRequest::Wait,
 
             // views
+            H => PlayerRequest::ViewHelp,
             I => PlayerRequest::ViewInventory,
             M => PlayerRequest::ViewMap,
             S => { log::debug!("SELECTION!!"); PlayerRequest::Selection }

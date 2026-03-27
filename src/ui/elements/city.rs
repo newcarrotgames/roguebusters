@@ -7,7 +7,7 @@ use crate::{
     components::{player::Player, position::Position, renderable::Renderable},
     game::GameState,
     service::screen::ScreenService,
-    ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI},
+    ui::ui::{UIElement, UIState, LINES_SINGLE, UI},
 };
 
 const MOVEMENT_VIEW_OFFSET: i32 = 4;
@@ -62,7 +62,7 @@ impl UIElement for CityUIElement {
             ctx,
             [0, 0, ScreenService::map_area_size()[0] - 1, ScreenService::map_area_size()[1] - 1],
             RGB::from_u8(255, 255, 255),
-            LINES_DOUBLE_SINGLE,
+            LINES_SINGLE,
             "City",
         );
 
@@ -93,8 +93,8 @@ impl UIElement for CityUIElement {
             let cy = pos.y as i32 - self.view_offset[1];
 
             if cx < 1 || cy < 1
-                || cx > ScreenService::map_area_size()[0]
-                || cy > ScreenService::map_area_size()[1]
+                || cx >= ScreenService::map_area_size()[0] - 1
+                || cy >= ScreenService::map_area_size()[1] - 1
             {
                 continue;
             }

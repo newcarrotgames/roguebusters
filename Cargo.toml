@@ -3,6 +3,9 @@ name = "roguebusters"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+testing = []
+
 [dependencies]
 bracket-lib = "0.8"
 lazy_static = "1.5.0"
@@ -15,3 +18,6 @@ walkdir = "2.3.3"
 xml-rs = "0.8.4"
 yaserde = "0.8.0"
 yaserde_derive = "0.8.0"
+
+[patch.crates-io]
+bracket-terminal = { path = "vendor/bracket-terminal" }

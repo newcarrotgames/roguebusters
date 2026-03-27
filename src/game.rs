@@ -25,12 +25,14 @@ use crate::{
     systems::{
         combat::combat::Combat,
         item_search::ItemSearch,
+        npc_behavior::NPCBehavior,
         player_action::PlayerAction,
         simple_path::SimplePath,
     },
     ui::{
         modals::{
             crosshairs::CrosshairsInputHandler,
+            help::HelpInputHandler,
             inventory::InventoryInputHandler,
             map::MapInputHandler,
             modal_request::ModalPlayerRequest,
@@ -40,7 +42,47 @@ use crate::{
     MAP_HEIGHT, MAP_WIDTH,
 };
 
-const TORCH_RADIUS: i32   = 75;
+const TORCH_RADIUS: i32 = 75;
+const DEFAULT_NUM_NPCS: usize = 1000;
+const DEFAULT_NUM_ITEMS: usize = 1000;
+
+// ── configurable game setup ───────────────────────────────────────────────────
+
+pub struct GameConfig {
+    pub map_width:  i32,
+    pub map_height: i32,
+    pub num_npcs:   usize,
+    pub num_items:  usize,
+    pub prefabs:    Prefabs,
+}
+
+impl GameConfig {
+    /// Full production world — 1000×1000 city, 1000 NPCs, 1000 items.
+    pub fn default_full(prefabs: Prefabs) -> Self {
+        GameConfig {
+            map_width:  MAP_WIDTH,
+            map_height: MAP_HEIGHT,
+            num_npcs:   DEFAULT_NUM_NPCS,
+            num_items:  DEFAULT_NUM_ITEMS,
+            prefabs,
+        }
+    }
+
+    /// Small world suitable for fast `cargo test` runs.
+    /// Uses a 300×300 map (city builder requires width/height ≥ 100 for the water
+    /// strip; 300 is enough for at least one city block), no prefab decoration, zero
+    /// random items (tests spawn their own via `PlayTester::spawn_item_at`), and only
+    /// a handful of NPCs.
+    pub fn small_test() -> Self {
+        GameConfig {
+            map_width:  300,
+            map_height: 300,
+            num_npcs:   3,
+            num_items:  0,
+            prefabs:    Prefabs::empty(),
+        }
+    }
+}
 
 pub struct Game {
     pub world:         World,
@@ -51,7 +93,14 @@ pub struct Game {
 }
 
 impl Game {
+    /// Convenience constructor used by `main.rs` — builds the full production world.
     pub fn new(prefabs: Prefabs) -> Self {
+        Game::new_with_config(GameConfig::default_full(prefabs))
+    }
+
+    /// Construct a game world from an explicit `GameConfig`.
+    /// No window or bracket-lib context is required — safe to call from tests.
+    pub fn new_with_config(config: GameConfig) -> Self {
         log::debug!("creating specs world");
         let mut world = World::new();
 
@@ -67,20 +116,21 @@ impl Game {
         world.register::<NPC>();
 
         let dispatcher = DispatcherBuilder::new()
-            .with(PlayerAction, "player_action", &[])
-            .with(SimplePath,   "simple_path",   &["player_action"])
-            .with(ItemSearch,   "item_search",   &["player_action"])
-            .with(Combat,       "combat",        &[])
+            .with(PlayerAction,  "player_action",  &[])
+            .with(NPCBehavior,   "npc_behavior",   &["player_action"])
+            .with(SimplePath,    "simple_path",    &["player_action", "npc_behavior"])
+            .with(ItemSearch,    "item_search",    &["player_action"])
+            .with(Combat,        "combat",         &["npc_behavior"])
             .build();
 
         log::debug!("creating city map");
-        let mut map = City::new(MAP_WIDTH, MAP_HEIGHT);
-        map.build(prefabs);
+        let mut map = City::new(config.map_width, config.map_height);
+        map.build(config.prefabs);
 
         let names = Names::new();
 
         log::debug!("creating npcs");
-        for _ in 0..1000 {
+        for _ in 0..config.num_npcs {
             let position = map.get_random_target();
             let target   = map.get_random_target();
             world
@@ -95,18 +145,20 @@ impl Game {
                 .build();
         }
 
-        log::debug!("creating items");
-        let mut items = Items::new();
-        items.load_all("data/items");
-        for _ in 0..1000 {
-            let item     = items.random_item();
-            let position = map.get_random_target();
-            world
-                .create_entity()
-                .with(Item::from_itemdata(item.clone()))
-                .with(Renderable { char: item.char as char, color: RGB::from_u8(255, 255, 255) })
-                .with(position)
-                .build();
+        if config.num_items > 0 {
+            log::debug!("creating items");
+            let mut items = Items::new();
+            items.load_all("data/items");
+            for _ in 0..config.num_items {
+                let item     = items.random_item();
+                let position = map.get_random_target();
+                world
+                    .create_entity()
+                    .with(Item::from_itemdata(item.clone()))
+                    .with(Renderable { char: item.char as char, color: RGB::from_u8(255, 255, 255) })
+                    .with(position)
+                    .build();
+            }
         }
 
         log::debug!("creating player");
@@ -172,10 +224,26 @@ impl Game {
         // update UI after the player has moved so the viewport scrolls
         self.ui.update(&self.world);
 
+        // If a UI element (e.g. crosshairs) pushed an action request during its
+        // update, run the simulation now so PlayerAction can consume it before
+        // the request is popped at the end of this frame.
+        let ui_triggered_tick = {
+            let mut game_state = self.world.write_resource::<GameState>();
+            let tick = game_state.should_tick();
+            game_state.clear_tick();
+            tick
+        };
+        if ui_triggered_tick {
+            self.update_game();
+        }
+
         let mut game_state = self.world.write_resource::<GameState>();
 
         // swap input handler for modals
         match game_state.peek_player_request() {
+            PlayerRequest::ViewHelp => {
+                self.input_handler = Box::new(HelpInputHandler::new());
+            }
             PlayerRequest::ViewInventory => {
                 self.input_handler = Box::new(InventoryInputHandler::new());
             }
@@ -193,7 +261,12 @@ impl Game {
         }
 
         let player_request = game_state.pop_player_request();
-        player_request != PlayerRequest::Quit
+        if player_request == PlayerRequest::Quit {
+            return false;
+        }
+
+        // Keep running unless the player has died
+        !game_state.game_over
     }
 
     /// Advance the game simulation one tick and recompute FOV.
@@ -234,6 +307,8 @@ impl Game {
 
 impl BGameState for Game {
     fn tick(&mut self, ctx: &mut BTerm) {
+        let (w, h) = ctx.get_char_size();
+        ScreenService::update(w as i32, h as i32);
         ctx.cls();
         let should_continue = self.update(ctx);
         self.render(ctx);
@@ -255,6 +330,7 @@ pub enum PlayerRequest {
     Quit,
     ToggleFullscreen,
     UseItem,
+    ViewHelp,
     ViewInventory,
     ViewMap,
     Selection,
@@ -270,6 +346,7 @@ pub struct GameState {
     player_request: Option<PlayerRequest>,
     view_offset:    [i32; 2],
     should_tick:    bool,
+    pub game_over:  bool,
 }
 
 impl GameState {
@@ -279,6 +356,7 @@ impl GameState {
             player_request: None,
             view_offset:    [0, 0],
             should_tick:    false,
+            game_over:      false,
         }
     }
 

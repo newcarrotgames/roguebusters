@@ -6,7 +6,7 @@ use crate::{
     components::{inventory::{Inventory, EquipLocation}, player::Player},
     game::{GameState, PlayerRequest},
     input::handlers::InputHandler,
-    ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI},
+    ui::ui::{UIElement, UIState, LINES_SINGLE, UI},
 };
 
 use super::modal_request::ModalPlayerRequest;
@@ -68,7 +68,7 @@ impl UIElement for InventoryUIElement {
     }
 
     fn render(&mut self, ctx: &mut BTerm, world: &World, _visible: &HashSet<Point>) {
-        UI::render_dialog(ctx, INVENTORY_POSITION, RGB::from_u8(255, 255, 255), LINES_DOUBLE_SINGLE, "Inventory");
+        UI::render_dialog(ctx, INVENTORY_POSITION, RGB::from_u8(255, 255, 255), LINES_SINGLE, "Inventory");
         let player_storage    = world.read_storage::<Player>();
         let inventory_storage = world.read_storage::<Inventory>();
         for (_, inventory) in (&player_storage, &inventory_storage).join() {

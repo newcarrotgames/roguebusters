@@ -19,6 +19,16 @@ impl Prefabs {
         };
     }
 
+    /// Returns an empty `Prefabs` with no folder and no loaded data.
+    /// City generation still works — rooms are simply left undecorated.
+    /// Use this in tests to avoid touching the filesystem.
+    pub fn empty() -> Self {
+        Prefabs {
+            folder: String::new(),
+            prefabs: HashMap::new(),
+        }
+    }
+
     pub fn load_all(&mut self) {
         for entry in WalkDir::new(self.folder.as_str())
             .into_iter()
@@ -33,8 +43,12 @@ impl Prefabs {
         }
     }
 
-    pub fn get(&self, name: &str) -> &Prefab {
-        return self.prefabs.get(name).unwrap();
+    pub fn get(&self, name: &str) -> Option<&Prefab> {
+        self.prefabs.get(name)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.prefabs.is_empty()
     }
 }
 

@@ -15,7 +15,7 @@ use tcod::{
 
 type LineSet = [u8; 8];
 
-pub const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
+pub const LINES_SINGLE: LineSet = [196, 179, 218, 191, 192, 217, 180, 195];
 
 pub struct Renderer {
     messages: Vec<String>,
@@ -45,7 +45,7 @@ impl Renderer {
                 SCREEN_HEIGHT - 1,
             ],
             WHITE,
-            LINES_DOUBLE_SINGLE,
+            LINES_SINGLE,
             "RogueBusters",
         );
 
@@ -59,7 +59,7 @@ impl Renderer {
                 SCREEN_HEIGHT - 1,
             ],
             WHITE,
-            LINES_DOUBLE_SINGLE,
+            LINES_SINGLE,
             "Messages",
         );
 

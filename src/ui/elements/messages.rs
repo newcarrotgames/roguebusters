@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use crate::{
     game::GameState,
     service::screen::ScreenService,
-    ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI},
+    ui::ui::{UIElement, UIState, LINES_SINGLE, UI},
 };
 
 pub struct MessagesUIElement {
@@ -37,7 +37,7 @@ impl UIElement for MessagesUIElement {
             ctx,
             [mp[0], mp[1], mp[0] + ms[0] - 1, mp[1] + ms[1] - 1],
             RGB::from_u8(255, 255, 255),
-            LINES_DOUBLE_SINGLE,
+            LINES_SINGLE,
             "Messages",
         );
 

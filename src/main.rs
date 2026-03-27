@@ -37,6 +37,7 @@ mod components {
 mod systems {
     pub mod simple_path;
     pub mod item_search;
+    pub mod npc_behavior;
     pub mod player_action;
     pub mod combat {
         pub mod combat;
@@ -55,6 +56,7 @@ mod ui {
         pub mod inventory;
         pub mod map;
         pub mod crosshairs;
+        pub mod help;
     }
     pub mod elements {
         pub mod city;
@@ -66,6 +68,9 @@ mod ui {
 mod util {
     pub mod rng;
 }
+
+#[cfg(any(test, feature = "testing"))]
+mod testing;
 
 use crate::deser::prefabs::Prefabs;
 
@@ -85,7 +90,10 @@ fn main() -> BError {
         .with_fps_cap(20.0)
         .with_resource_path("tilesets/")
         .with_font("latest.png", 16, 16)
-        .with_tile_dimensions(24, 24)
+        .with_tile_dimensions(16, 16)
+        .with_dimensions(80, 45)
+        .with_gutter(0)
+        .with_automatic_console_resize(true)
         .with_simple_console(80, 45, "latest.png")
         .build()?;
 

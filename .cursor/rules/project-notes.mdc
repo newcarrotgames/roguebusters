@@ -1,0 +1,64 @@
+---
+description: Roguebusters project status, active priorities, and key decisions. Read this before starting any task.
+alwaysApply: true
+---
+
+# Roguebusters — Project Notes
+
+## Current State (as of March 2026)
+
+The game runs. Core loop is functional: procedural city generation, turn-based movement,
+NPC hostile pursuit, melee/ranged combat, inventory, and pick-up/drop/wield items.
+
+**Recent changes:**
+- Tileset switched to `tilesets/latest.png` (16×16 custom tileset)
+- Window is resizable via a patched local copy of bracket-terminal in `vendor/bracket-terminal/`
+  (two-line fix: `init.rs` makes window resizable when `resize_scaling` is set; `mainloop.rs`
+  calls `change_physical_size` instead of `change_physical_size_smooth` to avoid letterboxing)
+- `ScreenService` is now dynamic — updated each tick from `ctx.get_char_size()`; UI panels
+  adapt when the window is resized
+- UI box borders switched from mixed double/single (`LINES_DOUBLE_SINGLE`) to consistent
+  single-line (`LINES_SINGLE`) to fix jagged corners
+- `NPCBehavior` system added — hostile NPCs chase the player and attack when adjacent
+- Testing framework added under `src/testing/` (behind `#[cfg(any(test, feature="testing"))]`)
+
+## Active Work Plan
+
+Seven streams — see the plan file for full details. Rough priority order:
+
+1. **Building entrance orientation** (prerequisite for interior variety)
+   — Add `entrance_wall` to `Space`; implement prefab alignment in `fill_space`
+
+2. **NPC AI state machine**
+   — Wire up `src/systems/ai/npc_update.rs`; implement Searching / Fleeing states
+
+3. **Building interior variety**
+   — Randomise generator per building; add speakeasy / shop / apartment / office generators
+
+4. **Dialog system** — `E` key opens a dialog modal with the nearest NPC
+
+5. **Shops** — `Shopkeeper` component; shop modal with buy/sell; spawn in shop buildings
+
+6. **Item glyph reindex** — See `notes/item-glyphs.md` for the full reference table.
+   Most items share glyph indices that don't match the new tileset; user will update
+   `tilesets/latest.png` via the composer and then update `<char>` values in XML.
+
+7. **README update** — Rewrite once the above features are in
+
+## Key Decisions & Constraints
+
+- **`BuildingOrientation::Vertical` / `Horizontal`** `todo!()` stubs will NOT be implemented
+  for now. Triple-style building footprints are also deferred.
+- **No rayon / parallel specs** — project is intentionally single-threaded for now; the
+  architecture supports adding it later via `par_join`.
+- **vendor/bracket-terminal** is a local patch of bracket-terminal 0.8.7. Do not update it
+  from crates.io without re-applying the two patches in `init.rs` and `mainloop.rs`.
+- `src/input/service.rs` is dead/stub code — do not use it; `src/input/handlers.rs` is the
+  active input path.
+- The `src/systems/ai/` folder exists but is **not in the module tree** yet (`main.rs` does
+  not declare `pub mod ai`). It will be wired in as part of the AI stream.
+
+## Notes Folder
+
+Detailed reference documents live in `notes/`:
+- `notes/item-glyphs.md` — full item list with current and target tileset glyph indices

@@ -9,16 +9,16 @@ use crate::{
 };
 use super::{
     elements::{city::CityUIElement, messages::MessagesUIElement, sidebar::SidebarUIElement},
-    modals::{inventory::InventoryUIElement, map::MapUIElement, crosshairs::CrosshairsUIElement},
+    modals::{crosshairs::CrosshairsUIElement, help::HelpUIElement, inventory::InventoryUIElement, map::MapUIElement},
 };
 
 type Quad = [i32; 4];
 pub type LineSet = [u8; 8];
 
-// const LINES_SINGLE: LineSet = [196, 179, 218, 191, 192, 217, 180, 195];
+pub const LINES_SINGLE: LineSet = [196, 179, 218, 191, 192, 217, 180, 195];
 // const LINES_DOUBLE: LineSet = [205, 186, 201, 187, 200, 188];
 // const LINES_SINGLE_DOUBLE: LineSet = [205, 179, 213, 184, 212, 190, 181, 198];
-pub const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
+// const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum UIState {
@@ -56,6 +56,8 @@ impl UI {
 
         let game_state = world.read_resource::<GameState>();
         match game_state.peek_player_request() {
+            PlayerRequest::ViewHelp =>
+                self.elements.push(Box::new(HelpUIElement::new())),
             PlayerRequest::ViewInventory =>
                 self.elements.push(Box::new(InventoryUIElement::new())),
             PlayerRequest::ViewMap =>

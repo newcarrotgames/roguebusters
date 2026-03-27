@@ -554,7 +554,7 @@ impl Space {
         let mut rng = rand::thread_rng();
         for rule in gen.rules.rules.iter() {
             // log::debug!("rule: {:?}", rule);
-            let prefab = prefabs.get(rule.name.as_str());
+            let Some(prefab) = prefabs.get(rule.name.as_str()) else { continue };
             // log::debug!("self.rect: {}", self.rect);
             match rule.frequency.as_str() {
                 "one" => loop {

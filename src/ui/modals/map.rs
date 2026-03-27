@@ -8,7 +8,7 @@ use crate::{
     game::{GameState, PlayerRequest},
     input::handlers::InputHandler,
     service::screen::ScreenService,
-    ui::ui::{UIElement, UIState, LINES_DOUBLE_SINGLE, UI},
+    ui::ui::{UIElement, UIState, LINES_SINGLE, UI},
     MAP_HEIGHT, MAP_WIDTH,
 };
 
@@ -34,7 +34,7 @@ impl UIElement for MapUIElement {
     fn update(&mut self, _world: &World) {}
 
     fn render(&mut self, ctx: &mut BTerm, world: &World, _visible: &HashSet<Point>) {
-        UI::render_dialog(ctx, self.pos, RGB::from_u8(255, 255, 255), LINES_DOUBLE_SINGLE, "Map");
+        UI::render_dialog(ctx, self.pos, RGB::from_u8(255, 255, 255), LINES_SINGLE, "Map");
 
         let map = world.read_resource::<City>();
         let map_x_scale = MAP_WIDTH  / (self.pos[2] - self.pos[0] - 2);
