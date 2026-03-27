@@ -1,0 +1,24 @@
+<prefab name="waiting_bench" width="3" height="1">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="top"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>220</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>220</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>220</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

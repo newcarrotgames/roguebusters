@@ -1,0 +1,73 @@
+<prefab name="planning_table" width="4" height="3">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="middle"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>177</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>177</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

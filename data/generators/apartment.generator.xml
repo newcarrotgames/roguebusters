@@ -1,0 +1,8 @@
+<generator name="apartment" type="building_interior">
+	<rules>
+		<rule type="prefab" name="bed" frequency="one" />
+		<rule type="prefab" name="dresser" frequency="one" />
+		<rule type="prefab" name="stove_small" frequency="one" />
+		<rule type="prefab" name="sink" frequency="one" />
+	</rules>
+</generator>

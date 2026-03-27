@@ -1,0 +1,24 @@
+<prefab name="display_case" width="3" height="1">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>4</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

@@ -1,0 +1,7 @@
+<generator name="church" type="building_interior">
+	<rules>
+		<rule type="prefab" name="altar" frequency="one" />
+		<rule type="prefab" name="confessional" frequency="one" />
+		<rule type="prefab" name="pew" frequency="many" chance="0.35" />
+	</rules>
+</generator>

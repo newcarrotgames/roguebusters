@@ -1,0 +1,7 @@
+<generator name="shop" type="building_interior">
+	<rules>
+		<rule type="prefab" name="shop_counter" frequency="one" />
+		<rule type="prefab" name="cash_register" frequency="one" />
+		<rule type="prefab" name="shelf" frequency="many" chance="0.3" />
+	</rules>
+</generator>

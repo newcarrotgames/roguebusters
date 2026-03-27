@@ -12,6 +12,8 @@ use crate::{
 use bracket_lib::prelude::{Algorithm2D, BaseMap, Point, RGB};
 use log::{error, debug};
 use rand::Rng;
+use rand::distributions::WeightedIndex;
+use rand::prelude::Distribution;
 use std::{collections::HashMap, error::Error, fmt};
 
 use super::building::Building;
@@ -569,10 +571,48 @@ impl City {
             // Building::populate(&mut building.root(), &mut self.data);
         }
 
-        let gen = generators.get("building_interior", "restaurant");
+        let interior_weights: &[(&str, u32)] = &[
+            ("apartment", 30),
+            ("office", 15),
+            ("shop", 12),
+            ("restaurant", 8),
+            ("speakeasy", 6),
+            ("hotel", 5),
+            ("barbershop", 4),
+            ("pharmacy", 4),
+            ("pool_hall", 3),
+            ("warehouse", 3),
+            ("pawn_shop", 2),
+            ("hideout", 2),
+            ("bank", 1),
+            ("police_precinct", 1),
+            ("newspaper", 1),
+            ("courthouse", 1),
+            ("boxing_gym", 1),
+            ("church", 1),
+            ("flophouse", 1),
+            ("brewery", 1),
+            ("casino", 1),
+            ("tailor", 1),
+            ("laundry", 1),
+            ("clinic", 1),
+            ("dock_office", 1),
+        ];
 
-        // generators
-        for building in buildings.iter_mut() { 
+        let weights: Vec<u32> = interior_weights.iter().map(|(_, w)| *w).collect();
+        let dist = WeightedIndex::new(&weights).unwrap();
+        let fallback_gen = generators.get("building_interior", "restaurant");
+
+        for building in buildings.iter_mut() {
+            let idx = dist.sample(&mut rng);
+            let interior_name = interior_weights[idx].0;
+            building.interior_type = interior_name.to_string();
+
+            let gen = match generators.get_opt("building_interior", interior_name) {
+                Some(g) if g.rules.rules.iter().any(|r| prefabs.get(&r.name).is_some()) => g,
+                _ => fallback_gen,
+            };
+
             for floor in building.floors.iter_mut() {
                 for space in floor.partitions.iter_mut() {
                     space.fill(gen, &prefabs, &mut self.data);

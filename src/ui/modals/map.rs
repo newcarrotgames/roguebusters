@@ -46,8 +46,8 @@ impl UIElement for MapUIElement {
 
         for my in self.pos[1] + 1..self.pos[3] {
             for mx in self.pos[0] + 1..self.pos[2] {
-                let x    = mx - self.pos[0];
-                let y    = my - self.pos[1];
+                let x    = mx - self.pos[0] - 1;
+                let y    = my - self.pos[1] - 1;
                 let tile = map.data[(y * map_y_scale) as usize][(x * map_x_scale) as usize];
 
                 let (fg, bg, ch) = if tile.bg_color == water_blue {
@@ -70,8 +70,8 @@ impl UIElement for MapUIElement {
         let position_storage = world.read_storage::<Position>();
         for (_, player_pos) in (&player_storage, &position_storage).join() {
             ctx.set(
-                self.pos[0] + (player_pos.x as i32 / map_x_scale),
-                self.pos[1] + (player_pos.y as i32 / map_y_scale),
+                self.pos[0] + 1 + (player_pos.x as i32 / map_x_scale),
+                self.pos[1] + 1 + (player_pos.y as i32 / map_y_scale),
                 white, black, b'@' as u16,
             );
         }

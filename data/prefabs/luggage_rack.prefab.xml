@@ -1,0 +1,19 @@
+<prefab name="luggage_rack" width="2" height="1">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

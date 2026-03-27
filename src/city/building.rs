@@ -82,6 +82,7 @@ pub const BUILDING_TEMPLATE_D: [Coord; 7] = [
 #[derive(PartialEq, Clone, Debug)]
 pub struct Building {
     pub id: i32,
+    pub interior_type: String,
     pub floors: Vec<Space>,
 }
 
@@ -93,7 +94,7 @@ impl Building {
         for _ in 0..num_floors {
             floors.push(Space::new(rect, id));
         }
-        Building { id, floors }
+        Building { id, interior_type: String::new(), floors }
     }
 
     pub fn root(&mut self) -> &mut Space {
@@ -273,6 +274,7 @@ pub struct Space {
     walls: [bool; 4], // interior/exterior
     pub partitions: Vec<Space>,
     building_id: i32,
+    entrance_wall: Option<usize>,
 }
 
 impl Space {
@@ -282,6 +284,7 @@ impl Space {
             walls: Wall::all(),
             partitions: Vec::new(),
             building_id,
+            entrance_wall: None,
         }
     }
 
@@ -291,6 +294,7 @@ impl Space {
             walls,
             partitions: Vec::new(),
             building_id,
+            entrance_wall: None,
         }
     }
 
@@ -542,6 +546,7 @@ impl Space {
                         }
                         data[door_y as usize][door_x as usize] =
                             Tile::door(self.building_id, DIRECTIONS[i]);
+                        self.entrance_wall = Some(i);
                         has_door = true;
                     }
                 }
@@ -549,26 +554,117 @@ impl Space {
         }
     }
 
+    /// Compute (x, y) anchor for a prefab using its alignment relative to the
+    /// entrance wall.  "top" = near entrance, "bottom" = far from entrance.
+    /// For east/west entrances the depth/lateral axes swap so the mapping
+    /// stays entrance-relative even though the prefab grid is not rotated.
+    fn compute_aligned_position(&self, prefab: &Prefab, entrance_wall: usize) -> (i32, i32) {
+        let h_align = prefab.placement.alignment.horizontal.as_str();
+        let v_align = prefab.placement.alignment.vertical.as_str();
+
+        let margin = 1;
+        let min_x = self.rect.x1 + margin;
+        let min_y = self.rect.y1 + margin;
+        let max_x = (self.rect.x2 - margin - prefab.width).max(min_x);
+        let max_y = (self.rect.y2 - margin - prefab.height).max(min_y);
+        let mid_x = (min_x + max_x) / 2;
+        let mid_y = (min_y + max_y) / 2;
+
+        match entrance_wall {
+            DIR_NORTH | DIR_SOUTH => {
+                let near_y = if entrance_wall == DIR_NORTH { min_y } else { max_y };
+                let far_y  = if entrance_wall == DIR_NORTH { max_y } else { min_y };
+
+                let y = match v_align {
+                    "top"    => near_y,
+                    "bottom" => far_y,
+                    _        => mid_y,
+                };
+                let x = match h_align {
+                    "left"  => min_x,
+                    "right" => max_x,
+                    _       => mid_x,
+                };
+                (x, y)
+            }
+            DIR_EAST | DIR_WEST => {
+                let near_x = if entrance_wall == DIR_WEST { min_x } else { max_x };
+                let far_x  = if entrance_wall == DIR_WEST { max_x } else { min_x };
+
+                let x = match v_align {
+                    "top"    => near_x,
+                    "bottom" => far_x,
+                    _        => mid_x,
+                };
+                let y = match h_align {
+                    "left"  => min_y,
+                    "right" => max_y,
+                    _       => mid_y,
+                };
+                (x, y)
+            }
+            _ => (mid_x, mid_y),
+        }
+    }
+
     pub fn fill_space(&mut self, gen: &Generator, prefabs: &Prefabs, data: &mut Grid) {
-        let mut times = 0;
         let mut rng = rand::thread_rng();
         for rule in gen.rules.rules.iter() {
-            // log::debug!("rule: {:?}", rule);
             let Some(prefab) = prefabs.get(rule.name.as_str()) else { continue };
-            // log::debug!("self.rect: {}", self.rect);
             match rule.frequency.as_str() {
-                "one" => loop {
-                    let x = rng.gen_range(self.rect.x1..self.rect.x2 - 2);
-                    let y = rng.gen_range(self.rect.y1..self.rect.y2 - 2);
-                    if self.can_place_prefab(data, x, y, prefab) {
-                        self.draw_prefab(x, y, prefab, self.building_id, data);
-                        break;
+                "one" => {
+                    let has_alignment = !prefab.placement.alignment.vertical.is_empty()
+                        || !prefab.placement.alignment.horizontal.is_empty();
+
+                    let mut placed = false;
+
+                    if has_alignment {
+                        if let Some(ew) = self.entrance_wall {
+                            let (ax, ay) = self.compute_aligned_position(prefab, ew);
+                            if self.can_place_prefab(data, ax, ay, prefab) {
+                                self.draw_prefab(ax, ay, prefab, self.building_id, data);
+                                placed = true;
+                            } else {
+                                'search: for radius in 1..=5_i32 {
+                                    for dy in -radius..=radius {
+                                        for dx in -radius..=radius {
+                                            if dx.abs() != radius && dy.abs() != radius {
+                                                continue;
+                                            }
+                                            let x = ax + dx;
+                                            let y = ay + dy;
+                                            if self.can_place_prefab(data, x, y, prefab) {
+                                                self.draw_prefab(x, y, prefab, self.building_id, data);
+                                                placed = true;
+                                                break 'search;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    times += 1;
-                    if times > 10 {
-                        break
+
+                    if !placed {
+                        let x_range = self.rect.x2 - 2 - self.rect.x1;
+                        let y_range = self.rect.y2 - 2 - self.rect.y1;
+                        if x_range > 0 && y_range > 0 {
+                            let mut tries = 0;
+                            loop {
+                                let x = rng.gen_range(self.rect.x1..self.rect.x2 - 2);
+                                let y = rng.gen_range(self.rect.y1..self.rect.y2 - 2);
+                                if self.can_place_prefab(data, x, y, prefab) {
+                                    self.draw_prefab(x, y, prefab, self.building_id, data);
+                                    break;
+                                }
+                                tries += 1;
+                                if tries > 10 {
+                                    break;
+                                }
+                            }
+                        }
                     }
-                },
+                }
                 "many" => {
                     for y in self.rect.y1..self.rect.y2 - 2 {
                         for x in self.rect.x1..self.rect.x2 - 2 {
@@ -595,16 +691,22 @@ impl Space {
     }
 
     fn can_place_prefab(&self, data: &mut Grid, x: i32, y: i32, prefab: &Prefab) -> bool {
+        if x < 0 || y < 0 {
+            return false;
+        }
         for py in 0..prefab.height + 1 {
             for px in 0..prefab.width + 1 {
-                let tile = data[(y + py) as usize][(x + px) as usize];
-                // log::debug!("tile: {:?}", tile);
-                if tile.tile_id != TileId::Interior {
+                let ty = (y + py) as usize;
+                let tx = (x + px) as usize;
+                if ty >= data.len() || tx >= data[ty].len() {
+                    return false;
+                }
+                if data[ty][tx].tile_id != TileId::Interior {
                     return false;
                 }
             }
         }
-        return true;
+        true
     }
 
     pub fn fill(&mut self, gen: &Generator, prefabs: &Prefabs, data: &mut Grid) {

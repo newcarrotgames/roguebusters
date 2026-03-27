@@ -1,0 +1,8 @@
+<generator name="hideout" type="building_interior">
+	<rules>
+		<rule type="prefab" name="planning_table" frequency="one" />
+		<rule type="prefab" name="weapon_crate" frequency="many" chance="0.2" />
+		<rule type="prefab" name="bunk" frequency="many" chance="0.25" />
+		<rule type="prefab" name="safe" frequency="one" />
+	</rules>
+</generator>

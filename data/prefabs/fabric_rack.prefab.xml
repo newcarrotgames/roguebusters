@@ -1,0 +1,24 @@
+<prefab name="fabric_rack" width="3" height="1">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

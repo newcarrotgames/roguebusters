@@ -1,0 +1,31 @@
+<prefab name="safe" width="2" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#808080</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#808080</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#808080</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>248</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

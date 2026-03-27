@@ -1,0 +1,29 @@
+<prefab name="locker_row" width="4" height="1">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#A0A0A0</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#808080</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#A0A0A0</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#808080</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

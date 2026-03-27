@@ -1,0 +1,31 @@
+<prefab name="weapon_crate" width="2" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#806640</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#806640</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#806640</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#806640</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

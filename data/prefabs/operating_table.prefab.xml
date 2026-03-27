@@ -1,0 +1,41 @@
+<prefab name="operating_table" width="3" height="2">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="middle"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>218</ascii>
+				<fgd>#C0C0C0</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#C0C0C0</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>191</ascii>
+				<fgd>#C0C0C0</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>192</ascii>
+				<fgd>#C0C0C0</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>15</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>217</ascii>
+				<fgd>#C0C0C0</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

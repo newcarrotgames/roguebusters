@@ -1,0 +1,14 @@
+<prefab name="bouncer_post" width="1" height="1">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="top"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>15</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

@@ -1,0 +1,7 @@
+<generator name="boxing_gym" type="building_interior">
+	<rules>
+		<rule type="prefab" name="boxing_ring" frequency="one" />
+		<rule type="prefab" name="punching_bag" frequency="many" chance="0.2" />
+		<rule type="prefab" name="locker_row" frequency="one" />
+	</rules>
+</generator>

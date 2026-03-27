@@ -1,0 +1,29 @@
+<prefab name="mirror_counter" width="4" height="1">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="bottom"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

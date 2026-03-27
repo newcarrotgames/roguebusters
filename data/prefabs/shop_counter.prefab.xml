@@ -1,0 +1,61 @@
+<prefab name="shop_counter" width="5" height="2">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="top"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>218</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>191</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>248</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

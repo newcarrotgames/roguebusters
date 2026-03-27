@@ -1,0 +1,31 @@
+<prefab name="evidence_locker" width="2" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#A0A0A0</fgd>
+				<bkg>#505050</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#A0A0A0</fgd>
+				<bkg>#505050</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#A0A0A0</fgd>
+				<bkg>#505050</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>219</ascii>
+				<fgd>#A0A0A0</fgd>
+				<bkg>#505050</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

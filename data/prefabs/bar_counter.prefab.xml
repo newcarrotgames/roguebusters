@@ -1,0 +1,71 @@
+<prefab name="bar_counter" width="6" height="2">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="bottom"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>218</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>191</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>248</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>248</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#503020</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

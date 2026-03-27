@@ -40,6 +40,17 @@ impl Generators {
         let gentypes = self.generators.get(gentype).unwrap();
         gentypes.get(name).unwrap()
     }
+
+    pub fn get_opt(&self, gentype: &str, name: &str) -> Option<&Generator> {
+        self.generators.get(gentype)?.get(name)
+    }
+
+    pub fn names_for_type(&self, gentype: &str) -> Vec<&str> {
+        match self.generators.get(gentype) {
+            Some(map) => map.keys().map(|s| s.as_str()).collect(),
+            None => Vec::new(),
+        }
+    }
 }
 
 #[derive(Default, PartialEq, Debug, YaDeserialize)]

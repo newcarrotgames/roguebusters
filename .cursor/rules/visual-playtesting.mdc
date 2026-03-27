@@ -1,0 +1,117 @@
+---
+description: How to visually playtest RogueBusters by taking live screenshots and sending input to the running game window
+alwaysApply: false
+---
+
+# Visual Playtesting RogueBusters
+
+Use this method to test live game behaviour by seeing what the player sees — no code changes required.
+
+## Prerequisites
+
+```
+pip install pywin32 pygetwindow pyautogui Pillow
+```
+
+The game must be running (`cargo run` or `cargo run --release`).
+
+## Step 1 — Find the game window handle
+
+```python
+import win32gui
+hwnd = win32gui.FindWindow(None, 'RogueBusters')
+print(hwnd)  # e.g. 2425816
+```
+
+## Step 2 — Send keystrokes (no focus required)
+
+Use `PostMessage` with `WM_KEYDOWN`/`WM_KEYUP` — works even when Cursor is in the foreground.
+
+```python
+import win32api, win32con, time
+
+def press(hwnd, vk, delay=0.35):
+    win32api.PostMessage(hwnd, win32con.WM_KEYDOWN, vk, 0)
+    time.sleep(0.05)
+    win32api.PostMessage(hwnd, win32con.WM_KEYUP,   vk, 0)
+    time.sleep(delay)
+
+# Common virtual key codes
+VK = {
+    'up':    win32con.VK_UP,
+    'down':  win32con.VK_DOWN,
+    'left':  win32con.VK_LEFT,
+    'right': win32con.VK_RIGHT,
+    'p':     0x50,   # pick up
+    'w':     0x57,   # wield
+    'd':     0x44,   # drop
+    'i':     0x49,   # inventory
+    's':     0x53,   # target / crosshairs
+    '.':     0xBE,   # wait
+}
+```
+
+## Step 3 — Take a clean screenshot
+
+`ImageGrab.grab()` only captures what is visually on screen. Minimize all other windows first, then restore them after:
+
+```python
+import win32gui, win32con, time
+from PIL import ImageGrab
+
+def screenshot(game_hwnd, path='rb_shot.png'):
+    # Collect windows to temporarily hide
+    others = []
+    def cb(h, _):
+        if win32gui.IsWindowVisible(h) and h != game_hwnd:
+            r = win32gui.GetWindowRect(h)
+            if r[2] - r[0] > 100 and r[3] - r[1] > 100:
+                others.append(h)
+    win32gui.EnumWindows(cb, None)
+
+    for h in others:
+        win32gui.ShowWindow(h, win32con.SW_MINIMIZE)
+    time.sleep(0.6)  # wait for windows to hide + game to repaint
+
+    img = ImageGrab.grab(bbox=win32gui.GetWindowRect(game_hwnd))
+    img.save(path)
+
+    for h in others:
+        win32gui.ShowWindow(h, win32con.SW_RESTORE)
+    return img
+```
+
+Save screenshots to `notes/playtester/` — this folder is gitignored. Never write to the repo root.
+
+Then read the saved image file using the Read tool to visually inspect the game state.
+
+## Step 4 — Analyse what you see
+
+Key UI elements:
+- **Yellow `@`** — player character
+- **Grey smiley/letter characters** — NPCs
+- **White characters** (`r`, `!`, `)`, etc.) — items on the ground
+- **Sidebar (right)** — Name, HP, stats, Wielding slot
+- **Messages (bottom)** — last actions and events
+
+## Step 5 — Full playtest loop
+
+```python
+# 1. Send actions
+press(hwnd, VK['up'])
+press(hwnd, VK['w'])   # wield item on this tile
+
+# 2. Screenshot and inspect
+img = screenshot(hwnd, 'rb_shot.png')
+# Use Read tool on rb_shot.png to see result
+
+# 3. Repeat based on what you observe
+```
+
+## Important notes
+
+- **Do not** use `pyautogui.press()` or `SetForegroundWindow` for input — SDL2 ignores them unless the game window truly owns focus. `PostMessage` works without focus.
+- **Do not** use `PrintWindow` — bracket-lib uses GPU/OpenGL rendering; `PrintWindow` only captures GDI surfaces and returns a blank white image.
+- **Do** minimize all other windows before screenshotting, then restore them. The minimize/restore is fast (~0.6 s) and does not disturb the terminal subprocess.
+- Ask the user not to click on other windows during a test loop — it will interfere with the minimize/restore pattern.
+- The game title is exactly `RogueBusters` (capital R and B).

@@ -1,0 +1,21 @@
+<prefab name="filing_cabinet" width="1" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>220</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

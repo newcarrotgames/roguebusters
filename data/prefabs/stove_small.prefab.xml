@@ -1,0 +1,31 @@
+<prefab name="stove_small" width="2" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>248</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>248</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

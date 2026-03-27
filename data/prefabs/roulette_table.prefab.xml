@@ -1,0 +1,58 @@
+<prefab name="roulette_table" width="3" height="3">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="middle"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>220</ascii>
+				<fgd>#206020</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>222</ascii>
+				<fgd>#206020</fgd>
+				<bkg>#602020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>15</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#602020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>221</ascii>
+				<fgd>#206020</fgd>
+				<bkg>#602020</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>223</ascii>
+				<fgd>#206020</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

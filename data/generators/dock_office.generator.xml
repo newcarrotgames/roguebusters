@@ -1,0 +1,7 @@
+<generator name="dock_office" type="building_interior">
+	<rules>
+		<rule type="prefab" name="desk" frequency="one" />
+		<rule type="prefab" name="shipping_manifest_board" frequency="one" />
+		<rule type="prefab" name="crate_stack" frequency="many" chance="0.3" />
+	</rules>
+</generator>

@@ -1,0 +1,7 @@
+<generator name="warehouse" type="building_interior">
+	<rules>
+		<rule type="prefab" name="crate_stack" frequency="many" chance="0.35" />
+		<rule type="prefab" name="foreman_desk" frequency="one" />
+		<rule type="prefab" name="loading_dock" frequency="one" />
+	</rules>
+</generator>

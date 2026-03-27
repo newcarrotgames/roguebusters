@@ -1,0 +1,24 @@
+<prefab name="shelf_cluttered" width="3" height="1">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#C0C0C0</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

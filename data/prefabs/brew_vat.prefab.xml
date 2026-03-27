@@ -1,0 +1,58 @@
+<prefab name="brew_vat" width="3" height="3">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>220</ascii>
+				<fgd>#806640</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>222</ascii>
+				<fgd>#806640</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>177</ascii>
+				<fgd>#FFD700</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>221</ascii>
+				<fgd>#806640</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>223</ascii>
+				<fgd>#806640</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

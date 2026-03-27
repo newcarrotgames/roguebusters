@@ -1,0 +1,8 @@
+<generator name="clinic" type="building_interior">
+	<rules>
+		<rule type="prefab" name="hospital_bed" frequency="many" chance="0.25" />
+		<rule type="prefab" name="operating_table" frequency="one" />
+		<rule type="prefab" name="medicine_cabinet" frequency="one" />
+		<rule type="prefab" name="doctor_desk" frequency="one" />
+	</rules>
+</generator>

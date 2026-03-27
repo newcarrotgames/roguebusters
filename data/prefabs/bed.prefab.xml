@@ -1,0 +1,41 @@
+<prefab name="bed" width="3" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>223</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#402040</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>223</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#402040</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>223</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#402040</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#203060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#203060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#203060</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

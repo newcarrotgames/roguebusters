@@ -1,0 +1,31 @@
+<prefab name="shipping_manifest_board" width="2" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#403020</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

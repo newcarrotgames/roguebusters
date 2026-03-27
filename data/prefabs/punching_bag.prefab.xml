@@ -1,0 +1,21 @@
+<prefab name="punching_bag" width="1" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>7</ascii>
+				<fgd>#C0C0C0</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#602020</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

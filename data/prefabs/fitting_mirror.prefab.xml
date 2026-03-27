@@ -1,0 +1,21 @@
+<prefab name="fitting_mirror" width="1" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>176</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

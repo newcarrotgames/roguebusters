@@ -1,0 +1,58 @@
+<prefab name="card_table" width="3" height="3">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#206020</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#206020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>4</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#206020</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#206020</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#206020</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

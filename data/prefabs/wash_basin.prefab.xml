@@ -1,0 +1,31 @@
+<prefab name="wash_basin" width="2" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>218</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>191</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>192</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>217</ascii>
+				<fgd>#80C0FF</fgd>
+				<bkg>#606060</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

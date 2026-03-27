@@ -1,0 +1,8 @@
+<generator name="police_precinct" type="building_interior">
+	<rules>
+		<rule type="prefab" name="front_desk" frequency="one" />
+		<rule type="prefab" name="holding_cell" frequency="one" />
+		<rule type="prefab" name="evidence_locker" frequency="one" />
+		<rule type="prefab" name="desk" frequency="many" chance="0.3" />
+	</rules>
+</generator>

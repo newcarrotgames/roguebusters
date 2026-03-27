@@ -1,0 +1,31 @@
+<prefab name="medicine_cabinet" width="2" height="2">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#FFFFFF</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>254</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#FFFFFF</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>220</ascii>
+				<fgd>#000000</fgd>
+				<bkg>#FFFFFF</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>220</ascii>
+				<fgd>#000000</fgd>
+				<bkg>#FFFFFF</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

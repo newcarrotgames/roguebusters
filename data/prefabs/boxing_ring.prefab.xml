@@ -1,0 +1,142 @@
+<prefab name="boxing_ring" width="5" height="5">
+	<placement mode="inset">
+		<alignment horizontal="center" vertical="middle"></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>218</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>191</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell>
+				<ascii>32</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#404040</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>179</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+		<row>
+			<cell blocked="true">
+				<ascii>192</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>217</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#000000</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

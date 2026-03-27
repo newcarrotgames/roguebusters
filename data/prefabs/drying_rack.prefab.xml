@@ -1,0 +1,24 @@
+<prefab name="drying_rack" width="3" height="1">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>197</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>196</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>197</ascii>
+				<fgd>#FFFFFF</fgd>
+				<bkg>#806640</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

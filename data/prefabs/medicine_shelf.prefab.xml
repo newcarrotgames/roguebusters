@@ -1,0 +1,24 @@
+<prefab name="medicine_shelf" width="3" height="1">
+	<placement mode="inset">
+		<alignment horizontal="" vertical=""></alignment>
+	</placement>
+	<data>
+		<row>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#FFFFFF</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#FFFFFF</bkg>
+			</cell>
+			<cell blocked="true">
+				<ascii>240</ascii>
+				<fgd>#FF4444</fgd>
+				<bkg>#FFFFFF</bkg>
+			</cell>
+		</row>
+	</data>
+</prefab>

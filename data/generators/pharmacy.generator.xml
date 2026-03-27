@@ -1,0 +1,7 @@
+<generator name="pharmacy" type="building_interior">
+	<rules>
+		<rule type="prefab" name="pharmacist_counter" frequency="one" />
+		<rule type="prefab" name="soda_fountain" frequency="one" />
+		<rule type="prefab" name="medicine_shelf" frequency="many" chance="0.3" />
+	</rules>
+</generator>
