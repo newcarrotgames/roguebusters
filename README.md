@@ -1,31 +1,23 @@
 RogueBusters
 ============
 
-RogueBusters is a roguelike game developed in Rust, utilizing the `libtcod` library for terminal rendering and the `specs` library for the entity-component-system (ECS) architecture. Dive into a procedurally generated city set in the prohibition-era United States during the 1920s.
+A turn-based roguelike set in the prohibition-era United States, 1920s.
 
-![RogueBusters Screenshot](./img/rb-1.png)
+Built in Rust using [bracket-lib](https://github.com/amethyst/bracket-lib) for
+rendering and [specs](https://github.com/amethyst/specs) for the
+Entity-Component-System architecture.
 
-Features
---------
+---
 
-* Procedurally generated city with varied building layouts and businesses
-* Turn-based combat system
-* A diverse set of NPCs with unique abilities
-* An extensive range of items and weapons
-* Character progression and skill system
-* ASCII graphics rendered using libtcod
-* Efficient and modular ECS architecture with specs
-* Cars!
 
 Installation
 ------------
 
 ### Prerequisites
 
-* [Rust](https://www.rust-lang.org/tools/install) installed on your system (1.56.0 or higher)
-* [libtcod](https://github.com/libtcod/libtcod) library
+- [Rust](https://www.rust-lang.org/tools/install) 1.70 or newer
 
-### Building and Running
+### Build and Run
 
 ```
 git clone https://github.com/newcarrotgames/RogueBusters.git
@@ -33,25 +25,66 @@ cd RogueBusters
 cargo run --release
 ```
 
+No external native libraries required. The window is resizable by default.
+
 Controls
 --------
 
-* Movement: Numpad
-* Attack: Move into an NPC
-* Pick up item: `p` when standing on an item
-* Open inventory: `i`
-* Drop item: `d` followed by the item's inventory index
-* View character sheet: `c`
-* Quit game: `Q`
+| Key | Action |
+|-----|--------|
+| Numpad / Arrow keys | Move / attack (bump into NPC) |
+| `P` | Pick up item at current tile |
+| `W` | Wield item at current tile |
+| `D` | Drop wielded item |
+| `.` | Wait one turn |
+| `S` | Crosshairs mode (click to target) |
+| `I` | Open inventory |
+| `M` | Open map |
+| `H` | Help |
+| `Shift+Q` | Quit |
 
-Contributing
+Architecture
 ------------
 
-Contributions are welcome! Please follow these steps:
+```
+src/
+  components/   Pure ECS data (Position, Attributes, Inventory, NPC, …)
+  systems/      Pure ECS behavior (PlayerAction, NPCBehavior, Combat, …)
+  city/         Procedural map and building generation
+  deser/        XML data loading — items, prefabs, generators
+  ui/           Rendering layer (elements/, modals/)
+  input/        Keyboard handling and input handler trait
+  service/      ScreenService — dynamic layout dimensions
+  util/         Shared utilities (RNG)
+  testing/      Headless play-testing harness (cfg(test) only)
+```
 
-1.  Fork the repository
-2.  Create a new branch for your feature or bugfix
-3.  Commit your changes to the new branch
-4.  Create a pull request, describing your changes and any potential issues
+The simulation runs through a `specs` `Dispatcher`; bracket-lib drives the main loop.
+Systems with non-overlapping `SystemData` are ready for parallel dispatch via rayon
+when that becomes necessary.
 
-We will review your pull request as soon as possible. Thank you for your contribution!
+The game uses a vendored, lightly patched copy of `bracket-terminal` (in
+`vendor/bracket-terminal/`) to enable free window resizing without aspect-ratio
+letterboxing.
+
+Data files
+----------
+
+Game content is defined in XML and loaded at startup:
+
+| Path | Contents |
+|------|----------|
+| `data/items/weapons.items.xml` | All weapons with stats |
+| `data/items/clothing.items.xml` | All clothing items |
+| `data/prefabs/*.prefab.xml` | ASCII room furniture pieces |
+| `data/generators/*.generator.xml` | Rules for filling building interiors |
+
+Roadmap
+-------
+
+- [ ] Smarter NPCs — patrol, search, and flee when hurt
+- [ ] Varied building interiors — speakeasies, shops, apartments, offices
+- [ ] Dialog System
+- [ ] Shops
+- [ ] Character progression (xp, skills, leveling)
+- [ ] Cars!
