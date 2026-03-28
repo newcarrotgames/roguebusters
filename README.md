@@ -7,7 +7,7 @@ Built in Rust using [bracket-lib](https://github.com/amethyst/bracket-lib) for
 rendering and [specs](https://github.com/amethyst/specs) for the
 Entity-Component-System architecture.
 
-![RogueBusters Screenshot](img/rb-1.png)
+![RogueBusters Screenshot](img/rb1.png)
 
 ---
 
