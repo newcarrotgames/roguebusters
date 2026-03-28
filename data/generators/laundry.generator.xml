@@ -1,4 +1,4 @@
-<generator name="laundry" type="building_interior">
+<generator name="laundry" type="room">
 	<rules>
 		<rule type="prefab" name="wash_basin" frequency="many" chance="0.3" />
 		<rule type="prefab" name="mangle" frequency="one" />

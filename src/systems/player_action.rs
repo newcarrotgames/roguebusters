@@ -2,7 +2,7 @@ use bracket_lib::prelude::RGB;
 use specs::{Builder, Entities, Join, LazyUpdate, Read, ReadStorage, System, Write, WorldExt, WriteStorage};
 
 use crate::{
-    city::city::City,
+    city::city::{City, TileId},
     components::{
         combatant::Combatant,
         inventory::{EquipLocation, Inventory},
@@ -48,7 +48,18 @@ impl<'a> System<'a> for PlayerAction {
                 for (_, pos) in (&players, &mut positions).join() {
                     let nx = pos.x + dx as f32;
                     let ny = pos.y + dy as f32;
-                    if !city.data[ny as usize][nx as usize].blocked {
+                    let tile = &city.data[ny as usize][nx as usize];
+                    if !tile.blocked {
+                        if tile.tile_id == TileId::Door {
+                            if let Some((name, itype)) = city.space_info_at_door(
+                                tile.building_id, nx as i32, ny as i32,
+                            ) {
+                                let interior = itype.replace('_', " ");
+                                game_state.push_message(format!(
+                                    "You enter {} ({})", name, interior
+                                ));
+                            }
+                        }
                         pos.x = nx;
                         pos.y = ny;
                     }

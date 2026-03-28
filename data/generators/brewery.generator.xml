@@ -1,4 +1,4 @@
-<generator name="brewery" type="building_interior">
+<generator name="brewery" type="room">
 	<rules>
 		<rule type="prefab" name="brew_vat" frequency="many" chance="0.25" />
 		<rule type="prefab" name="bottling_station" frequency="one" />

@@ -1,4 +1,4 @@
-<generator name="tailor" type="building_interior">
+<generator name="tailor" type="room">
 	<rules>
 		<rule type="prefab" name="sewing_machine" frequency="one" />
 		<rule type="prefab" name="fitting_mirror" frequency="one" />

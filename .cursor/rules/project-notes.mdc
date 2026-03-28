@@ -21,19 +21,28 @@ NPC hostile pursuit, melee/ranged combat, inventory, and pick-up/drop/wield item
   single-line (`LINES_SINGLE`) to fix jagged corners
 - `NPCBehavior` system added — hostile NPCs chase the player and attack when adjacent
 - Testing framework added under `src/testing/` (behind `#[cfg(any(test, feature="testing"))]`)
+- Building entrance orientation complete — `entrance_wall: Option<usize>` on `Space`, set by
+  `add_doors`; `fill_space` uses `compute_aligned_position` to align prefabs to the door wall
+- Building interior variety complete — each leaf `Space` independently gets its own
+  `interior_type` and `name`; `Space::fill` selects a room generator per leaf via
+  `generators.get_opt("room", &space.interior_type)`; 25 room generators in `data/generators/`
+  (type renamed from `"building_interior"` → `"room"`); entering a door prints the room's
+  name and type; building names generated from templates with `[CITY_NAME]` / `[BUSINESS_TERM]`
+  placeholders now resolved
 
 ## Active Work Plan
 
-Seven streams — see the plan file for full details. Rough priority order:
+Rough priority order:
 
-1. **Building entrance orientation** (prerequisite for interior variety)
-   — Add `entrance_wall` to `Space`; implement prefab alignment in `fill_space`
-
-2. **NPC AI state machine**
+1. **NPC AI state machine**
    — Wire up `src/systems/ai/npc_update.rs`; implement Searching / Fleeing states
 
-3. **Building interior variety**
-   — Randomise generator per building; add speakeasy / shop / apartment / office generators
+2. **Building interior variety — remaining polish**
+   — Most generators are stubs (only restaurant is well-furnished); flesh out prefab sets
+     for speakeasy, shop, apartment, office, etc.
+
+3. **Settings modal** — `Esc` (or dedicated key) opens an in-game settings modal; initial
+   scope: music/SFX volume toggles, keybinding display, and a Quit option
 
 4. **Dialog system** — `E` key opens a dialog modal with the nearest NPC
 

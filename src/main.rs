@@ -89,12 +89,12 @@ fn main() -> BError {
         .with_title("RogueBusters")
         .with_fps_cap(20.0)
         .with_resource_path("tilesets/")
-        .with_font("latest.png", 16, 16)
+        .with_font("base.png", 16, 16)
         .with_tile_dimensions(16, 16)
         .with_dimensions(80, 45)
         .with_gutter(0)
         .with_automatic_console_resize(true)
-        .with_simple_console(80, 45, "latest.png")
+        .with_simple_console(80, 45, "base.png")
         .build()?;
 
     log::debug!("creating game");

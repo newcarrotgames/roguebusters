@@ -1,4 +1,4 @@
-<generator name="hideout" type="building_interior">
+<generator name="hideout" type="room">
 	<rules>
 		<rule type="prefab" name="planning_table" frequency="one" />
 		<rule type="prefab" name="weapon_crate" frequency="many" chance="0.2" />

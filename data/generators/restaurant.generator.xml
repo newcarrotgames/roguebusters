@@ -1,4 +1,4 @@
-<generator name="restaurant" type="building_interior">
+<generator name="restaurant" type="room">
 	<rules>
 		<rule type="prefab" name="kitchen" frequency="one" />
 		<rule type="prefab" name="host_station" frequency="one" />

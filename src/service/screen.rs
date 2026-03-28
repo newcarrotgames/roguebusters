@@ -48,4 +48,12 @@ impl ScreenService {
     pub fn map_area_position() -> [i32; 2] {
         [0, 0]
     }
+
+    /// Returns `[x1, y1, x2, y2]` for a rect of the given size centered on
+    /// the current screen.
+    pub fn centered_rect(w: i32, h: i32) -> [i32; 4] {
+        let x1 = (Self::get_width()  - w) / 2;
+        let y1 = (Self::get_height() - h) / 2;
+        [x1, y1, x1 + w, y1 + h]
+    }
 }

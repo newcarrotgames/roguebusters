@@ -53,3 +53,44 @@ To keep the door open:
 `Game::tick` (bracket-lib) → read input → optional sim tick (specs dispatcher) → UI render
 
 Never put simulation logic in the UI layer. Never put rendering in systems.
+
+## Building & Interior Model
+
+Understanding this hierarchy is critical before touching `src/city/`.
+
+```
+City
+ └─ buildings: HashMap<i32, Building>   ← keyed by building_id
+     └─ floors: Vec<Space>              ← one Space per floor
+         └─ partitions: Vec<Space>      ← recursive subdivision tree
+             └─ (leaf Space)            ← actual rooms / businesses
+```
+
+**`Building`** is a physical shell. It has an `id`, `interior_type` (kept for
+reference), and a list of floors. It does **not** own a business name — it is
+just real estate.
+
+**`Space`** is both an internal node (when `partitions` is non-empty) and a leaf
+(when `partitions` is empty). Leaf spaces are the actual rooms that get:
+- `interior_type: String` — the business category (e.g. `"speakeasy"`, `"apartment"`)
+- `name: String` — the generated business name (e.g. "Harrison's Tailor Shop")
+- `entrance_wall: Option<usize>` — which wall the door is on (set by `add_doors`)
+
+Think of a `Building` as the physical structure, and each leaf `Space` as a
+separate tenant/business leasing a room inside it.
+
+**Generators** (`data/generators/*.generator.xml`) describe what prefab furniture
+goes into a room. They are keyed `type="room"` and looked up by `interior_type`
+at fill time. Each leaf space picks its own generator — **do not** pre-select one
+generator per building and apply it to all rooms.
+
+**Key methods:**
+- `Space::assign_leaf_businesses_with(f)` — recursively assigns `(name, interior_type)`
+  to every leaf via a closure; called during city gen
+- `Space::fill(generators, fallback, prefabs, data)` — recursively walks to leaves,
+  looks up `generators.get_opt("room", &space.interior_type)` per leaf, then calls
+  `fill_space` to place prefabs
+- `Space::find_space_info_at(x, y)` — walks the tree to find the leaf whose rect
+  boundary contains `(x, y)`; used to identify which room a door belongs to
+- `City::space_info_at_door(building_id, x, y)` — convenience wrapper used by
+  `PlayerAction` to display the room name/type on door entry

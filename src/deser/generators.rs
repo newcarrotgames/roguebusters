@@ -115,6 +115,6 @@ mod tests {
     fn test_get() {
         let mut gens = Generators::new("data/generators");
         gens.load_all();
-        println!("{:?}", gens.get("building_interior", "restaurant"));
+        println!("{:?}", gens.get("room", "restaurant"));
     }
 }

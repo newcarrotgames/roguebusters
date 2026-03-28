@@ -1,4 +1,4 @@
-<generator name="bank" type="building_interior">
+<generator name="bank" type="room">
 	<rules>
 		<rule type="prefab" name="teller_window" frequency="many" chance="0.3" />
 		<rule type="prefab" name="vault_door" frequency="one" />

@@ -1,4 +1,4 @@
-<generator name="newspaper" type="building_interior">
+<generator name="newspaper" type="room">
 	<rules>
 		<rule type="prefab" name="editor_desk" frequency="one" />
 		<rule type="prefab" name="printing_press" frequency="one" />

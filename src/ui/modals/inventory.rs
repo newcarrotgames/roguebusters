@@ -6,12 +6,14 @@ use crate::{
     components::{inventory::{Inventory, EquipLocation}, player::Player},
     game::{GameState, PlayerRequest},
     input::handlers::InputHandler,
+    service::screen::ScreenService,
     ui::ui::{UIElement, UIState, LINES_SINGLE, UI},
 };
 
 use super::modal_request::ModalPlayerRequest;
 
-const INVENTORY_POSITION: [i32; 4] = [10, 10, 50, 50];
+const INVENTORY_W: i32 = 40;
+const INVENTORY_H: i32 = 40;
 
 pub struct InventoryUIElement {
     selected_item: i32,
@@ -68,7 +70,8 @@ impl UIElement for InventoryUIElement {
     }
 
     fn render(&mut self, ctx: &mut BTerm, world: &World, _visible: &HashSet<Point>) {
-        UI::render_dialog(ctx, INVENTORY_POSITION, RGB::from_u8(255, 255, 255), LINES_SINGLE, "Inventory");
+        let pos = ScreenService::centered_rect(INVENTORY_W, INVENTORY_H);
+        UI::render_dialog(ctx, pos, RGB::from_u8(255, 255, 255), LINES_SINGLE, "Inventory");
         let player_storage    = world.read_storage::<Player>();
         let inventory_storage = world.read_storage::<Inventory>();
         for (_, inventory) in (&player_storage, &inventory_storage).join() {
@@ -80,8 +83,8 @@ impl UIElement for InventoryUIElement {
                 };
                 UI::puts(
                     ctx,
-                    INVENTORY_POSITION[0] + 2,
-                    INVENTORY_POSITION[1] + 1 + i as i32,
+                    pos[0] + 2,
+                    pos[1] + 1 + i as i32,
                     item.name.as_str(),
                     color,
                 );

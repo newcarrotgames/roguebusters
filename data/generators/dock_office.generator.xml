@@ -1,4 +1,4 @@
-<generator name="dock_office" type="building_interior">
+<generator name="dock_office" type="room">
 	<rules>
 		<rule type="prefab" name="desk" frequency="one" />
 		<rule type="prefab" name="shipping_manifest_board" frequency="one" />

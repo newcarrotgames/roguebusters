@@ -1,4 +1,4 @@
-<generator name="courthouse" type="building_interior">
+<generator name="courthouse" type="room">
 	<rules>
 		<rule type="prefab" name="judge_bench" frequency="one" />
 		<rule type="prefab" name="witness_stand" frequency="one" />

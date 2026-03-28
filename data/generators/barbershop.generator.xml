@@ -1,4 +1,4 @@
-<generator name="barbershop" type="building_interior">
+<generator name="barbershop" type="room">
 	<rules>
 		<rule type="prefab" name="barber_chair" frequency="many" chance="0.3" />
 		<rule type="prefab" name="waiting_bench" frequency="one" />

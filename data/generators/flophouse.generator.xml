@@ -1,4 +1,4 @@
-<generator name="flophouse" type="building_interior">
+<generator name="flophouse" type="room">
 	<rules>
 		<rule type="prefab" name="cot" frequency="many" chance="0.35" />
 		<rule type="prefab" name="footlocker" frequency="many" chance="0.2" />

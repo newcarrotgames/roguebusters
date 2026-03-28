@@ -1,4 +1,4 @@
-<generator name="church" type="building_interior">
+<generator name="church" type="room">
 	<rules>
 		<rule type="prefab" name="altar" frequency="one" />
 		<rule type="prefab" name="confessional" frequency="one" />

@@ -90,27 +90,42 @@ impl Names {
                     .templates
                     .get_random_template("business", "restaurant");
                 self.process_template(template, TemplateData {
-					last_name: Some(last_name),
+                    last_name: Some(last_name),
                     street_name: None,
                     direction: None,
-				})
+                    city_name: None,
+                    business_term: None,
+                })
             }
             NameType::StreetName => {
                 let num = rng.gen_range(1..100);
                 self.number_to_position(num)
             }
             NameType::BuildingName => {
-                let last_name = self.get_random_name(NameType::LastName);
-                let street_name = self.get_random_name(NameType::StreetName);
-                let direction = self.get_random_name(NameType::Direction);
+                const CITY_NAMES: &[&str] = &[
+                    "New Providence", "Port Alcott", "Havelock", "Dunmore",
+                    "Creston", "Aldgate", "Merrick Falls", "Voss City",
+                ];
+                const BUSINESS_TERMS: &[&str] = &[
+                    "Commerce", "Trade", "Finance", "Exchange",
+                    "Industry", "Merchants", "Civic", "Central",
+                ];
+                let mut rng = rand::thread_rng();
+                let last_name     = self.get_random_name(NameType::LastName);
+                let street_name   = self.get_random_name(NameType::StreetName);
+                let direction     = self.get_random_name(NameType::Direction);
+                let city_name     = CITY_NAMES[rng.gen_range(0..CITY_NAMES.len())].to_string();
+                let business_term = BUSINESS_TERMS[rng.gen_range(0..BUSINESS_TERMS.len())].to_string();
                 let template = self
                     .templates
                     .get_random_template("building", "building");
                 self.process_template(template, TemplateData {
-					last_name: Some(last_name),
+                    last_name: Some(last_name),
                     street_name: Some(street_name),
                     direction: Some(direction),
-				})
+                    city_name: Some(city_name),
+                    business_term: Some(business_term),
+                })
             }
             NameType::Direction => {
                 match rng.gen_range(0..4) {
@@ -130,15 +145,19 @@ impl Names {
     }
 
     fn process_template(&self, template: &templates::Template, data: TemplateData) -> String {
-        let last_name = data.last_name.as_deref().unwrap_or("");
-        let street_name = data.street_name.as_deref().unwrap_or("");
-        let direction = data.direction.as_deref().unwrap_or("");
+        let last_name     = data.last_name.as_deref().unwrap_or("");
+        let street_name   = data.street_name.as_deref().unwrap_or("");
+        let direction     = data.direction.as_deref().unwrap_or("");
+        let city_name     = data.city_name.as_deref().unwrap_or("");
+        let business_term = data.business_term.as_deref().unwrap_or("");
         let mut s = template.text.clone();
-        s = s.replace("[LAST_NAME]", last_name);
+        s = s.replace("[LAST_NAME]",       last_name);
         s = s.replace("[NUMBERED_STREET]", street_name);
-        s = s.replace("[DIRECTION]", direction);
+        s = s.replace("[DIRECTION]",       direction);
+        s = s.replace("[CITY_NAME]",       city_name);
+        s = s.replace("[BUSINESS_TERM]",   business_term);
         s
-	}
+    }
 
     fn number_to_position(&self, n: i32) -> String {
         let suffix = match (n % 10, n % 100) {
@@ -155,6 +174,8 @@ struct TemplateData {
     last_name: Option<String>,
     street_name: Option<String>,
     direction: Option<String>,
+    city_name: Option<String>,
+    business_term: Option<String>,
 }
 
 #[cfg(test)]

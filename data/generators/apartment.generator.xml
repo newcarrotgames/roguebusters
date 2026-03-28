@@ -1,4 +1,4 @@
-<generator name="apartment" type="building_interior">
+<generator name="apartment" type="room">
 	<rules>
 		<rule type="prefab" name="bed" frequency="one" />
 		<rule type="prefab" name="dresser" frequency="one" />

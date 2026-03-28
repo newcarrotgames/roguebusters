@@ -1,4 +1,4 @@
-<generator name="clinic" type="building_interior">
+<generator name="clinic" type="room">
 	<rules>
 		<rule type="prefab" name="hospital_bed" frequency="many" chance="0.25" />
 		<rule type="prefab" name="operating_table" frequency="one" />

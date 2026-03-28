@@ -1,4 +1,4 @@
-<generator name="speakeasy" type="building_interior">
+<generator name="speakeasy" type="room">
 	<rules>
 		<rule type="prefab" name="bar_counter" frequency="one" />
 		<rule type="prefab" name="stage" frequency="one" />

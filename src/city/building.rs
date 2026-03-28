@@ -1,5 +1,5 @@
 use super::city::{Coord, Direction, Grid, Rect, DIRECTIONS};
-use crate::{city::city::{Tile, TileId}, deser::{prefabs::{self, Prefabs, Prefab}, generators::Generator}};
+use crate::{city::city::{Tile, TileId}, deser::{prefabs::{self, Prefabs, Prefab}, generators::{Generator, Generators}}};
 use rand::Rng;
 use std::fmt;
 use log::{debug, error};
@@ -275,6 +275,8 @@ pub struct Space {
     pub partitions: Vec<Space>,
     building_id: i32,
     entrance_wall: Option<usize>,
+    pub name: String,
+    pub interior_type: String,
 }
 
 impl Space {
@@ -285,6 +287,8 @@ impl Space {
             partitions: Vec::new(),
             building_id,
             entrance_wall: None,
+            name: String::new(),
+            interior_type: String::new(),
         }
     }
 
@@ -295,6 +299,8 @@ impl Space {
             partitions: Vec::new(),
             building_id,
             entrance_wall: None,
+            name: String::new(),
+            interior_type: String::new(),
         }
     }
 
@@ -528,20 +534,20 @@ impl Space {
                         let door_y: i32;
                         match DIRECTIONS[i] {
                             Direction::NORTH => {
-                                door_x = self.rect.x1 + self.partition_point(HORIZONTAL);
+                                door_x = self.rect.x1 + self.partition_point(VERTICAL);
                                 door_y = self.rect.y1;
                             }
                             Direction::EAST => {
                                 door_x = self.rect.x2;
-                                door_y = self.rect.y1 + self.partition_point(VERTICAL);
+                                door_y = self.rect.y1 + self.partition_point(HORIZONTAL);
                             }
                             Direction::SOUTH => {
-                                door_x = self.rect.x1 + self.partition_point(HORIZONTAL);
+                                door_x = self.rect.x1 + self.partition_point(VERTICAL);
                                 door_y = self.rect.y2;
                             }
                             Direction::WEST => {
                                 door_x = self.rect.x1;
-                                door_y = self.rect.y1 + self.partition_point(VERTICAL);
+                                door_y = self.rect.y1 + self.partition_point(HORIZONTAL);
                             }
                         }
                         data[door_y as usize][door_x as usize] =
@@ -709,16 +715,54 @@ impl Space {
         true
     }
 
-    pub fn fill(&mut self, gen: &Generator, prefabs: &Prefabs, data: &mut Grid) {
+    pub fn fill(&mut self, generators: &Generators, fallback: &Generator, prefabs: &Prefabs, data: &mut Grid) {
         for space in self.partitions.iter_mut() {
             if space.partitions.len() > 0 {
-                log::debug!("space has partitions, continuing to traverse partiontions tree...");
-                space.fill(gen, prefabs, data);
+                log::debug!("space has partitions, continuing to traverse partitions tree...");
+                space.fill(generators, fallback, prefabs, data);
             } else {
-                log::debug!("space has no partions, attempting to fill it with useful stuff...");
+                log::debug!("space has no partitions, filling with room generator for '{}'", space.interior_type);
+                let gen = generators
+                    .get_opt("room", &space.interior_type)
+                    .filter(|g| g.rules.rules.iter().any(|r| prefabs.get(&r.name).is_some()))
+                    .unwrap_or(fallback);
                 space.fill_space(gen, prefabs, data);
             }
         }
+    }
+
+    /// Recursively visits every leaf space (no partitions) and calls `f` to
+    /// obtain a `(name, interior_type)` pair to assign to that space.
+    pub fn assign_leaf_businesses_with<F: FnMut() -> (String, String)>(&mut self, f: &mut F) {
+        if self.partitions.is_empty() {
+            let (n, t) = f();
+            self.name = n;
+            self.interior_type = t;
+        } else {
+            for partition in self.partitions.iter_mut() {
+                partition.assign_leaf_businesses_with(f);
+            }
+        }
+    }
+
+    /// Searches the leaf-space tree for a space whose rect boundary contains
+    /// the point `(x, y)`, and returns its `(name, interior_type)` if found.
+    pub fn find_space_info_at(&self, x: i32, y: i32) -> Option<(&str, &str)> {
+        if self.partitions.is_empty() {
+            let r = &self.rect;
+            let on_h_wall = (x == r.x1 || x == r.x2) && y >= r.y1 && y <= r.y2;
+            let on_v_wall = (y == r.y1 || y == r.y2) && x >= r.x1 && x <= r.x2;
+            if (on_h_wall || on_v_wall) && !self.name.is_empty() {
+                return Some((&self.name, &self.interior_type));
+            }
+            return None;
+        }
+        for partition in &self.partitions {
+            if let Some(info) = partition.find_space_info_at(x, y) {
+                return Some(info);
+            }
+        }
+        None
     }
 }
 

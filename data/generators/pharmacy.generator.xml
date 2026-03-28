@@ -1,4 +1,4 @@
-<generator name="pharmacy" type="building_interior">
+<generator name="pharmacy" type="room">
 	<rules>
 		<rule type="prefab" name="pharmacist_counter" frequency="one" />
 		<rule type="prefab" name="soda_fountain" frequency="one" />

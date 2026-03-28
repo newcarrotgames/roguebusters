@@ -1,4 +1,4 @@
-<generator name="pawn_shop" type="building_interior">
+<generator name="pawn_shop" type="room">
 	<rules>
 		<rule type="prefab" name="caged_counter" frequency="one" />
 		<rule type="prefab" name="display_case" frequency="many" chance="0.25" />

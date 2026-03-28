@@ -1,4 +1,4 @@
-<generator name="police_precinct" type="building_interior">
+<generator name="police_precinct" type="room">
 	<rules>
 		<rule type="prefab" name="front_desk" frequency="one" />
 		<rule type="prefab" name="holding_cell" frequency="one" />

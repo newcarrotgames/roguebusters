@@ -5,10 +5,12 @@ use std::collections::HashSet;
 use crate::{
     game::{GameState, PlayerRequest},
     input::handlers::InputHandler,
+    service::screen::ScreenService,
     ui::ui::{UIElement, UIState, LINES_SINGLE, UI},
 };
 
-const HELP_POS: [i32; 4] = [10, 2, 70, 42];
+const HELP_W: i32 = 60;
+const HELP_H: i32 = 40;
 
 // Each row is (key column text, description column text).
 const BINDINGS: &[(&str, &str)] = &[
@@ -55,11 +57,12 @@ impl UIElement for HelpUIElement {
         let yellow = RGB::from_u8(255, 220, 80);
         let grey   = RGB::from_u8(180, 180, 180);
 
-        UI::render_dialog(ctx, HELP_POS, white, LINES_SINGLE, "Help");
+        let pos = ScreenService::centered_rect(HELP_W, HELP_H);
+        UI::render_dialog(ctx, pos, white, LINES_SINGLE, "Help");
 
-        let x      = HELP_POS[0] + 2;
-        let key_w  = 16; // column width for the key label
-        let mut row = HELP_POS[1] + 2;
+        let x      = pos[0] + 2;
+        let key_w  = 16;
+        let mut row = pos[1] + 2;
 
         for &(key, desc) in BINDINGS {
             if key.is_empty() {

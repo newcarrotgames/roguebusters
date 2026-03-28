@@ -1,4 +1,4 @@
-<generator name="warehouse" type="building_interior">
+<generator name="warehouse" type="room">
 	<rules>
 		<rule type="prefab" name="crate_stack" frequency="many" chance="0.35" />
 		<rule type="prefab" name="foreman_desk" frequency="one" />

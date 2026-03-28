@@ -8,6 +8,7 @@ use crate::{
         generators::Generators,
         prefabs::{Cell, Prefab, Prefabs},
     },
+    names::{NameType, Names},
 };
 use bracket_lib::prelude::{Algorithm2D, BaseMap, Point, RGB};
 use log::{error, debug};
@@ -601,21 +602,28 @@ impl City {
 
         let weights: Vec<u32> = interior_weights.iter().map(|(_, w)| *w).collect();
         let dist = WeightedIndex::new(&weights).unwrap();
-        let fallback_gen = generators.get("building_interior", "restaurant");
+        let fallback_gen = generators.get("room", "restaurant");
+        let names = Names::new();
 
         for building in buildings.iter_mut() {
-            let idx = dist.sample(&mut rng);
-            let interior_name = interior_weights[idx].0;
-            building.interior_type = interior_name.to_string();
+            // Assign an independent name and type to every leaf space (room).
+            for floor in building.floors.iter_mut() {
+                floor.assign_leaf_businesses_with(&mut || {
+                    let i = dist.sample(&mut rng);
+                    let itype = interior_weights[i].0;
+                    let name_type = if itype == "restaurant" {
+                        NameType::RestaurantName
+                    } else {
+                        NameType::BuildingName
+                    };
+                    (names.get_random_name(name_type), itype.to_string())
+                });
+            }
 
-            let gen = match generators.get_opt("building_interior", interior_name) {
-                Some(g) if g.rules.rules.iter().any(|r| prefabs.get(&r.name).is_some()) => g,
-                _ => fallback_gen,
-            };
-
+            // Fill each room using the generator that matches its own type.
             for floor in building.floors.iter_mut() {
                 for space in floor.partitions.iter_mut() {
-                    space.fill(gen, &prefabs, &mut self.data);
+                    space.fill(&generators, fallback_gen, &prefabs, &mut self.data);
                 }
             }
         }
@@ -638,6 +646,18 @@ impl City {
                 self.data[y as usize][x as usize] = tile;
             }
         }
+    }
+
+    /// Returns the `(name, interior_type)` of the leaf space whose boundary
+    /// contains the door at `(x, y)` in the given building.
+    pub fn space_info_at_door(&self, building_id: i32, x: i32, y: i32) -> Option<(&str, &str)> {
+        let building = self.buildings.get(&building_id)?;
+        for floor in &building.floors {
+            if let Some(info) = floor.find_space_info_at(x, y) {
+                return Some(info);
+            }
+        }
+        None
     }
 
     pub fn get_random_target(&self) -> Position {
