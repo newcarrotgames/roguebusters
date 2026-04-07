@@ -20,7 +20,7 @@ use crate::{
         renderable::Renderable,
         target::Target,
     },
-    deser::{items::Items, prefabs::Prefabs},
+    deser::prefabs::Prefabs,
     input::handlers::{DefaultInputHandler, InputHandler},
     names::{NameType, Names},
     service::screen::ScreenService,
@@ -46,7 +46,6 @@ use crate::{
 
 const TORCH_RADIUS: i32 = 75;
 const DEFAULT_NUM_NPCS: usize = 1000;
-const DEFAULT_NUM_ITEMS: usize = 1000;
 const TICKS_PER_HOUR: u64 = 60;
 
 // ── game clock ───────────────────────────────────────────────────────────────
@@ -94,19 +93,17 @@ pub struct GameConfig {
     pub map_width:  i32,
     pub map_height: i32,
     pub num_npcs:   usize,
-    pub num_items:  usize,
     pub prefabs:    Prefabs,
     pub spawn_business_npcs: bool,
 }
 
 impl GameConfig {
-    /// Full production world — 1000×1000 city, 1000 NPCs, 1000 items.
+    /// Full production world — 1000×1000 city, 1000 NPCs.
     pub fn default_full(prefabs: Prefabs) -> Self {
         GameConfig {
             map_width:  MAP_WIDTH,
             map_height: MAP_HEIGHT,
             num_npcs:   DEFAULT_NUM_NPCS,
-            num_items:  DEFAULT_NUM_ITEMS,
             prefabs,
             spawn_business_npcs: true,
         }
@@ -114,16 +111,14 @@ impl GameConfig {
 
     /// Small world suitable for fast `cargo test` runs.
     /// Uses a 300×300 map (city builder requires width/height ≥ 100 for the water
-    /// strip; 300 is enough for at least one city block), no prefab decoration, zero
-    /// random items (tests spawn their own via `PlayTester::spawn_item_at`), and only
-    /// a handful of NPCs.
+    /// strip; 300 is enough for at least one city block), no prefab decoration, and
+    /// only a handful of NPCs.
     #[allow(dead_code)]
     pub fn small_test() -> Self {
         GameConfig {
             map_width:  300,
             map_height: 300,
             num_npcs:   3,
-            num_items:  0,
             prefabs:    Prefabs::empty(),
             spawn_business_npcs: false,
         }
@@ -244,22 +239,6 @@ impl Game {
                 .with(Attributes::random())
                 .with(Inventory::new())
                 .build();
-        }
-
-        if config.num_items > 0 {
-            log::debug!("creating items");
-            let mut items = Items::new();
-            items.load_all("data/items");
-            for _ in 0..config.num_items {
-                let item     = items.random_item();
-                let position = map.get_random_target();
-                world
-                    .create_entity()
-                    .with(Item::from_itemdata(item.clone()))
-                    .with(Renderable { char: item.char as char, color: RGB::from_u8(255, 255, 255) })
-                    .with(position)
-                    .build();
-            }
         }
 
         log::debug!("creating player");

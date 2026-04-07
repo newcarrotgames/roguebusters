@@ -5,11 +5,13 @@ use walkdir::WalkDir;
 use yaserde_derive::YaDeserialize;
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Items {
     items: Vec<ItemData>,
     items_by_name: HashMap<String, ItemData>,
 }
 
+#[allow(dead_code)]
 impl Items {
     pub fn new() -> Items {
         Items { 
@@ -47,11 +49,13 @@ impl Items {
 
 #[derive(YaDeserialize, Debug, PartialEq)]
 #[yaserde(rename = "items")]
+#[allow(dead_code)]
 pub struct ItemCollection {
     #[yaserde(rename = "item")]
     pub items: Vec<ItemData>,
 }
 
+#[allow(dead_code)]
 impl ItemCollection {
 	pub fn from_xml(path: &Path) -> Self {
         let xml = fs::read_to_string(path).expect(format!("Error reading prefab file {:?}", path).as_str());
