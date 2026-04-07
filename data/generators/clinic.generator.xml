@@ -1,8 +1,7 @@
-<generator name="clinic" type="room">
-	<rules>
-		<rule type="prefab" name="hospital_bed" frequency="many" chance="0.25" />
-		<rule type="prefab" name="operating_table" frequency="one" />
-		<rule type="prefab" name="medicine_cabinet" frequency="one" />
-		<rule type="prefab" name="doctor_desk" frequency="one" />
-	</rules>
+<generator name="clinic" type="layout">
+	<rooms>
+		<room name="waiting room" type="clinic_waiting" proportion="35" />
+		<room name="exam room" type="clinic_exam" proportion="35" />
+		<room name="operating room" type="clinic_operating" proportion="30" />
+	</rooms>
 </generator>

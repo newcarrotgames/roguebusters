@@ -1,8 +1,7 @@
-<generator name="courthouse" type="room">
-	<rules>
-		<rule type="prefab" name="judge_bench" frequency="one" />
-		<rule type="prefab" name="witness_stand" frequency="one" />
-		<rule type="prefab" name="jury_box" frequency="one" />
-		<rule type="prefab" name="gallery_pew" frequency="many" chance="0.3" />
-	</rules>
+<generator name="courthouse" type="layout">
+	<rooms>
+		<room name="courtroom" type="courthouse_courtroom" proportion="50" />
+		<room name="judge's chambers" type="courthouse_chambers" proportion="25" />
+		<room name="holding cell" type="courthouse_holding" proportion="25" />
+	</rooms>
 </generator>

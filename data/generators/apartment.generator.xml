@@ -1,8 +1,7 @@
-<generator name="apartment" type="room">
-	<rules>
-		<rule type="prefab" name="bed" frequency="one" />
-		<rule type="prefab" name="dresser" frequency="one" />
-		<rule type="prefab" name="stove_small" frequency="one" />
-		<rule type="prefab" name="sink" frequency="one" />
-	</rules>
+<generator name="apartment" type="layout">
+	<rooms>
+		<room name="bedroom" type="apartment_bedroom" proportion="40" />
+		<room name="kitchen" type="apartment_kitchen" proportion="35" />
+		<room name="bathroom" type="apartment_bathroom" proportion="25" />
+	</rooms>
 </generator>

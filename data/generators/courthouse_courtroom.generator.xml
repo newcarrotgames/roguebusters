@@ -1,0 +1,8 @@
+<generator name="courthouse_courtroom" type="room">
+	<rules>
+		<rule type="prefab" name="judge_bench" frequency="one" required="true" />
+		<rule type="prefab" name="witness_stand" frequency="one" required="true" />
+		<rule type="prefab" name="jury_box" frequency="one" />
+		<rule type="prefab" name="gallery_pew" frequency="many" padding="1" />
+	</rules>
+</generator>

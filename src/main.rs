@@ -32,15 +32,20 @@ mod components {
     pub mod attributes;
     pub mod combatant;
     pub mod npc;
+    pub mod profession;
+    pub mod npc_memory;
 }
 
 mod systems {
     pub mod simple_path;
     pub mod item_search;
-    pub mod npc_behavior;
     pub mod player_action;
     pub mod combat {
         pub mod combat;
+    }
+    pub mod ai {
+        pub mod npc_update;
+        pub mod schedule;
     }
 }
 

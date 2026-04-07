@@ -1,0 +1,6 @@
+<generator name="clinic_waiting" type="room">
+	<rules>
+		<rule type="prefab" name="reception_desk" frequency="one" required="true" />
+		<rule type="prefab" name="lobby_bench" frequency="many" padding="1" />
+	</rules>
+</generator>

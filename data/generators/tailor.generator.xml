@@ -1,8 +1,8 @@
 <generator name="tailor" type="room">
 	<rules>
-		<rule type="prefab" name="sewing_machine" frequency="one" />
-		<rule type="prefab" name="fitting_mirror" frequency="one" />
-		<rule type="prefab" name="fabric_rack" frequency="many" chance="0.25" />
+		<rule type="prefab" name="sewing_machine" frequency="one" required="true" />
+		<rule type="prefab" name="fitting_mirror" frequency="one" required="true" />
 		<rule type="prefab" name="display_mannequin" frequency="one" />
+		<rule type="prefab" name="fabric_rack" frequency="many" padding="1" />
 	</rules>
 </generator>

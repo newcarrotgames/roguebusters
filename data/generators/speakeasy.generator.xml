@@ -1,9 +1,9 @@
 <generator name="speakeasy" type="room">
 	<rules>
-		<rule type="prefab" name="bar_counter" frequency="one" />
-		<rule type="prefab" name="stage" frequency="one" />
+		<rule type="prefab" name="bar_counter" frequency="one" required="true" />
+		<rule type="prefab" name="stage" frequency="one" required="true" />
 		<rule type="prefab" name="piano" frequency="one" />
-		<rule type="prefab" name="round_table" frequency="many" chance="0.25" />
 		<rule type="prefab" name="bouncer_post" frequency="one" />
+		<rule type="prefab" name="round_table" frequency="many" padding="1" />
 	</rules>
 </generator>

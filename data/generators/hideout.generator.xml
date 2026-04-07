@@ -1,8 +1,7 @@
-<generator name="hideout" type="room">
-	<rules>
-		<rule type="prefab" name="planning_table" frequency="one" />
-		<rule type="prefab" name="weapon_crate" frequency="many" chance="0.2" />
-		<rule type="prefab" name="bunk" frequency="many" chance="0.25" />
-		<rule type="prefab" name="safe" frequency="one" />
-	</rules>
+<generator name="hideout" type="layout">
+	<rooms>
+		<room name="planning room" type="hideout_planning" proportion="40" />
+		<room name="bunk room" type="hideout_bunk_room" proportion="35" />
+		<room name="armory" type="hideout_armory" proportion="25" />
+	</rooms>
 </generator>

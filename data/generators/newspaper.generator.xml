@@ -1,8 +1,8 @@
 <generator name="newspaper" type="room">
 	<rules>
-		<rule type="prefab" name="editor_desk" frequency="one" />
-		<rule type="prefab" name="printing_press" frequency="one" />
-		<rule type="prefab" name="reporter_desk" frequency="many" chance="0.3" />
-		<rule type="prefab" name="filing_cabinet" frequency="many" chance="0.2" />
+		<rule type="prefab" name="editor_desk" frequency="one" required="true" />
+		<rule type="prefab" name="printing_press" frequency="one" required="true" />
+		<rule type="prefab" name="reporter_desk" frequency="many" padding="1" />
+		<rule type="prefab" name="filing_cabinet" frequency="many" padding="1" />
 	</rules>
 </generator>

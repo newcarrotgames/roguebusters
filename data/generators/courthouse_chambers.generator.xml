@@ -1,0 +1,7 @@
+<generator name="courthouse_chambers" type="room">
+	<rules>
+		<rule type="prefab" name="desk" frequency="one" required="true" />
+		<rule type="prefab" name="bookshelf" frequency="one" />
+		<rule type="prefab" name="filing_cabinet" frequency="many" padding="1" />
+	</rules>
+</generator>

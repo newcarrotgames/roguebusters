@@ -28,6 +28,7 @@ impl Inventory {
         &self.items
     }
 
+    #[allow(dead_code)]
     pub fn equipped(&self) -> &Equipped {
         &self.equipped
     }
@@ -41,7 +42,7 @@ impl Inventory {
         }
     }
 
-    pub fn unequip(&mut self, item: Item, location: EquipLocation) {
+    pub fn unequip(&mut self, _item: Item, location: EquipLocation) {
         match location {
             EquipLocation::LeftHand => self.equipped.left_hand = None,
             EquipLocation::RightHand => self.equipped.right_hand = None,
@@ -73,6 +74,7 @@ impl Inventory {
     }
 }
 
+#[allow(dead_code)]
 pub enum EquipLocation {
     LeftHand,
     RightHand,

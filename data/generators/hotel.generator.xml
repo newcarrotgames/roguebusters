@@ -1,9 +1,7 @@
-<generator name="hotel" type="room">
-	<rules>
-		<rule type="prefab" name="hotel_front_desk" frequency="one" />
-		<rule type="prefab" name="lobby_seating" frequency="one" />
-		<rule type="prefab" name="bed" frequency="one" />
-		<rule type="prefab" name="dresser" frequency="one" />
-		<rule type="prefab" name="luggage_rack" frequency="one" />
-	</rules>
+<generator name="hotel" type="layout">
+	<rooms>
+		<room name="lobby" type="hotel_lobby" proportion="40" />
+		<room name="guest room" type="hotel_guest_room" proportion="35" />
+		<room name="storage" type="hotel_storage" proportion="25" />
+	</rooms>
 </generator>

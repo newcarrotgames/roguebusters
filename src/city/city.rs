@@ -6,7 +6,7 @@ use crate::{
     components::position::Position,
     deser::{
         generators::Generators,
-        prefabs::{Cell, Prefab, Prefabs},
+        prefabs::{Cell, Prefabs},
     },
     names::{NameType, Names},
 };
@@ -76,11 +76,13 @@ impl fmt::Display for Rect {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct RectError {
     msg: String,
 }
 
 impl RectError {
+    #[allow(dead_code)]
     fn new(msg: &str) -> Self {
         RectError {
             msg: msg.to_string(),
@@ -114,12 +116,14 @@ pub const DIRECTIONS: [Direction; 4] = [
     Direction::WEST,
 ];
 
+#[allow(dead_code)]
 pub enum VerticalDirection {
     UP,
     DOWN,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[allow(dead_code)]
 pub enum TileId {
     Empty,
     Wall,
@@ -203,6 +207,7 @@ impl Tile {
         }
     }
 
+    #[allow(dead_code)]
     pub fn stairs(building_id: i32, dir: VerticalDirection) -> Self {
         let char = match dir {
             VerticalDirection::UP   => 30 as char,
@@ -363,12 +368,6 @@ impl City {
 
         for building_guide in building_guides {
             building_id += 1;
-            let mut rect: Rect = Rect {
-                x1: 0,
-                y1: 0,
-                x2: 0,
-                y2: 0,
-            };
             match building_guide.building_type {
                 BuildingType::Empty => error!("building guide type is empty!"),
                 BuildingType::Single => {
@@ -393,7 +392,7 @@ impl City {
                         );
                     }
 
-                    rect = Rect::new(
+                    let rect = Rect::new(
                         x1 + offset + 4,
                         y1 + offset + 4,
                         x2 - offset - 4,
@@ -448,7 +447,7 @@ impl City {
                         );
                     }
 
-                    rect = Rect::new(
+                    let rect = Rect::new(
                         x1 + offset + 4,
                         y1 + offset + 4,
                         x2 - offset - 4,
@@ -545,6 +544,15 @@ impl City {
                         );
                     }
 
+                    let rect = Rect::new(
+                        x1 + offset + 4,
+                        y1 + offset + 4,
+                        x2 - offset - 4,
+                        y2 - offset - 4,
+                    );
+                    self.buildings
+                        .insert(building_id, Building::new(building_id, rect));
+
                     // interior
                     offset += 5;
                     self.filled_rect(
@@ -586,7 +594,6 @@ impl City {
             ("pawn_shop", 2),
             ("hideout", 2),
             ("bank", 1),
-            ("police_precinct", 1),
             ("newspaper", 1),
             ("courthouse", 1),
             ("boxing_gym", 1),
@@ -605,22 +612,34 @@ impl City {
         let fallback_gen = generators.get("room", "restaurant");
         let names = Names::new();
 
+        // Phase 1: Assign business types (guarantee one police precinct)
+        let mut precinct_assigned = false;
         for building in buildings.iter_mut() {
-            // Assign an independent name and type to every leaf space (room).
-            for floor in building.floors.iter_mut() {
-                floor.assign_leaf_businesses_with(&mut || {
-                    let i = dist.sample(&mut rng);
-                    let itype = interior_weights[i].0;
-                    let name_type = if itype == "restaurant" {
-                        NameType::RestaurantName
-                    } else {
-                        NameType::BuildingName
-                    };
-                    (names.get_random_name(name_type), itype.to_string())
-                });
+            if !precinct_assigned {
+                for floor in building.floors.iter_mut() {
+                    floor.assign_leaf_businesses_with(&mut || {
+                        ("Police Precinct".to_string(), "police_precinct".to_string())
+                    });
+                }
+                precinct_assigned = true;
+            } else {
+                for floor in building.floors.iter_mut() {
+                    floor.assign_leaf_businesses_with(&mut || {
+                        let i = dist.sample(&mut rng);
+                        let itype = interior_weights[i].0;
+                        let name_type = if itype == "restaurant" {
+                            NameType::RestaurantName
+                        } else {
+                            NameType::BuildingName
+                        };
+                        (names.get_random_name(name_type), itype.to_string())
+                    });
+                }
             }
+        }
 
-            // Fill each room using the generator that matches its own type.
+        // Phase 2: Fill each room using the generator that matches its type
+        for building in buildings.iter_mut() {
             for floor in building.floors.iter_mut() {
                 for space in floor.partitions.iter_mut() {
                     space.fill(&generators, fallback_gen, &prefabs, &mut self.data);
@@ -660,6 +679,56 @@ impl City {
         None
     }
 
+    pub fn find_building_entrance(&self, building_id: i32) -> Option<Position> {
+        let building = self.buildings.get(&building_id)?;
+        if building.floors.is_empty() {
+            return None;
+        }
+        let rect = building.floors[0].rect();
+
+        for x in rect.x1..=rect.x2 {
+            for &y in &[rect.y1, rect.y2] {
+                let (uy, ux) = (y as usize, x as usize);
+                if uy < self.data.len()
+                    && ux < self.data[uy].len()
+                    && self.data[uy][ux].tile_id == TileId::Door
+                    && self.data[uy][ux].building_id == building_id
+                {
+                    return Some(Position { x: x as f32, y: y as f32 });
+                }
+            }
+        }
+        for y in (rect.y1 + 1)..rect.y2 {
+            for &x in &[rect.x1, rect.x2] {
+                let (uy, ux) = (y as usize, x as usize);
+                if uy < self.data.len()
+                    && ux < self.data[uy].len()
+                    && self.data[uy][ux].tile_id == TileId::Door
+                    && self.data[uy][ux].building_id == building_id
+                {
+                    return Some(Position { x: x as f32, y: y as f32 });
+                }
+            }
+        }
+        None
+    }
+
+    pub fn find_walkable_in_rect(&self, rect: &Rect) -> Option<Position> {
+        for y in (rect.y1 + 1)..rect.y2 {
+            for x in (rect.x1 + 1)..rect.x2 {
+                let (uy, ux) = (y as usize, x as usize);
+                if uy < self.data.len()
+                    && ux < self.data[uy].len()
+                    && !self.data[uy][ux].blocked
+                    && self.data[uy][ux].tile_id == TileId::Interior
+                {
+                    return Some(Position { x: x as f32, y: y as f32 });
+                }
+            }
+        }
+        None
+    }
+
     pub fn get_random_target(&self) -> Position {
         let mut rng = rand::thread_rng();
         loop {
@@ -675,27 +744,6 @@ impl City {
                 y: y as f32,
             };
         }
-    }
-
-    fn draw_prefab(&mut self, x: i32, y: i32, prefab: &Prefab, building_id: i32) {
-        for (py, row) in prefab.data.rows.iter().enumerate() {
-            for (px, cell) in row.cells.iter().enumerate() {
-                self.data[y as usize + py][x as usize + px] = Tile::from_cell(cell, building_id);
-            }
-        }
-    }
-
-    // todo: add building id
-    fn can_place_prefab(&self, x: i32, y: i32, prefab: &Prefab) -> bool {
-        for py in 0..prefab.height + 1 {
-            for px in 0..prefab.width + 1 {
-                let tile = self.data[(y + py) as usize][(x + px) as usize];
-                if tile.char != NULLCHAR {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     fn draw_template(

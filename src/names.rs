@@ -136,7 +136,6 @@ impl Names {
                     _ => String::from(""),
                 }
             }
-            _ => String::from(""),
         }
     }
 

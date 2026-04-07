@@ -1,11 +1,11 @@
 use bracket_lib::prelude::{
-    field_of_view, Algorithm2D, BaseMap, BTerm, GameState as BGameState, Point, RGB,
+    field_of_view, BTerm, GameState as BGameState, Point, RGB,
 };
 use specs::{Builder, Dispatcher, DispatcherBuilder, Join, World, WorldExt};
 use std::collections::HashSet;
 
 use crate::{
-    city::city::City,
+    city::city::{City, Rect},
     components::{
         attributes::Attributes,
         combatant::Combatant,
@@ -13,8 +13,10 @@ use crate::{
         item::Item,
         name::Name,
         npc::NPC,
+        npc_memory::NPCMemory,
         player::Player,
         position::Position,
+        profession::{JobType, Profession},
         renderable::Renderable,
         target::Target,
     },
@@ -23,9 +25,9 @@ use crate::{
     names::{NameType, Names},
     service::screen::ScreenService,
     systems::{
+        ai::{npc_update::NPCUpdate, schedule::ScheduleSystem},
         combat::combat::Combat,
         item_search::ItemSearch,
-        npc_behavior::NPCBehavior,
         player_action::PlayerAction,
         simple_path::SimplePath,
     },
@@ -45,6 +47,46 @@ use crate::{
 const TORCH_RADIUS: i32 = 75;
 const DEFAULT_NUM_NPCS: usize = 1000;
 const DEFAULT_NUM_ITEMS: usize = 1000;
+const TICKS_PER_HOUR: u64 = 60;
+
+// ── game clock ───────────────────────────────────────────────────────────────
+
+pub struct GameTime {
+    tick: u64,
+}
+
+impl Default for GameTime {
+    fn default() -> Self {
+        GameTime::new()
+    }
+}
+
+impl GameTime {
+    pub fn new() -> Self {
+        GameTime { tick: 8 * TICKS_PER_HOUR }
+    }
+
+    pub fn advance(&mut self) {
+        self.tick += 1;
+    }
+
+    pub fn hour(&self) -> u8 {
+        ((self.tick / TICKS_PER_HOUR) % 24) as u8
+    }
+
+    #[allow(dead_code)]
+    pub fn day(&self) -> u64 {
+        self.tick / (TICKS_PER_HOUR * 24)
+    }
+}
+
+fn npc_color_for_job(job_type: &JobType) -> RGB {
+    match job_type {
+        JobType::Police   => RGB::from_u8(50, 50, 200),
+        JobType::Criminal => RGB::from_u8(200, 50, 50),
+        _                 => RGB::from_u8(100, 100, 100),
+    }
+}
 
 // ── configurable game setup ───────────────────────────────────────────────────
 
@@ -54,6 +96,7 @@ pub struct GameConfig {
     pub num_npcs:   usize,
     pub num_items:  usize,
     pub prefabs:    Prefabs,
+    pub spawn_business_npcs: bool,
 }
 
 impl GameConfig {
@@ -65,6 +108,7 @@ impl GameConfig {
             num_npcs:   DEFAULT_NUM_NPCS,
             num_items:  DEFAULT_NUM_ITEMS,
             prefabs,
+            spawn_business_npcs: true,
         }
     }
 
@@ -73,6 +117,7 @@ impl GameConfig {
     /// strip; 300 is enough for at least one city block), no prefab decoration, zero
     /// random items (tests spawn their own via `PlayTester::spawn_item_at`), and only
     /// a handful of NPCs.
+    #[allow(dead_code)]
     pub fn small_test() -> Self {
         GameConfig {
             map_width:  300,
@@ -80,6 +125,7 @@ impl GameConfig {
             num_npcs:   3,
             num_items:  0,
             prefabs:    Prefabs::empty(),
+            spawn_business_npcs: false,
         }
     }
 }
@@ -114,13 +160,16 @@ impl Game {
         world.register::<Attributes>();
         world.register::<Combatant>();
         world.register::<NPC>();
+        world.register::<Profession>();
+        world.register::<NPCMemory>();
 
         let dispatcher = DispatcherBuilder::new()
-            .with(PlayerAction,  "player_action",  &[])
-            .with(NPCBehavior,   "npc_behavior",   &["player_action"])
-            .with(SimplePath,    "simple_path",    &["player_action", "npc_behavior"])
-            .with(ItemSearch,    "item_search",    &["player_action"])
-            .with(Combat,        "combat",         &["npc_behavior"])
+            .with(PlayerAction,    "player_action",  &[])
+            .with(ScheduleSystem,  "schedule",       &["player_action"])
+            .with(NPCUpdate,       "npc_update",     &["player_action", "schedule"])
+            .with(SimplePath,      "simple_path",    &["player_action", "npc_update"])
+            .with(ItemSearch,      "item_search",    &["player_action"])
+            .with(Combat,          "combat",         &["npc_update"])
             .build();
 
         log::debug!("creating city map");
@@ -129,7 +178,59 @@ impl Game {
 
         let names = Names::new();
 
-        log::debug!("creating npcs");
+        // Spawn business NPCs tied to their buildings
+        if config.spawn_business_npcs {
+            log::debug!("creating business npcs");
+            let building_ids: Vec<i32> = map.buildings.keys().copied().collect();
+            for &bid in &building_ids {
+                let leaf_info: Vec<(String, Rect)> = {
+                    let building = &map.buildings[&bid];
+                    if building.floors.is_empty() {
+                        continue;
+                    }
+                    building.floors[0]
+                        .collect_leaves()
+                        .into_iter()
+                        .filter(|s| !s.interior_type.is_empty())
+                        .map(|s| (s.interior_type.clone(), *s.rect()))
+                        .collect()
+                };
+
+                for (interior_type, rect) in leaf_info {
+                    if let Some((job_type, count)) = Profession::staff_for_interior(&interior_type) {
+                        let spawn_pos = map
+                            .find_walkable_in_rect(&rect)
+                            .unwrap_or_else(|| map.get_random_target());
+
+                        let npc_builder = if job_type == JobType::Criminal {
+                            NPC::aggressive
+                        } else {
+                            NPC::new
+                        };
+
+                        for _ in 0..count {
+                            world
+                                .create_entity()
+                                .with(npc_builder())
+                                .with(Position { x: spawn_pos.x, y: spawn_pos.y })
+                                .with(Renderable {
+                                    char: 2 as char,
+                                    color: npc_color_for_job(&job_type),
+                                })
+                                .with(Target { x: spawn_pos.x, y: spawn_pos.y })
+                                .with(Name { name: names.get_random_name(NameType::AnyFullName) })
+                                .with(Attributes::random())
+                                .with(Inventory::new())
+                                .with(Profession::with_employer(job_type, bid))
+                                .build();
+                        }
+                    }
+                }
+            }
+        }
+
+        // Spawn civilian NPCs (wander randomly, no profession)
+        log::debug!("creating civilian npcs");
         for _ in 0..config.num_npcs {
             let position = map.get_random_target();
             let target   = map.get_random_target();
@@ -195,6 +296,7 @@ impl Game {
         let mut initial_state = GameState::new();
         initial_state.set_view_offset(view_offset);
         world.insert(initial_state);
+        world.insert(GameTime::new());
 
         let input_handler: Box<dyn InputHandler> = Box::new(DefaultInputHandler::new());
 
@@ -271,6 +373,10 @@ impl Game {
 
     /// Advance the game simulation one tick and recompute FOV.
     pub fn update_game(&mut self) {
+        {
+            let mut time = self.world.write_resource::<GameTime>();
+            time.advance();
+        }
         self.dispatcher.dispatch(&mut self.world);
         self.world.maintain();
 
@@ -329,6 +435,7 @@ pub enum PlayerRequest {
     PickupItem,
     Quit,
     ToggleFullscreen,
+    #[allow(dead_code)]
     UseItem,
     ViewHelp,
     ViewInventory,

@@ -1,8 +1,7 @@
-<generator name="police_precinct" type="room">
-	<rules>
-		<rule type="prefab" name="front_desk" frequency="one" />
-		<rule type="prefab" name="holding_cell" frequency="one" />
-		<rule type="prefab" name="evidence_locker" frequency="one" />
-		<rule type="prefab" name="desk" frequency="many" chance="0.3" />
-	</rules>
+<generator name="police_precinct" type="layout">
+	<rooms>
+		<room name="bullpen" type="precinct_bullpen" proportion="45" />
+		<room name="holding cells" type="precinct_holding" proportion="30" />
+		<room name="captain's office" type="precinct_captain_office" proportion="25" />
+	</rooms>
 </generator>

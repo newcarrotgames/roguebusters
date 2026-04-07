@@ -1,0 +1,6 @@
+<generator name="hideout_bunk_room" type="room">
+	<rules>
+		<rule type="prefab" name="bunk" frequency="many" padding="1" />
+		<rule type="prefab" name="footlocker" frequency="many" padding="1" />
+	</rules>
+</generator>

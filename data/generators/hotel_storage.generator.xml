@@ -1,0 +1,6 @@
+<generator name="hotel_storage" type="room">
+	<rules>
+		<rule type="prefab" name="crate_stack" frequency="many" padding="1" />
+		<rule type="prefab" name="shelf" frequency="many" padding="1" />
+	</rules>
+</generator>

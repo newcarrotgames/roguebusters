@@ -1,5 +1,5 @@
 use super::city::{Coord, Direction, Grid, Rect, DIRECTIONS};
-use crate::{city::city::{Tile, TileId}, deser::{prefabs::{self, Prefabs, Prefab}, generators::{Generator, Generators}}};
+use crate::{city::city::{Tile, TileId}, deser::{prefabs::{Prefabs, Prefab}, generators::{Generator, Generators, LayoutRoom}}};
 use rand::Rng;
 use std::fmt;
 use log::{debug, error};
@@ -16,8 +16,6 @@ pub const DIR_WEST: usize = 3;
 const SUBDIVISION_SIZE_LIMIT: i32 = 32;
 const SUBDIVISION_WIDTH_LIMIT: i32 = 5;
 const SUBDIVISION_HEIGHT_LIMIT: i32 = 5;
-
-const NULLCHAR: char = 0 as char;
 
 /*
 
@@ -121,7 +119,7 @@ impl Building {
         }
     }
 
-    pub(crate) fn add_stairs(building: &mut Building, data: &mut Grid) {
+    pub(crate) fn add_stairs(building: &mut Building, _data: &mut Grid) {
         for floor in building.floors.iter_mut() {
             debug!("{}", floor);
         }
@@ -148,10 +146,11 @@ impl Building {
 }
 
 #[derive(PartialEq, Clone, Copy, Debug)]
+#[allow(dead_code)]
 pub enum BuildingType {
     Empty,
     Single,
-    Double(BuildingOrientation), // true horizontal, false vertical
+    Double(BuildingOrientation),
     Triple(BuildingOrientation),
     Quad,
 }
@@ -259,6 +258,7 @@ impl BuildingGuide {
 }
 
 #[derive(PartialEq, Clone, Copy, Debug)]
+#[allow(dead_code)]
 pub enum BuildingOrientation {
     Vertical,
     Horizontal,
@@ -494,6 +494,7 @@ impl Space {
         self.partitions.push(space2);
     }
 
+    #[allow(dead_code)]
     pub fn get_wall_coords(&mut self, wall_dir: Direction) -> Rect {
         match wall_dir {
             Direction::NORTH => Rect {
@@ -613,79 +614,179 @@ impl Space {
         }
     }
 
-    pub fn fill_space(&mut self, gen: &Generator, prefabs: &Prefabs, data: &mut Grid) {
-        let mut rng = rand::thread_rng();
-        for rule in gen.rules.rules.iter() {
-            let Some(prefab) = prefabs.get(rule.name.as_str()) else { continue };
-            match rule.frequency.as_str() {
-                "one" => {
-                    let has_alignment = !prefab.placement.alignment.vertical.is_empty()
-                        || !prefab.placement.alignment.horizontal.is_empty();
+    /// Find interior tiles directly adjacent to doors on this room's walls.
+    /// These must be kept clear so the player can walk through doorways.
+    fn find_door_clearance_tiles(&self, data: &Grid) -> Vec<(usize, usize)> {
+        let mut tiles = Vec::new();
+        let r = &self.rect;
 
-                    let mut placed = false;
+        let check = |data: &Grid, x: i32, y: i32, tiles: &mut Vec<(usize, usize)>| {
+            let (ty, tx) = (y as usize, x as usize);
+            if ty < data.len() && tx < data[ty].len() && data[ty][tx].tile_id == TileId::Interior {
+                tiles.push((ty, tx));
+            }
+        };
 
-                    if has_alignment {
-                        if let Some(ew) = self.entrance_wall {
-                            let (ax, ay) = self.compute_aligned_position(prefab, ew);
-                            if self.can_place_prefab(data, ax, ay, prefab) {
-                                self.draw_prefab(ax, ay, prefab, self.building_id, data);
-                                placed = true;
-                            } else {
-                                'search: for radius in 1..=5_i32 {
-                                    for dy in -radius..=radius {
-                                        for dx in -radius..=radius {
-                                            if dx.abs() != radius && dy.abs() != radius {
-                                                continue;
-                                            }
-                                            let x = ax + dx;
-                                            let y = ay + dy;
-                                            if self.can_place_prefab(data, x, y, prefab) {
-                                                self.draw_prefab(x, y, prefab, self.building_id, data);
-                                                placed = true;
-                                                break 'search;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if !placed {
-                        let x_range = self.rect.x2 - 2 - self.rect.x1;
-                        let y_range = self.rect.y2 - 2 - self.rect.y1;
-                        if x_range > 0 && y_range > 0 {
-                            let mut tries = 0;
-                            loop {
-                                let x = rng.gen_range(self.rect.x1..self.rect.x2 - 2);
-                                let y = rng.gen_range(self.rect.y1..self.rect.y2 - 2);
-                                if self.can_place_prefab(data, x, y, prefab) {
-                                    self.draw_prefab(x, y, prefab, self.building_id, data);
-                                    break;
-                                }
-                                tries += 1;
-                                if tries > 10 {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                "many" => {
-                    for y in self.rect.y1..self.rect.y2 - 2 {
-                        for x in self.rect.x1..self.rect.x2 - 2 {
-                            let range_limit = (1.0 / rule.chance) as usize;
-                            if rng.gen_range(0..range_limit) == 0 {
-                                if self.can_place_prefab(data, x, y, prefab) {
-                                    self.draw_prefab(x, y, prefab, self.building_id, data);
-                                }
-                            }
-                        }
-                    }
-                }
-                _ => unreachable!(),
+        // North wall — doors open inward (y+1)
+        for x in r.x1..=r.x2 {
+            let (ty, tx) = (r.y1 as usize, x as usize);
+            if ty < data.len() && tx < data[ty].len() && data[ty][tx].tile_id == TileId::Door {
+                check(data, x, r.y1 + 1, &mut tiles);
             }
         }
+        // South wall — doors open inward (y-1)
+        for x in r.x1..=r.x2 {
+            let (ty, tx) = (r.y2 as usize, x as usize);
+            if ty < data.len() && tx < data[ty].len() && data[ty][tx].tile_id == TileId::Door {
+                check(data, x, r.y2 - 1, &mut tiles);
+            }
+        }
+        // West wall — doors open inward (x+1)
+        for y in r.y1..=r.y2 {
+            let (ty, tx) = (y as usize, r.x1 as usize);
+            if ty < data.len() && tx < data[ty].len() && data[ty][tx].tile_id == TileId::Door {
+                check(data, r.x1 + 1, y, &mut tiles);
+            }
+        }
+        // East wall — doors open inward (x-1)
+        for y in r.y1..=r.y2 {
+            let (ty, tx) = (y as usize, r.x2 as usize);
+            if ty < data.len() && tx < data[ty].len() && data[ty][tx].tile_id == TileId::Door {
+                check(data, r.x2 - 1, y, &mut tiles);
+            }
+        }
+        tiles
+    }
+
+    pub fn fill_space(&mut self, gen: &Generator, prefabs: &Prefabs, data: &mut Grid) {
+        let mut rng = rand::thread_rng();
+
+        // Reserve tiles adjacent to doors so prefabs don't block entry
+        let clearance = self.find_door_clearance_tiles(data);
+        for &(ty, tx) in &clearance {
+            data[ty][tx] = Tile::wall();
+        }
+
+        // Phase 1: required "one" items — placed first to guarantee core furniture
+        for rule in gen.rules.rules.iter() {
+            if rule.frequency != "one" || rule.required != "true" { continue; }
+            let Some(prefab) = prefabs.get(rule.name.as_str()) else { continue };
+            self.place_one(prefab, data, &mut rng);
+        }
+
+        // Phase 2: optional "one" items
+        for rule in gen.rules.rules.iter() {
+            if rule.frequency != "one" || rule.required == "true" { continue; }
+            let Some(prefab) = prefabs.get(rule.name.as_str()) else { continue };
+            self.place_one(prefab, data, &mut rng);
+        }
+
+        // Phase 3: "many" items — grid-aligned fill of remaining space
+        for rule in gen.rules.rules.iter() {
+            if rule.frequency != "many" { continue; }
+            let Some(prefab) = prefabs.get(rule.name.as_str()) else { continue };
+            self.place_many_grid(prefab, rule.padding, data);
+        }
+
+        // Restore cleared tiles so the player can walk through
+        for &(ty, tx) in &clearance {
+            data[ty][tx] = Tile::interior(self.building_id);
+        }
+    }
+
+    fn place_one(&mut self, prefab: &Prefab, data: &mut Grid, rng: &mut impl Rng) {
+        let has_alignment = !prefab.placement.alignment.vertical.is_empty()
+            || !prefab.placement.alignment.horizontal.is_empty();
+
+        let mut placed = false;
+
+        if has_alignment {
+            if let Some(ew) = self.entrance_wall {
+                let (ax, ay) = self.compute_aligned_position(prefab, ew);
+                if self.can_place_prefab(data, ax, ay, prefab) {
+                    self.draw_prefab(ax, ay, prefab, self.building_id, data);
+                    placed = true;
+                } else {
+                    'search: for radius in 1..=5_i32 {
+                        for dy in -radius..=radius {
+                            for dx in -radius..=radius {
+                                if dx.abs() != radius && dy.abs() != radius {
+                                    continue;
+                                }
+                                let x = ax + dx;
+                                let y = ay + dy;
+                                if self.can_place_prefab(data, x, y, prefab) {
+                                    self.draw_prefab(x, y, prefab, self.building_id, data);
+                                    placed = true;
+                                    break 'search;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if !placed {
+            let x_range = self.rect.x2 - 2 - self.rect.x1;
+            let y_range = self.rect.y2 - 2 - self.rect.y1;
+            if x_range > 0 && y_range > 0 {
+                for _ in 0..20 {
+                    let x = rng.gen_range(self.rect.x1..self.rect.x2 - 2);
+                    let y = rng.gen_range(self.rect.y1..self.rect.y2 - 2);
+                    if self.can_place_prefab(data, x, y, prefab) {
+                        self.draw_prefab(x, y, prefab, self.building_id, data);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    fn place_many_grid(&mut self, prefab: &Prefab, padding: i32, data: &mut Grid) {
+        let cell_w = prefab.width + padding * 2;
+        let cell_h = prefab.height + padding * 2;
+
+        let interior_x1 = self.rect.x1 + 1;
+        let interior_y1 = self.rect.y1 + 1;
+        let interior_x2 = self.rect.x2 - 1;
+        let interior_y2 = self.rect.y2 - 1;
+
+        let cols = (interior_x2 - interior_x1) / cell_w;
+        let rows = (interior_y2 - interior_y1) / cell_h;
+
+        for gy in 0..rows {
+            for gx in 0..cols {
+                let cell_origin_x = interior_x1 + gx * cell_w;
+                let cell_origin_y = interior_y1 + gy * cell_h;
+                let place_x = cell_origin_x + padding;
+                let place_y = cell_origin_y + padding;
+
+                if !self.is_grid_cell_clear(data, cell_origin_x, cell_origin_y, cell_w, cell_h) {
+                    continue;
+                }
+                if self.can_place_prefab(data, place_x, place_y, prefab) {
+                    self.draw_prefab(place_x, place_y, prefab, self.building_id, data);
+                }
+            }
+        }
+    }
+
+    fn is_grid_cell_clear(&self, data: &Grid, x: i32, y: i32, w: i32, h: i32) -> bool {
+        for py in 0..h {
+            for px in 0..w {
+                let ty = (y + py) as usize;
+                let tx = (x + px) as usize;
+                if ty >= data.len() || tx >= data[ty].len() {
+                    return false;
+                }
+                let tile = &data[ty][tx];
+                if tile.tile_id != TileId::Interior || tile.char != ' ' {
+                    return false;
+                }
+            }
+        }
+        true
     }
 
     fn draw_prefab(&mut self, x: i32, y: i32, prefab: &Prefab, building_id: i32, data: &mut Grid) {
@@ -707,12 +808,137 @@ impl Space {
                 if ty >= data.len() || tx >= data[ty].len() {
                     return false;
                 }
-                if data[ty][tx].tile_id != TileId::Interior {
+                let tile = &data[ty][tx];
+                if tile.tile_id != TileId::Interior || tile.char != ' ' {
                     return false;
                 }
             }
         }
         true
+    }
+
+    /// Subdivide this leaf space into sub-rooms defined by a layout generator,
+    /// draw internal walls and doors between them, then fill each with its own
+    /// room generator.
+    pub fn subdivide_layout(
+        &mut self,
+        layout_rooms: &[LayoutRoom],
+        generators: &Generators,
+        fallback: &Generator,
+        prefabs: &Prefabs,
+        data: &mut Grid,
+    ) {
+        let mut rng = rand::thread_rng();
+
+        // Filter rooms that can actually fit given the available space
+        let min_dim = SUBDIVISION_WIDTH_LIMIT + 2; // wall + at least 1 interior tile + wall
+        let mut rooms: Vec<&LayoutRoom> = layout_rooms.iter().collect();
+
+        // Drop smallest-proportion rooms if the space is too tight for all of them
+        rooms.sort_by(|a, b| b.proportion.cmp(&a.proportion));
+        while rooms.len() > 1 {
+            let splits_needed = rooms.len() as i32 - 1;
+            let min_total = min_dim * (splits_needed + 1);
+            let available = self.rect.width().min(self.rect.height());
+            if available >= min_total {
+                break;
+            }
+            rooms.pop();
+        }
+
+        if rooms.len() <= 1 {
+            // Too small to subdivide — fill as a single room using first sub-room's generator
+            if let Some(room) = rooms.first() {
+                if let Some(gen) = generators.get_opt("room", &room.room_type) {
+                    self.fill_space(gen, prefabs, data);
+                    return;
+                }
+            }
+            self.fill_space(fallback, prefabs, data);
+            return;
+        }
+
+        // Sequential proportional splits: peel off one room at a time
+        let total_proportion: i32 = rooms.iter().map(|r| r.proportion).sum();
+        let mut remaining_proportion = total_proportion;
+        let mut current_rect = self.rect;
+
+        let mut sub_spaces: Vec<(Space, String)> = Vec::new();
+
+        for (i, room) in rooms.iter().enumerate() {
+            if i == rooms.len() - 1 {
+                // Last room gets whatever space is left
+                let mut sub = Space::with_walls(current_rect, self.building_id, [INTERIOR, INTERIOR, INTERIOR, INTERIOR]);
+                sub.interior_type = room.room_type.clone();
+                sub.name = room.name.clone();
+                sub_spaces.push((sub, room.room_type.clone()));
+                break;
+            }
+
+            let fraction = room.proportion as f32 / remaining_proportion as f32;
+
+            // Pick axis based on aspect ratio of remaining space
+            let w = current_rect.x2 - current_rect.x1;
+            let h = current_rect.y2 - current_rect.y1;
+            let axis = if w >= h { VERTICAL } else { HORIZONTAL };
+
+            let (split_rect, remainder_rect) = if axis == VERTICAL {
+                let split_x = current_rect.x1 + ((w as f32 * fraction) as i32).max(min_dim).min(w - min_dim);
+                let left = Rect { x1: current_rect.x1, y1: current_rect.y1, x2: split_x, y2: current_rect.y2 };
+                let right = Rect { x1: split_x, y1: current_rect.y1, x2: current_rect.x2, y2: current_rect.y2 };
+                (left, right)
+            } else {
+                let split_y = current_rect.y1 + ((h as f32 * fraction) as i32).max(min_dim).min(h - min_dim);
+                let top = Rect { x1: current_rect.x1, y1: current_rect.y1, x2: current_rect.x2, y2: split_y };
+                let bottom = Rect { x1: current_rect.x1, y1: split_y, x2: current_rect.x2, y2: current_rect.y2 };
+                (top, bottom)
+            };
+
+            // Draw the internal wall
+            if axis == VERTICAL {
+                for y in split_rect.y1..split_rect.y2 + 1 {
+                    if (y as usize) < data.len() && (split_rect.x2 as usize) < data[y as usize].len() {
+                        data[y as usize][split_rect.x2 as usize] = Tile::wall();
+                    }
+                }
+            } else {
+                for x in split_rect.x1..split_rect.x2 + 1 {
+                    if (split_rect.y2 as usize) < data.len() && (x as usize) < data[split_rect.y2 as usize].len() {
+                        data[split_rect.y2 as usize][x as usize] = Tile::wall();
+                    }
+                }
+            }
+
+            // Add an internal door on the partition wall
+            if axis == VERTICAL {
+                let door_y = split_rect.y1 + 1 + rng.gen_range(0..(split_rect.y2 - split_rect.y1 - 1).max(1));
+                if (door_y as usize) < data.len() && (split_rect.x2 as usize) < data[door_y as usize].len() {
+                    data[door_y as usize][split_rect.x2 as usize] = Tile::door(self.building_id, Direction::EAST);
+                }
+            } else {
+                let door_x = split_rect.x1 + 1 + rng.gen_range(0..(split_rect.x2 - split_rect.x1 - 1).max(1));
+                if (split_rect.y2 as usize) < data.len() && (door_x as usize) < data[split_rect.y2 as usize].len() {
+                    data[split_rect.y2 as usize][door_x as usize] = Tile::door(self.building_id, Direction::SOUTH);
+                }
+            }
+
+            let mut sub = Space::with_walls(split_rect, self.building_id, [INTERIOR, INTERIOR, INTERIOR, INTERIOR]);
+            sub.interior_type = room.room_type.clone();
+            sub.name = room.name.clone();
+            sub_spaces.push((sub, room.room_type.clone()));
+
+            remaining_proportion -= room.proportion;
+            current_rect = remainder_rect;
+        }
+
+        // Fill each sub-room
+        for (sub_space, room_type) in sub_spaces.iter_mut() {
+            let gen = generators
+                .get_opt("room", room_type)
+                .filter(|g| g.rules.rules.iter().any(|r| prefabs.get(&r.name).is_some()))
+                .unwrap_or(fallback);
+            sub_space.fill_space(gen, prefabs, data);
+        }
     }
 
     pub fn fill(&mut self, generators: &Generators, fallback: &Generator, prefabs: &Prefabs, data: &mut Grid) {
@@ -721,6 +947,15 @@ impl Space {
                 log::debug!("space has partitions, continuing to traverse partitions tree...");
                 space.fill(generators, fallback, prefabs, data);
             } else {
+                // Check for a layout generator first
+                if let Some(layout_gen) = generators.get_opt("layout", &space.interior_type) {
+                    if !layout_gen.rooms.rooms.is_empty() {
+                        log::debug!("space '{}' has layout generator, subdividing into sub-rooms", space.interior_type);
+                        space.subdivide_layout(&layout_gen.rooms.rooms, generators, fallback, prefabs, data);
+                        continue;
+                    }
+                }
+
                 log::debug!("space has no partitions, filling with room generator for '{}'", space.interior_type);
                 let gen = generators
                     .get_opt("room", &space.interior_type)
@@ -728,6 +963,18 @@ impl Space {
                     .unwrap_or(fallback);
                 space.fill_space(gen, prefabs, data);
             }
+        }
+    }
+
+    pub fn rect(&self) -> &Rect {
+        &self.rect
+    }
+
+    pub fn collect_leaves(&self) -> Vec<&Space> {
+        if self.partitions.is_empty() {
+            vec![self]
+        } else {
+            self.partitions.iter().flat_map(|p| p.collect_leaves()).collect()
         }
     }
 

@@ -28,6 +28,7 @@ impl Dice {
 		self.roll(1, 20)
 	}
 
+	#[allow(dead_code)]
 	pub fn from_int(&mut self, num: u32) -> i32 {
         return self.roll(1, num as i32);
     }

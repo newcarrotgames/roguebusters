@@ -1,0 +1,7 @@
+<generator name="precinct_bullpen" type="room">
+	<rules>
+		<rule type="prefab" name="front_desk" frequency="one" required="true" />
+		<rule type="prefab" name="desk" frequency="many" padding="1" />
+		<rule type="prefab" name="filing_cabinet" frequency="many" padding="1" />
+	</rules>
+</generator>

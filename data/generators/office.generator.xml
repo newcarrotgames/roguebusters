@@ -1,8 +1,8 @@
 <generator name="office" type="room">
 	<rules>
-		<rule type="prefab" name="reception_desk" frequency="one" />
-		<rule type="prefab" name="desk" frequency="many" chance="0.3" />
-		<rule type="prefab" name="filing_cabinet" frequency="many" chance="0.2" />
+		<rule type="prefab" name="reception_desk" frequency="one" required="true" />
 		<rule type="prefab" name="bookshelf" frequency="one" />
+		<rule type="prefab" name="desk" frequency="many" padding="1" />
+		<rule type="prefab" name="filing_cabinet" frequency="many" padding="1" />
 	</rules>
 </generator>

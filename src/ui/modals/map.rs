@@ -109,6 +109,7 @@ impl InputHandler for MapInputHandler {
 }
 
 #[derive(PartialEq, Eq, Hash, Clone, Copy, Debug)]
+#[allow(dead_code)]
 pub enum MapModalPlayerRequest {
     Zoom,
     Move(i32, i32),

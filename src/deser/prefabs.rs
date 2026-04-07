@@ -22,6 +22,7 @@ impl Prefabs {
     /// Returns an empty `Prefabs` with no folder and no loaded data.
     /// City generation still works — rooms are simply left undecorated.
     /// Use this in tests to avoid touching the filesystem.
+    #[allow(dead_code)]
     pub fn empty() -> Self {
         Prefabs {
             folder: String::new(),
@@ -47,6 +48,7 @@ impl Prefabs {
         self.prefabs.get(name)
     }
 
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.prefabs.is_empty()
     }

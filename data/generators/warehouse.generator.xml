@@ -1,7 +1,7 @@
 <generator name="warehouse" type="room">
 	<rules>
-		<rule type="prefab" name="crate_stack" frequency="many" chance="0.35" />
-		<rule type="prefab" name="foreman_desk" frequency="one" />
+		<rule type="prefab" name="foreman_desk" frequency="one" required="true" />
 		<rule type="prefab" name="loading_dock" frequency="one" />
+		<rule type="prefab" name="crate_stack" frequency="many" padding="1" />
 	</rules>
 </generator>

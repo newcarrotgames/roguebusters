@@ -1,0 +1,6 @@
+<generator name="precinct_holding" type="room">
+	<rules>
+		<rule type="prefab" name="holding_cell" frequency="one" required="true" />
+		<rule type="prefab" name="cot" frequency="many" padding="1" />
+	</rules>
+</generator>

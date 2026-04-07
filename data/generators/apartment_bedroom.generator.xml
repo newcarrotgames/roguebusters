@@ -1,0 +1,6 @@
+<generator name="apartment_bedroom" type="room">
+	<rules>
+		<rule type="prefab" name="bed" frequency="one" required="true" />
+		<rule type="prefab" name="dresser" frequency="one" />
+	</rules>
+</generator>

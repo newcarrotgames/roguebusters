@@ -1,7 +1,7 @@
 <generator name="pool_hall" type="room">
 	<rules>
-		<rule type="prefab" name="pool_table" frequency="many" chance="0.25" />
-		<rule type="prefab" name="bar_counter_small" frequency="one" />
+		<rule type="prefab" name="bar_counter_small" frequency="one" required="true" />
 		<rule type="prefab" name="coat_rack" frequency="one" />
+		<rule type="prefab" name="pool_table" frequency="many" padding="1" />
 	</rules>
 </generator>

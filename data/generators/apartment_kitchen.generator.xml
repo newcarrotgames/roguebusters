@@ -1,0 +1,7 @@
+<generator name="apartment_kitchen" type="room">
+	<rules>
+		<rule type="prefab" name="stove_small" frequency="one" required="true" />
+		<rule type="prefab" name="sink" frequency="one" required="true" />
+		<rule type="prefab" name="counter" frequency="one" />
+	</rules>
+</generator>

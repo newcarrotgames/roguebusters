@@ -1,0 +1,6 @@
+<generator name="clinic_operating" type="room">
+	<rules>
+		<rule type="prefab" name="operating_table" frequency="one" required="true" />
+		<rule type="prefab" name="medicine_cabinet" frequency="one" required="true" />
+	</rules>
+</generator>

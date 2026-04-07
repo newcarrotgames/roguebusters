@@ -25,6 +25,7 @@ impl ScreenService {
         HEIGHT.load(Ordering::Relaxed)
     }
 
+    #[allow(dead_code)]
     pub fn sidebar_size() -> [i32; 2] {
         [SIDEBAR_W, Self::get_height()]
     }
@@ -45,6 +46,7 @@ impl ScreenService {
         [Self::get_width() - SIDEBAR_W, Self::get_height() - MSG_H]
     }
 
+    #[allow(dead_code)]
     pub fn map_area_position() -> [i32; 2] {
         [0, 0]
     }

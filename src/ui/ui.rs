@@ -21,12 +21,14 @@ pub const LINES_SINGLE: LineSet = [196, 179, 218, 191, 192, 217, 180, 195];
 // const LINES_DOUBLE_SINGLE: LineSet = [196, 186, 214, 183, 211, 189, 180, 195];
 
 #[derive(Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum UIState {
     Active,
     Inactive,
     Hidden,
 }
 
+#[allow(dead_code)]
 pub trait UIElement {
     fn state(&self) -> UIState;
     fn set_state(&mut self, new_state: UIState);

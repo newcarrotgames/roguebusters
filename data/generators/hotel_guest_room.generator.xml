@@ -1,0 +1,7 @@
+<generator name="hotel_guest_room" type="room">
+	<rules>
+		<rule type="prefab" name="bed" frequency="one" required="true" />
+		<rule type="prefab" name="dresser" frequency="one" />
+		<rule type="prefab" name="luggage_rack" frequency="one" />
+	</rules>
+</generator>

@@ -45,6 +45,7 @@ impl Generators {
         self.generators.get(gentype)?.get(name)
     }
 
+    #[allow(dead_code)]
     pub fn names_for_type(&self, gentype: &str) -> Vec<&str> {
         match self.generators.get(gentype) {
             Some(map) => map.keys().map(|s| s.as_str()).collect(),
@@ -61,7 +62,9 @@ pub struct Generator {
     #[yaserde(attribute, rename="type")]
     pub gen_type: String,
     #[yaserde(child)]
-    pub rules: Rules
+    pub rules: Rules,
+    #[yaserde(child)]
+    pub rooms: LayoutRooms,
 }
 
 impl Generator {
@@ -69,6 +72,22 @@ impl Generator {
         let xml = fs::read_to_string(path).expect(format!("Error reading prefab file {:?}", path).as_str());
         yaserde::de::from_str::<Generator>(xml.as_str()).unwrap()
     }
+}
+
+#[derive(Default, PartialEq, Debug, YaDeserialize)]
+pub struct LayoutRooms {
+    #[yaserde(child, rename = "room")]
+    pub rooms: Vec<LayoutRoom>,
+}
+
+#[derive(Default, PartialEq, Debug, YaDeserialize)]
+pub struct LayoutRoom {
+    #[yaserde(attribute)]
+    pub name: String,
+    #[yaserde(attribute, rename = "type")]
+    pub room_type: String,
+    #[yaserde(attribute)]
+    pub proportion: i32,
 }
 
 #[derive(Default, PartialEq, Debug, YaDeserialize)]
@@ -87,6 +106,14 @@ pub struct Rule {
     pub frequency: String,
     #[yaserde(attribute)]
     pub chance: f32,
+    #[yaserde(attribute)]
+    pub min: i32,
+    #[yaserde(attribute)]
+    pub max: i32,
+    #[yaserde(attribute)]
+    pub required: String,
+    #[yaserde(attribute)]
+    pub padding: i32,
 }
 
 #[cfg(test)]

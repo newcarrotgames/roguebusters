@@ -1,7 +1,7 @@
 <generator name="brewery" type="room">
 	<rules>
-		<rule type="prefab" name="brew_vat" frequency="many" chance="0.25" />
-		<rule type="prefab" name="bottling_station" frequency="one" />
-		<rule type="prefab" name="crate_stack" frequency="many" chance="0.2" />
+		<rule type="prefab" name="bottling_station" frequency="one" required="true" />
+		<rule type="prefab" name="brew_vat" frequency="many" padding="1" />
+		<rule type="prefab" name="crate_stack" frequency="many" padding="1" />
 	</rules>
 </generator>

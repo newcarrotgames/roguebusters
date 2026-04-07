@@ -1,8 +1,8 @@
 <generator name="bank" type="room">
 	<rules>
-		<rule type="prefab" name="teller_window" frequency="many" chance="0.3" />
-		<rule type="prefab" name="vault_door" frequency="one" />
-		<rule type="prefab" name="vault_interior" frequency="one" />
-		<rule type="prefab" name="lobby_bench" frequency="many" chance="0.2" />
+		<rule type="prefab" name="vault_door" frequency="one" required="true" />
+		<rule type="prefab" name="vault_interior" frequency="one" required="true" />
+		<rule type="prefab" name="teller_window" frequency="many" padding="1" />
+		<rule type="prefab" name="lobby_bench" frequency="many" padding="1" />
 	</rules>
 </generator>

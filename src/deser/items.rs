@@ -33,6 +33,7 @@ impl Items {
         self.items_by_name = self.items.iter().map(|i| (i.name.clone(), i.clone())).collect();
     }
 
+    #[allow(dead_code)]
     pub fn get_item(&self, name: &str) -> Option<&ItemData> {
         self.items_by_name.get(name)
     }

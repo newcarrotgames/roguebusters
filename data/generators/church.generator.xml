@@ -1,7 +1,7 @@
 <generator name="church" type="room">
 	<rules>
-		<rule type="prefab" name="altar" frequency="one" />
+		<rule type="prefab" name="altar" frequency="one" required="true" />
 		<rule type="prefab" name="confessional" frequency="one" />
-		<rule type="prefab" name="pew" frequency="many" chance="0.35" />
+		<rule type="prefab" name="pew" frequency="many" padding="1" />
 	</rules>
 </generator>

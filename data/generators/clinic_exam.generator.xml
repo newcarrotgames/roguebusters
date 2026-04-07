@@ -1,0 +1,7 @@
+<generator name="clinic_exam" type="room">
+	<rules>
+		<rule type="prefab" name="doctor_desk" frequency="one" required="true" />
+		<rule type="prefab" name="medicine_cabinet" frequency="one" />
+		<rule type="prefab" name="hospital_bed" frequency="many" padding="1" />
+	</rules>
+</generator>

@@ -1,0 +1,6 @@
+<generator name="apartment_bathroom" type="room">
+	<rules>
+		<rule type="prefab" name="sink" frequency="one" required="true" />
+		<rule type="prefab" name="wash_basin" frequency="one" />
+	</rules>
+</generator>

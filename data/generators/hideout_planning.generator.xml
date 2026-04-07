@@ -1,0 +1,7 @@
+<generator name="hideout_planning" type="room">
+	<rules>
+		<rule type="prefab" name="planning_table" frequency="one" required="true" />
+		<rule type="prefab" name="safe" frequency="one" />
+		<rule type="prefab" name="filing_cabinet" frequency="many" padding="1" />
+	</rules>
+</generator>

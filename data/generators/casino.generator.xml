@@ -1,8 +1,8 @@
 <generator name="casino" type="room">
 	<rules>
-		<rule type="prefab" name="card_table" frequency="many" chance="0.25" />
-		<rule type="prefab" name="roulette_table" frequency="one" />
+		<rule type="prefab" name="bar_counter_small" frequency="one" required="true" />
+		<rule type="prefab" name="roulette_table" frequency="one" required="true" />
 		<rule type="prefab" name="craps_table" frequency="one" />
-		<rule type="prefab" name="bar_counter_small" frequency="one" />
+		<rule type="prefab" name="card_table" frequency="many" padding="1" />
 	</rules>
 </generator>
